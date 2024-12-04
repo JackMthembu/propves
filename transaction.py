@@ -37,7 +37,7 @@ class TransactionError(Exception):
     pass
 
 # Create a blueprint for transaction routes
-transaction_routes = Blueprint('transaction_routes', __name__)
+transaction_routes = Blueprint('transaction_routes', __name__, url_prefix='/transactions')
 
 def classify_account(account_name):
     """
@@ -779,45 +779,66 @@ def list_transactions():
                          account_classifications=account_classifications,
                          today=datetime.today())
 
-@transaction_routes.route('/transaction/<int:transaction_id>/delete', methods=['POST'])
+@transaction_routes.route('/transactions/<int:transaction_id>', methods=['PUT'])
 @login_required
-def delete_portfolio_transaction(transaction_id):
+def update_transaction(transaction_id):
     try:
-        # Get the transaction
+        data = request.json
         transaction = Transaction.query.get_or_404(transaction_id)
         
-        # Get owner associated with current user
-        owner = Owner.query.filter_by(user_id=current_user.id).first()
-        if not owner:
-            current_app.logger.warning(f"Owner not found for user {current_user.id}")
-            flash('Permission denied: Owner not found', 'error')
-            return redirect(url_for('transaction_routes.portfolio_transactions'))
+        # Verify user has permission to update this transaction
+        if transaction.owner_id != Owner.query.filter_by(user_id=current_user.id).first().id:
+            return jsonify({'error': 'Unauthorized'}), 403
 
-        # Permission check
-        if transaction.owner_id != owner.id:
-            current_app.logger.warning(f"Unauthorized deletion attempt for transaction {transaction_id}")
-            flash('Permission denied: Not authorized to delete this transaction', 'error')
-            return redirect(url_for('transaction_routes.portfolio_transactions'))
+        # Update transaction fields if provided
+        if 'transaction_date' in data:
+            try:
+                transaction.transaction_date = datetime.strptime(data['transaction_date'], '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({'error': 'Invalid date format'}), 400
 
-        # Check if transaction is reconciled
-        if transaction.is_reconciled:
-            current_app.logger.warning(f"Attempted to delete reconciled transaction {transaction_id}")
-            flash('Cannot delete reconciled transactions', 'error')
-            return redirect(url_for('transaction_routes.portfolio_transactions'))
+        if 'property_id' in data:
+            # Verify property exists and belongs to user
+            property_exists = Property.query.filter_by(
+                id=data['property_id'], 
+                owner_id=Owner.query.filter_by(user_id=current_user.id).first().id
+            ).first()
+            if not property_exists and data['property_id'] != 'portfolio':
+                return jsonify({'error': 'Invalid property'}), 400
+            transaction.property_id = data['property_id']
 
-        # Delete the transaction
-        db.session.delete(transaction)
+        # Update other fields
+        if 'account' in data:
+            transaction.account = data['account']
+        if 'description' in data:
+            transaction.description = data['description']
+        if 'debit_amount' in data:
+            transaction.debit_amount = float(data['debit_amount'])
+        if 'credit_amount' in data:
+            transaction.credit_amount = float(data['credit_amount'])
+        if 'is_reconciled' in data:
+            transaction.is_reconciled = bool(data['is_reconciled'])
+
         db.session.commit()
         
-        current_app.logger.info(f"Successfully deleted transaction {transaction_id}")
-        flash('Transaction deleted successfully', 'success')
-        
+        return jsonify({
+            'success': True,
+            'message': 'Transaction updated successfully',
+            'transaction': {
+                'id': transaction.id,
+                'transaction_date': transaction.transaction_date.strftime('%Y-%m-%d'),
+                'property_id': transaction.property_id,
+                'account': transaction.account,
+                'description': transaction.description,
+                'debit_amount': float(transaction.debit_amount) if transaction.debit_amount else 0.0,
+                'credit_amount': float(transaction.credit_amount) if transaction.credit_amount else 0.0,
+                'is_reconciled': transaction.is_reconciled
+            }
+        }), 200
+
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error deleting transaction {transaction_id}: {str(e)}")
-        flash(f'Failed to delete transaction: {str(e)}', 'error')
-    
-    return redirect(url_for('transaction_routes.portfolio_transactions'))
+        return jsonify({'error': str(e)}), 500
 
 @transaction_routes.route('/transactions/save_all', methods=['POST'])
 @login_required
@@ -1011,7 +1032,7 @@ def create_portfolio_transaction():
     
     return jsonify({'status': 'error', 'message': 'Invalid form data', 'errors': form.errors}), 400
 
-@transaction_routes.route('/api/transactions', methods=['POST'])
+@transaction_routes.route('/transactions', methods=['POST'])
 @login_required
 def create_transaction():
     try:
@@ -1039,7 +1060,7 @@ def create_transaction():
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@transaction_routes.route('/api/transactions/<int:id>', methods=['PUT'])
+@transaction_routes.route('/transactions/<int:id>', methods=['PUT'])
 def update_transaction_api(id):
     try:
         transaction = Transaction.query.get_or_404(id)
@@ -1069,7 +1090,7 @@ def update_transaction_api(id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@transaction_routes.route('/api/transactions/<int:transaction_id>/update', methods=['PUT'])
+@transaction_routes.route('/transactions/<int:transaction_id>/update', methods=['PUT'])
 def update_transaction_alt(transaction_id):
     try:
         transaction = Transaction.query.get_or_404(transaction_id)
@@ -1099,7 +1120,7 @@ def update_transaction_alt(transaction_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@transaction_routes.route('/api/transactions/<int:transaction_id>/split', methods=['POST'])
+@transaction_routes.route('/transactions/<int:transaction_id>/split', methods=['POST'])
 @login_required
 def split_transaction(transaction_id):
     try:
@@ -1144,7 +1165,7 @@ def split_transaction(transaction_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@transaction_routes.route('/api/transactions/<int:transaction_id>/portfolio', methods=['POST'])
+@transaction_routes.route('/transactions/<int:transaction_id>/portfolio', methods=['POST'])
 @login_required
 def mark_portfolio_transaction(transaction_id):
     try:
@@ -1271,9 +1292,9 @@ def save_transactions():
     
     return redirect(url_for('transaction_routes.list_transactions'))
 
-@transaction_routes.route('/transaction/<int:transaction_id>/update', methods=['POST'])
+@transaction_routes.route('/update_transaction/<int:transaction_id>', methods=['POST'])
 @login_required
-def update_transaction(transaction_id):
+def update_transaction_form(transaction_id):
     form = TransactionForm()
     
     if form.validate_on_submit():
@@ -1311,7 +1332,7 @@ def update_transaction(transaction_id):
     
     return redirect(url_for('transaction_routes.list_transactions'))
 
-@transaction_routes.route('/api/monthly-financials')
+@transaction_routes.route('/monthly-financials')
 @login_required
 def monthly_financials():
     try:
@@ -1383,7 +1404,7 @@ def monthly_financials():
         current_app.logger.error(f"Error in monthly_financials: {str(e)}")
         return jsonify({'error': 'Failed to fetch monthly financials'}), 500
 
-@transaction_routes.route('/api/financial-data/<period>')
+@transaction_routes.route('/financial-data/<period>')
 def get_financial_data(period):
     # Get current date
     today = datetime.now()
@@ -1447,7 +1468,7 @@ def get_financial_data(period):
         'period': period
     })
 
-@transaction_routes.route('/api/expenses-data')
+@transaction_routes.route('/expenses-data')
 @login_required
 def get_expenses_data():
     try:

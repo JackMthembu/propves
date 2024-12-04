@@ -141,9 +141,9 @@ def create_app():
     @app.template_filter('currency')
     def currency_filter(value):
         try:
-            return f"{float(value):,.2f}"
+            return f"${value:,.2f}"
         except (ValueError, TypeError):
-            return "0.00"
+            return "$0.00"
 
     # Debug middleware
     @app.before_request
