@@ -1,0 +1,27 @@
+{% if transactions %}
+    {% for transaction in transactions %}
+    <tr data-id="{{ transaction.id }}" class="editable-row">
+        <td class="editable" data-field="date">
+            <input type="date" class="form-control form-control-sm" 
+                   value="{{ transaction.date.strftime('%Y-%m-%d') }}"
+                   onchange="updateTransaction(this)">
+        </td>
+        <td>{{ format_currency(transaction.debit_amount or 0) }}</td>
+        <td>{{ format_currency(transaction.credit_amount or 0) }}</td>
+        <td>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-primary edit-row">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger delete-row">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="8" class="text-center">No transactions found.</td>
+    </tr>
+{% endif %} 

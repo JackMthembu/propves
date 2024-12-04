@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Subscription Plans</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    /* Basic Styling - Customize as needed */
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f8f8f8;
+      margin: 0;
+    }
+
+    .pricing-section {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .pricing-section h2 {
+      font-size: 2.5em;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .pricing-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pricing-card {
+      background-color: #fff;
+      border: none;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      padding: 30px 20px;
+      margin: 20px;
+      width: 300px;
+      border-radius: 10px;
+      transition: transform 0.2s ease;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .pricing-card h3 {
+      color: #2196F3;
+      font-size: 1.8em;
+      margin-bottom: 10px;
+    }
+
+    .price {
+      font-size: 2em;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .price .original-price {
+      text-decoration: line-through;
+      color: #999;
+      font-size: 0.8em;
+      margin-left: 10px;
+    }
+
+    .features {
+      list-style: none;
+      padding: 0;
+      text-align: left;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    /* Toggle Switch Styling */
+    .toggle-switch {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    .toggle--checkbox {
+      display: none;
+    }
+
+    .toggle--label {
+      display: inline-block;
+      width: 80px;
+      height: 40px;
+      background-color: #ccc;
+      border-radius: 30px;
+      position: relative;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .toggle--label-background {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      width: 30px;
+      height: 30px;
+      background-color: #fff;
+      border-radius: 50%;
+      transition: left 0.3s ease;
+      box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .toggle--checkbox:checked+.toggle--label .toggle--label-background {
+      left: 45px;
+    }
+
+    .toggle--checkbox:checked+.toggle--label {
+      background-color: #2196F3;
+    }
+
+    .monthly,
+    .yearly {
+      margin: 0 15px;
+      font-weight: bold;
+      color: #555;
+      transition: color 0.3s ease;
+    }
+
+    .toggle--checkbox:checked+.toggle--label .monthly {
+      color: #ddd;
+    }
+
+    .toggle--checkbox:checked+.toggle--label .yearly {
+      color: #fff;
+    }
+
+    /* Button Styling */
+    button[type="submit"] {
+      background-color: #2196F3;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      margin-top: 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background-color 0.3s ease;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #1976D2;
+    }
+
+    .pricing-card.popular {
+      border: 2px solid #ffc107; /* Highlight border color */
+      transform: scale(1.05); /* Slightly larger */
+    }
+
+    .pricing-card.popular .popular-flag {
+      display: block; 
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #ffc107; /* Highlight color */
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="pricing-section">
+    <h2>What's About Our Pricing Subscription</h2>
+    <div class="toggle-switch">
+      <input type="checkbox" id="toggle" class="toggle--checkbox" checked>
+      <label for="toggle" class="toggle--label">
+        <span class="toggle--label-background"></span>
+      </label>
+      <span class="monthly">Annually</span>
+    </div>
+
+    <div class="pricing-container">
+      <div class="plan-section" data-frequency="monthly" style="display: none;">
+        <div class="pricing-card">
+          <h3>Basic</h3>
+          <div class="price">
+            <span class="price-value">R199.99</span>
+          </div>
+          <ul class="features">
+            <li>5 Properties Listings</li>
+            <li></li>
+            <li>Feature 3</li>
+          </ul>
+          <form method="POST">
+            <input type="hidden" name="subscription_id" value="1">
+            <button type="submit">Select Plan</button>
+          </form>
+        </div>
+
+        <div class="pricing-card popular">
+          <span class="popular-flag">Most Popular</span>
+          <h3>Standard</h3>
+          <div class="price">
+            <span class="price-value">R599.99</span>
+          </div>
+          <ul class="features">
+            <li>Feature 1</li>
+            <li>Feature 2</li>
+            <li>Feature 3</li>
+            <li>Feature 4</li>
+            <li>Feature 5</li>
+          </ul>
+          <form method="POST">
+            <input type="hidden" name="subscription_id" value="3">
+            <button type="submit">Select Plan</button>
+          </form>
+        </div>
+
+        <div class="pricing-card">
+          <h3>Premium</h3>
+          <div class="price">
+            <span class="price-value">R1499.99</span>
+          </div>
+          <ul class="features">
+            <li>Feature 1</li>
+            <li>Feature 2</li>
+            <li>Feature 3</li>
+            <li>Feature 4</li>
+            <li>Feature 5</li>
+            <li>Feature 6</li>
+            <li>Feature 7</li>
+          </ul>
+          <form method="POST">
+            <input type="hidden" name="subscription_id" value="5">
+            <button type="submit">Select Plan</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="plan-section" data-frequency="annually" style="display: flex;">
+        <div class="pricing-card">
+          <h3>Basic</h3>
+          <div class="price">
+            <span class="price-value">R1999.99</span>
+            <span class="original-price">R2399.99</span>
+          </div>
+          <ul class="features">
+            <li>Feature 1</li>
+            <li>Feature 2</li>
+            <li>Feature 3</li>
+          </ul>
+          <div class="saving">Save R400</div>
+          <form method="POST">
+            <input type="hidden" name="subscription_id" value="2">
+            <button type="submit">Select Plan</button>
+          </form>
+        </div>
+
+        <div class="pricing-card popular">
+          <span class="popular-flag">Most Popular</span>
+          <h3>Standard</h3>
+          <div class="price">
+            <span class="price-value">R5999.99</span>
+            <span class="original-price">R7199.99</span>
+          </div>
+          <ul class="features">
+            <li>Feature 1</li>
+            <li>Feature 2</li>
+            <li>Feature 3</li>
+            <li>Feature 4</li>
+            <li>Feature 5</li>
+          </ul>
+          <div class="saving">Save R1200</div>
+          <form method="POST">
+            <input type="hidden" name="subscription_id" value="4">
+            <button type="submit">Select Plan</button>
+          </form>
+        </div>
+
+        <div class="pricing-card">
+          <h3>Premium</h3>
+          <div class="price">
+            <span class="price-value">R14999.99</span>
+            <span class="original-price">R17999.99</span>
+          </div>
+          <ul class="features">
+            <li>Feature 1</li>
+            <li>Feature 2</li>
+            <li>Feature 3</li>
+            <li>Feature 4</li>
+            <li>Feature 5</li>
+            <li>Feature 6</li>
+            <li>Feature 7</li>
+          </ul>
+          <div class="saving">Save R3000</div>
+          <form method="POST">
+            <input type="hidden" name="subscription_id" value="6">
+            <button type="submit">Select Plan</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const toggle = document.getElementById('toggle');
+    const monthlyPlans = document.querySelector('.plan-section[data-frequency="monthly"]');
+    const yearlyPlans = document.querySelector('.plan-section[data-frequency="annually"]');
+
+    // Show yearly plans initially
+    yearlyPlans.style.display = 'flex';
+    monthlyPlans.style.display = 'none';
+
+    toggle.addEventListener('change', function() {
+      if (this.checked) {
+        monthlyPlans.style.display = 'none';
+        yearlyPlans.style.display = 'flex';
+      } else {
+        monthlyPlans.style.display = 'flex';
+        yearlyPlans.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

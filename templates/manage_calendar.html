@@ -1,0 +1,83 @@
+<!-- <h2>Manage Calendar for {{ property.title }}</h2>
+
+<form method="POST">
+    <div class="mb-3">
+        <label for="calendar_api" class="form-label">Calendar API:</label>
+        <input type="text" class="form-control" id="calendar_api" name="calendar_api" required>
+    </div>
+    <div class="mb-3">
+        <label for="date_start" class="form-label">Start Date/Time:</label>
+        <input type="datetime-local" class="form-control" id="date_start" name="date_start" required>
+    </div>
+    <div class="mb-3">
+        <label for="date_end" class="form-label">End Date/Time:</label>
+        <input type="datetime-local" class="form-control" id="date_end" name="date_end" required>
+    </div>
+    <div class="mb-3">
+        <label for="status" class="form-label">Status:</label>
+        <select class="form-select" id="status" name="status">
+            <option value="available">Available</option>
+            <option value="unavailable">Unavailable</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Entry</button>
+</form>
+
+<h3>Existing Entries</h3>
+<ul>
+    {% for entry in calendar_entries %}
+        <li>
+            {{ entry.date_start }} - {{ entry.date_end }}: {{ entry.status }}
+        </li>
+    {% endfor %}
+</ul> -->
+
+<h2>Manage Calendar for {{ property.title }}</h2>
+
+<a href="{{ url_for('calendar_routes.schedule_viewing', property_id=property.id) }}" class="btn btn-primary">Schedule Viewing</a>
+
+<h3>Existing Entries</h3>
+<ul>
+    {% for entry in calendar_entries %}
+        <li>
+            {{ entry.date_start }} - {{ entry.date_end }}:
+            <span id="entry-status-{{ entry.id }}">{{ entry.status }}</span>
+            <button data-entry-id="{{ entry.id }}" class="btn btn-sm btn-secondary update-button" data-status="{% if entry.status == 'available' %}unavailable{% else %}available{% endif %}">
+                {% if entry.status == 'available' %}Make Unavailable{% else %}Make Available{% endif %}
+            </button>
+        </li>
+    {% endfor %}
+</ul>
+
+<script>
+    const updateButtons = document.querySelectorAll('.update-button');
+
+    updateButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const entryId = this.dataset.entryId;
+            const newStatus = this.dataset.status;
+
+            fetch('/update_calendar_entry/' + entryId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'status': newStatus
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the status display on the page
+                    document.getElementById('entry-status-' + entryId).textContent = newStatus;
+                    // Update the button text
+                    this.textContent = newStatus === 'available' ? 'Make Unavailable' : 'Make Available';
+                    this.dataset.status = newStatus === 'available' ? 'unavailable' : 'available';
+                } else {
+                    alert('Error updating calendar entry.');
+                }
+            });
+        });
+    });
+</script>

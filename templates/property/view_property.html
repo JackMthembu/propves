@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/property.css') }}">
+
+<main id="main" class="main">
+  <div class="pagetitle">
+    <h1>Manage Property</h1>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('property_routes.property_list') }}">My Properties</a></li>
+        <li class="breadcrumb-item active">{{ property.title }}</li>
+      </ol>
+    </nav>
+  </div>
+
+  <section class="section">
+    <div class="row">
+      <!-- Property Overview Card -->
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Property Overview</h5>
+            
+            {% if property %}
+            <!-- Property Details Summary -->
+            <div class="property-summary">
+              <h2>{{ property.title }}</h2>
+              <p class="description">{{ property.description }}</p>
+              
+              <div class="feature-icons">
+                <div class="feature-item">
+                  <span class="feature-icon">
+                    <i class="bx bx-building"></i>
+                  </span>
+                  <span class="feature-name">{{ property.type | title }}</span>
+                </div>
+                
+                <div class="feature-item">
+                  <span class="feature-icon">
+                    <i class="bx bxs-bed"></i>
+                  </span>
+                  <span class="feature-name">{{ property.bedroom }} Bedrooms</span>
+                </div>
+                
+                <div class="feature-item">
+                  <span class="feature-icon">
+                    <i class="bx bxs-bath"></i>
+                  </span>
+                  <span class="feature-name">{{ property.bathroom }} Bathrooms</span>
+                </div>
+                
+                <div class="feature-item">
+                  <span class="feature-icon">
+                    <i class="bi bi-rulers"></i>
+                  </span>
+                  <span class="feature-name">{{ property.sqm }} ft²</span>
+                </div>
+                
+                <div class="feature-item">
+                  <span class="feature-icon">
+                      <i class="bx bxs-car-garage"></i>
+                  </span>
+                  <span class="feature-name">{{ property.garage }} Parking</span>
+                </div>
+              </div>
+
+              <!-- Features Preview -->
+              <div class="features-preview">
+                <h3>Features</h3>
+                <div class="feature-icons">
+                  {% if property.swimming_pool %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="bx bx-swim"></i>
+                    </span>
+                    <span class="feature-name">Swimming Pool</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if property.garden %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="bx bxs-tree"></i>
+                    </span>
+                    <span class="feature-name">Garden</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if property.air_conditioning %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="bi bi-thermometer-snow"></i>
+                    </span>
+                    <span class="feature-name">Air Conditioning</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if property.heating %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="bi bi-thermometer-sun"></i>
+                    </span>
+                    <span class="feature-name">Heating</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if property.gym %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="bx bx-dumbbell"></i>
+                    </span>
+                    <span class="feature-name">Gym</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if property.laundry %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="bx bxs-washer"></i>
+                    </span>
+                    <span class="feature-name">Laundry</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if property.fireplace %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="ri ri-fire-fill"></i>
+                    </span>
+                    <span class="feature-name">Fireplace</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if property.balcony %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="fas fa-door-open"></i>
+                    </span>
+                    <span class="feature-name">Balcony</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if property.pet_friendly %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="ri ri-baidu-line"></i>
+                    </span>
+                    <span class="feature-name">Pet Friendly</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if property.bbq_area %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="fas fa-burger"></i>
+                    </span>
+                    <span class="feature-name">BBQ Area</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if property.jacuzzi %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="fas fa-hot-tub"></i>
+                    </span>
+                    <span class="feature-name">Jacuzzi</span>
+                  </div>
+                  {% endif %}
+                  
+                  {% if property.tennis_court %}
+                  <div class="feature-item">
+                    <span class="feature-icon">
+                      <i class="fas fa-table-tennis"></i>
+                    </span>
+                    <span class="feature-name">Tennis Court</span>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Address Preview -->
+              <div class="address-preview">
+                <h3>Location</h3>
+                <p>
+                    {% if property.street_address %}
+                        {{ property.street_address }}{% if property.building %}, {{ property.building }}{% endif %}
+                        {% if property.door_number %}, #{{ property.door_number }}{% endif %}
+                        {% if property.suburb %}, {{ property.suburb }}{% endif %}
+                        {% if property.city %}, {{ property.city }}{% endif %}
+                        {% if property.state %}, {{ property.state.state }}{% endif %}
+                        {% if property.country %}, {{ property.country.country }}{% endif %}
+                    {% else %}
+                        No address information available
+                    {% endif %}
+                </p>
+              </div>
+
+              <!-- Photos Preview -->
+              <div class="photos-preview">
+                <h3>Photos</h3>
+                <div class="photo-grid">
+                  {% if property.photos %}
+                    {% for photo in property.photos %}
+                      <div class="photo-item">
+                        <img src="{{ url_for('static', filename=photo.file_path) }}" 
+                             alt="Property photo"
+                             class="img-thumbnail {% if photo.is_thumbnail %}thumbnail-highlight{% endif %}"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/placeholder.jpg') }}'; console.log('Error loading image:', this.src);"
+                             onclick="openPhotoModal(this.src)">
+                        <!-- ... rest of photo item code ... -->
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <p>No photos available</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+              <h3>No Property Details Added Yet</h3>
+              <p>Start by adding basic property information</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons Section -->
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Actions</h5>
+            <div class="d-grid gap-2">
+              <!-- Manage Button -->
+              <a href="{{ url_for('property_routes.manage_property', property_id=property.id) }}" 
+                 class="btn btn-primary rounded-3 d-flex align-items-center justify-content-center">
+                <i class="bi bi-gear me-2"></i> Manage
+              </a>
+
+              <!-- Duplicate Button -->
+              <a href="{{ url_for('property_routes.duplicate_property', property_id=property.id) }}" 
+                 class="btn btn-primary rounded-3 d-flex align-items-center justify-content-center">
+                <i class="bi bi-files me-2"></i> Duplicate
+              </a>
+
+              <!-- List/Unlist Button -->
+              {% if property_status == 'Listed' %}
+                <form method="POST" action="{{ url_for('property_routes.toggle_listing', property_id=property.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" 
+                          class="btn btn-primary rounded-3 w-100 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-house-dash me-2"></i> Unlist Property
+                  </button>
+                </form>
+              {% elif property_status == 'Unlisted' %}
+                {% if property.title and property.type and property.sqm and property.bedroom and property.bathroom and property.thumbnail %}
+                  <a href="{{ url_for('property_routes.create_listing', property_id=property.id) }}" 
+                     class="btn btn-primary rounded-3 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-house-add me-2"></i> List Property
+                  </a>
+                {% else %}
+                  <button type="button" 
+                          class="btn btn-warning rounded-3 d-flex align-items-center justify-content-center"
+                          data-bs-toggle="tooltip" 
+                          data-bs-placement="top" 
+                          title="Complete property details first">
+                    <i class="bi bi-exclamation-triangle me-2"></i> Complete Details
+                  </button>
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

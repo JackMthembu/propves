@@ -1,0 +1,65 @@
+{% extends "base_2.html" %}
+
+{% block title %}
+    Resend Verification
+{% endblock %}
+
+{% block content %}
+<main class="auth-main">
+    <div class="container">
+        <section class="section min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-4 col-md-6">
+                        <!-- Logo Section -->
+                        <div class="text-center mb-4">
+                            <a href="#" class="logo-link">
+                                <img src="{{ url_for('static', filename='img/logos/propves1.png') }}" alt="Propves Logo" class="logo-img" width="200">
+                            </a>
+                        </div>
+
+                        <!-- Resend Verification Card -->
+                        <div class="auth-card">
+                            <div class="card-body p-4">
+                                <div class="text-center mb-4">
+                                    <h3 class="auth-title">Resend Verification</h3>
+                                    <p class="auth-subtitle">Enter your email to receive a new verification link</p>
+                                </div>
+
+                                <form action="{{ url_for('auth_routes.resend_verification') }}" method="POST" class="form needs-validation">
+                                    {{ form.hidden_tag() }}
+
+                                    <div class="form-floating mb-3">
+                                        {{ form.email(class="form-control", placeholder="Email") }}
+                                        <label>Email</label>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        {{ form.submit(class="btn btn-primary w-100") }}
+                                    </div>
+
+                                    <div class="text-center">
+                                        <p class="mb-0">Remember your password? 
+                                            <a href="{{ url_for('auth_routes.login') }}" class="link-primary">Back to Login</a>
+                                        </p>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="flash-message flash-{{ category }} mt-3">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock %}

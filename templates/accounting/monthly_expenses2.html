@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main id="main" class="main">
+  <div class="pagetitle">
+    <h1>Monthly Expenses - {{ property.title }}</h1>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="">accounting_routes</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('accounting_routes.expenses_overview') }}">Overall Expenses</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('property_routes.view_property', property_id=property.id) }}">{{ property.title }}</a></li>
+        <li class="breadcrumb-item active">Monthly Expenses</li>
+      </ol>
+    </nav>
+  </div>
+
+  <section class="section">
+    <div class="row">
+      <div class="col-lg-12">
+        <!-- Document Upload Card -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title">Upload Statement</h5>
+            <p class="text-muted">Upload a PDF statement to automatically extract expense details</p>
+            
+            <form id="uploadForm" action="{{ url_for('accounting_routes.monthly_expenses', property_id=property.id) }}" 
+                  method="POST" enctype="multipart/form-data">
+              {{ form.csrf_token }}
+              
+              <div class="upload-area">
+                <!-- Drag & Drop Zone -->
+                <div class="drop-zone" id="dropZone">
+                  <div class="drop-zone__prompt">
+                    <i class="bi bi-cloud-upload fs-1"></i>
+                    <p>Drag and drop your PDF here or click to select</p>
+                    <span class="text-muted">Supported format: PDF</span>
+                  </div>
+                  <input type="file" id="document" name="document" class="drop-zone__input" accept=".pdf" hidden>
+                </div>
+                
+                <!-- Selected File Info -->
+                <div id="fileInfo" class="mt-3 d-none">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-file-pdf me-2 text-danger"></i>
+                    <span id="fileName">No file selected</span>
+                    <button type="button" class="btn btn-link text-danger ms-auto" id="removeFile">
+                      <i class="bi bi-x-circle"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="mt-3">
+                  <button type="submit" class="btn btn-primary" disabled id="uploadButton">
+                    <i class="bi bi-upload"></i> Upload & Extract
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Expenses Form Card -->
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Monthly Expenses Details</h5>
+            
+            <form id="expensesForm" action="{{ url_for('accounting_routes.monthly_expenses', property_id=property.id) }}" 
+                  method="POST" class="row g-3">
+              {{ form.csrf_token }}
+              
+              <!-- Date and Bill Type Section -->
+              <div class="row mb-4">
+                <div class="col-md-6">
+                  {{ form.month.label(class="form-label") }}
+                  {{ form.month(class="form-control", required=true) }}
+                </div>
+                
+                <div class="col-md-6">
+                  {{ form.bill_type.label(class="form-label") }}
+                  {{ form.bill_type(class="form-select", required=true) }}
+                </div>
+              </div>
+
+              <!-- Association Fees Section -->
+              <h6 class="mb-3">Association Fees</h6>
+              {% for field in ['hoa_fees', 'maintenance', 'staff_cost', 'management_fee', 
+                             'reserve_fund', 'special_assessments', 'amenities', 
+                             'other_expenses', 'insurance'] %}
+                <div class="col-md-4">
+                  <div class="form-group">
+                    {{ form[field].label(class="form-label") }}
+                    <div class="input-group">
+                      <span class="input-group-text">{{ currency_symbol }}</span>
+                      {{ form[field](class="form-control expense-input", type="number", step="0.01") }}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+
+              <!-- City Expenses Section -->
+              <h6 class="mt-4 mb-3">City Expenses</h6>
+              {% for field in ['property_taxes', 'electricity', 'gas', 'water_sewer', 
+                             'miscellaneous_cost', 'other_city_charges'] %}
+                <div class="col-md-4">
+                  <div class="form-group">
+                    {{ form[field].label(class="form-label") }}
+                    <div class="input-group">
+                      <span class="input-group-text">{{ currency_symbol }}</span>
+                      {{ form[field](class="form-control expense-input", type="number", step="0.01") }}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+
+              <div class="col-12">
+                <div class="alert alert-info">
+                  <strong>Total Monthly Expenses:</strong> 
+                  <span id="totalExpenses">{{ currency_symbol }}0.00</span>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <button type="submit" class="btn btn-success">
+                  <i class="bi bi-check-circle"></i> Save Expenses
+                </button>
+                <a href="{{ url_for('property_routes.view_property', property_id=property.id) }}" 
+                   class="btn btn-secondary">
+                  <i class="bi bi-x-circle"></i> Cancel
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="previewModalLabel">Extracted Data Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="extractedData"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmExtraction">
+          <i class="bi bi-check-circle"></i> Confirm & Use
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('uploadForm');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('document');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const uploadButton = document.getElementById('uploadButton');
+    const removeFileBtn = document.getElementById('removeFile');
+    const confirmExtractionBtn = document.getElementById('confirmExtraction');
+    let isSubmitting = false;
+
+    // Get currency symbol from the server
+    const currencySymbol = '{{ currency_symbol }}';
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    // Handle form submission
+    uploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (isSubmitting || !fileInput.files[0]) {
+            return;
+        }
+
+        try {
+            isSubmitting = true;
+            uploadButton.disabled = true;
+            uploadButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+            
+            const formData = new FormData(this);
+            
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.extracted_data) {
+                updatePreviewModal(data.extracted_data);
+                removeFile();
+            } else {
+                throw new Error(data.error || 'Failed to extract data');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error: ' + error.message);
+        } finally {
+            isSubmitting = false;
+            uploadButton.disabled = false;
+            uploadButton.innerHTML = '<i class="bi bi-upload"></i> Upload & Extract';
+        }
+    });
+
+    // Handle file selection
+    fileInput.addEventListener('change', handleFiles);
+    removeFileBtn.addEventListener('click', removeFile);
+
+    // Handle drag and drop
+    dropZone.addEventListener('drop', handleDrop);
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight);
+    });
+
+    // Make dropzone clickable
+    dropZone.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    // Add confirm extraction handler
+    confirmExtractionBtn.addEventListener('click', function() {
+        try {
+            const data = JSON.parse(this.dataset.extractedData || '{}');
+            console.log('Extracted data:', data); // Debug log
+            
+            // Fill the form with extracted data
+            Object.entries(data).forEach(([key, value]) => {
+                const input = document.querySelector(`input[name="${key}"]`);
+                if (input) {
+                    input.value = value;
+                    console.log(`Setting ${key} to ${value}`); // Debug log
+                }
+            });
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+            modal.hide();
+            
+            // Update total
+            updateTotalExpenses();
+            
+            // Show success message
+            alert('Data has been successfully transferred to the form!');
+            
+        } catch (error) {
+            console.error('Error applying extracted data:', error);
+            alert('There was an error applying the extracted data. Please try again.');
+        }
+    });
+
+    // Add total expenses calculator
+    const expenseInputs = document.querySelectorAll('.expense-input');
+    expenseInputs.forEach(input => {
+        input.addEventListener('input', updateTotalExpenses);
+    });
+
+    function updateTotalExpenses() {
+        const total = Array.from(expenseInputs)
+            .reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
+        document.getElementById('totalExpenses').textContent = 
+            `${currencySymbol}${total.toFixed(2)}`;
+    }
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function highlight() {
+        dropZone.classList.add('drop-zone--over');
+    }
+
+    function unhighlight() {
+        dropZone.classList.remove('drop-zone--over');
+    }
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles({ target: { files: files } });
+    }
+
+    function handleFiles(e) {
+        const file = e.target.files[0];
+        if (file && file.type === 'application/pdf') {
+            fileName.textContent = file.name;
+            fileInfo.classList.remove('d-none');
+            uploadButton.disabled = false;
+            dropZone.classList.add('drop-zone--accepted');
+        } else {
+            alert('Please select a PDF file');
+            removeFile();
+        }
+    }
+
+    function removeFile() {
+        fileInput.value = '';
+        fileInfo.classList.add('d-none');
+        uploadButton.disabled = true;
+        dropZone.classList.remove('drop-zone--accepted');
+    }
+
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(parseFloat(value || 0));
+    }
+
+    function updatePreviewModal(data) {
+        const extractedHtml = `
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(data).map(([key, value]) => `
+                            <tr>
+                                <td>${formatFieldName(key)}</td>
+                                <td>${formatCurrency(value)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-info">
+                            <th>Total</th>
+                            <th>${formatCurrency(
+                                Object.values(data)
+                                    .reduce((sum, val) => sum + parseFloat(val || 0), 0)
+                            )}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        `;
+        
+        document.getElementById('extractedData').innerHTML = extractedHtml;
+        
+        // Store the data in the button's dataset
+        const confirmBtn = document.getElementById('confirmExtraction');
+        confirmBtn.dataset.extractedData = JSON.stringify(data);
+        
+        // Show the modal
+        const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+        previewModal.show();
+    }
+
+    function formatFieldName(key) {
+        return key.split('_')
+                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                 .join(' ');
+    }
+});
+</script>
+
+
+{% endblock %}
+
+{% endblock %} 

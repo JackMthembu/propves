@@ -1,0 +1,677 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<main id="main" class="main">
+  <div class="pagetitle">
+    <h1>Manage Property</h1>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('main.properties') }}">My Properties</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('property_routes.manage_property') }}">Manage Property</a></li>
+      </ol>
+    </nav>
+  </div>
+
+  <section class="section">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">
+              {% if property %}
+              Edit Property
+              {% else %}
+              Add New Property
+              {% endif %}
+            </h5>
+
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="property-tab" data-bs-toggle="tab" data-bs-target="#property"
+                  type="button" role="tab" aria-controls="property" aria-selected="true">Property Details</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button"
+                  role="tab" aria-controls="address" aria-selected="false">Address</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button"
+                  role="tab" aria-controls="photos" aria-selected="false">Photos</button>
+              </li>
+            </ul>
+
+            <div class="tab-content" id="myTabContent">
+
+              <div class="tab-pane fade show active" id="property" role="tabpanel" aria-labelledby="property-tab">
+                <form id="propertyForm" method="POST" action="{{ url_for('property_routes.manage_property') }}"
+                  onsubmit="return submitPropertyDetails(event)">
+                  {{ property_form.hidden_tag() }}
+                  <div class="form-floating mb-3">
+                    {{ property_form.title(class="form-control", id="floatingTitle") }}
+                    <label for="floatingTitle">Title</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.description(class="form-control", id="floatingDescription") }}
+                    <label for="floatingDescription">Description</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.type(class="form-control", id="floatingType") }}
+                    <label for="floatingType">Type</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.bedroom(class="form-control", id="floatingBedroom") }}
+                    <label for="floatingBedroom">Bedrooms</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.sqm(class="form-control", id="floatingSqm") }}
+                    <label for="floatingSqm">Square Meters (m<sup>2</sup>)</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.bathroom(class="form-control", id="floatingBathroom") }}
+                    <label for="floatingBathroom">Bathroom</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.garage(class="form-control", id="floatingGarage") }}
+                    <label for="floatingGarage">Garages</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.kitchen(class="form-control", id="floatingKitchen") }}
+                    <label for="floatingKitchen">Kitchens</label>
+                  </div>
+
+                  <div>
+                    <h3>Property Features</h3>
+                  </div>
+                  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+                    integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+                    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+                  {% for feature in ['swimming_pool', 'garden', 'air_conditioning', 'heating', 'gym', 'laundry', 'fireplace', 'balcony', 'pet_friendly', 'bbq_area', 'jacuzzi', 'tennis_court'] %}
+                  <div class="form-check form-switch">
+                    {{ property_form[feature](class="form-check-input", id=feature, value=1) }}
+                    <label class="form-check-label" for="{{ feature }}">
+                      <i class="fas fa-{{ feature|replace('_', '-') }}"></i> {{ feature.replace('_', ' ').title() }}
+                    </label>
+                  </div>
+                  {% endfor %}
+
+                  <button type="submit" class="btn btn-primary">Next</button>
+                </form>
+              </div>
+
+              <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
+                <form id="addressForm" method="POST" action="{{ url_for('property_routes.manage_property') }}"
+                  onsubmit="return submitAddress(event)">
+                  {{ address_form.hidden_tag() }}
+                  <div class="row mb-3">
+                    <label for="autocomplete" class="col-sm-2 col-form-label">Street Address</label>
+                    <div class="col-sm-10">
+                      <input type="text" id="autocomplete" name="autocomplete" class="form-control"
+                        placeholder="Enter street address" onFocus="geolocate()"
+                        value="{{ address_form.street_address.data }}" />
+                    </div>
+                  </div>
+
+                  {% for field in ['building', 'door_number', 'suburb', 'city', 'country', 'state'] %}
+                  <div class="row mb-3">
+                    <label for="{{ field }}" class="col-sm-2 col-form-label">{{ field.replace('_', ' ').title() }}</label>
+                    <div class="col-sm-10">
+                      {{ address_form[field](class="form-control", id=field) }}
+                    </div>
+                  </div>
+                  {% endfor %}
+
+                  {{ address_form.latitude(class="form-control", type="hidden", id="latitude") }}
+                  {{ address_form.longitude(class="form-control", type="hidden", id="longitude") }}
+                  <button type="submit" class="btn btn-primary">Next</button>
+                </form>
+              </div>
+
+              <div class="tab-pane fade" id="photos" role="tabpanel" aria-labelledby="photos-tab">
+                <form id="photoForm" method="POST" action="{{ url_for('property_routes.manage_property_photos') }}"
+                  enctype="multipart/form-data" onsubmit="return submitPhotos(event)">
+                  {{ photo_form.hidden_tag() }}
+                  <div class="row mb-3">
+                    <label for="photos" class="col-sm-2 col-form-label">Photos</label>
+                    <div class="col-sm-10">
+                      <input type="file" class="form-control" id="photos" name="photos" multiple accept="image/*">
+                    </div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-sm-10">
+                      <div id="image-preview"></div>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-primary">
+                    {% if property %}
+                    Update Property
+                    {% else %}
+                    Add Property
+                    {% endif %}
+                  </button>
+                </form>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGQgUa65hjx3emcjnLwxMV4LUyeQBrDbk&libraries=places&callback=initMap"></script>
+
+<script>
+  function initAutocomplete() {
+    const autocomplete = new google.maps.places.Autocomplete(
+      document.getElementById('autocomplete'),
+      { types: ['geocode'] }
+    );
+
+    autocomplete.addListener('place_changed', function () {
+      const place = autocomplete.getPlace();
+      let city = '', state = '', country = '', suburb = '';
+      place.address_components.forEach(component => {
+        const types = component.types;
+        if (types.includes('locality')) city = component.long_name;
+        if (types.includes('administrative_area_level_1')) state = component.long_name;
+        if (types.includes('country')) country = component.long_name;
+        if (types.includes('sublocality_level_1')) suburb = component.long_name;
+      });
+      document.getElementById('city').value = city;
+      document.getElementById('state').value = state;
+      document.getElementById('country').value = country;
+      document.getElementById('suburb').value = suburb;
+      document.getElementById('latitude').value = place.geometry.location.lat();
+      document.getElementById('longitude').value = place.geometry.location.lng();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initAutocomplete);
+
+  document.getElementById('country').addEventListener('change', function() {
+    const countryValue = this.value;
+    // You can add logic here to filter states or other dependent fields based on selected country
+  });
+
+  document.getElementById('photos').addEventListener('change', function(event) {
+    const files = event.target.files;
+    const preview = document.getElementById('image-preview');
+    preview.innerHTML = '';
+    
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.width = '100px'; // Set width for the image preview
+        img.style.margin = '5px';
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+</script>
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<main id="main" class="main">
+
+  <div class="pagetitle">
+    <h1>Manage Property</h1>
+    <nav>
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Manage Property</li>
+      </ol>
+    </nav>
+  </div>
+
+  <section class="section">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">
+              {% if property %}
+              Edit Property
+              {% else %}
+              Add New Property
+              {% endif %}
+            </h5>
+
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="property-tab" data-bs-toggle="tab" data-bs-target="#property"
+                  type="button" role="tab" aria-controls="property" aria-selected="true">Property Details</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button"
+                  role="tab" aria-controls="address" aria-selected="false">Address</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button"
+                  role="tab" aria-controls="photos" aria-selected="false">Photos</button>
+              </li>
+            </ul>
+
+            <div class="tab-content" id="myTabContent">
+              
+              <div class="tab-pane fade show active" id="property" role="tabpanel" aria-labelledby="property-tab">
+                <form id="propertyForm" method="POST" action="{{ url_for('property_routes.manage_property') }}"
+                  onsubmit="return submitPropertyDetails(event)">
+                  {{ property_form.hidden_tag() }}
+
+                  <div class="form-floating mb-3">
+                    {{ property_form.title(class="form-control", id="floatingTitle") }}
+                    <label for="floatingTitle">Title</label>
+                  </div>
+
+                  <div class="form-floating mb-3">
+                    {{ property_form.description(class="form-control", id="floatingDescription") }}
+                    <label for="floatingDescription">Description</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.type(class="form-control", id="floatingType") }}
+                    <label for="floatingType">Type</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.bedroom(class="form-control", id="floatingBedroom") }}
+                    <label for="floatingBedroom">Bedrooms</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.sqm(class="form-control", id="floatingSqm") }}
+                    <label for="floatingSqm">Square Meters (m<sup>2</sup>)</label> 
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.bathroom(class="form-control", id="floatingBathroom") }}
+                    <label for="floatingBathroom">Bathroom</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.garage(class="form-control", id="floatingGarage") }}
+                    <label for="floatingGarage">Garages</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    {{ property_form.kitchen(class="form-control", id="floatingKitchen") }}
+                    <label for="floatingKitchen">Kitchens</label>
+                  </div>
+
+                  <div>
+                    <h3>Property Features</h3>
+                  </div>
+
+                  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+                    integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg=="
+                    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+                  <div class="form-check form-switch">
+                    {{ property_form.swimming_pool(class="form-check-input", id="swimming_pool", value=1) }}
+                    <label class="form-check-label" for="swimming_pool"><i class="fas fa-swimming-pool"></i> Swimming Pool</label>
+                  </div>
+
+                  <div class="form-check form-switch">
+                    {{ property_form.garden(class="form-check-input", id="garden", value=1) }}
+                    <label class="form-check-label" for="garden"><i class="fas fa-tree"></i> Garden</label>
+                  </div>
+
+                  <div class="form-check form-switch">
+                    {{ property_form.air_conditioning(class="form-check-input", id="air_conditioning", value=1) }}
+                    <label class="form-check-label" for="air_conditioning"><i class="fas fa-wind"></i> Air
+                      Conditioning</label>
+                  </div>
+
+                  <div class="form-check form-switch">
+                    {{ property_form.heating(class="form-check-input", id="heating", value=1) }}
+                    <label class="form-check-label" for="heating"><i class="fas fa-fire"></i> Heating</label>
+                  </div>
+
+                  <div class="form-check form-switch">
+                    {{ property_form.gym(class="form-check-input", id="gym", value=1) }}
+                    <label class="form-check-label" for="gym"><i class="fas fa-dumbbell"></i> Gym</label>
+                  </div>
+
+                  <div class="form-check form-switch">
+                    {{ property_form.laundry(class="form-check-input", id="laundry", value=1) }}
+                    <label class="form-check-label" for="laundry"><i class="fas fa-tshirt"></i> Laundry</label>
+                  </div>
+
+                  <div class="form-check form-switch">
+                    {{ property_form.fireplace(class="form-check-input", id="fireplace", value=1) }}
+                    <label class="form-check-label" for="fireplace"><i class="fas fa-fire-alt"></i> Fireplace</label>
+                  </div>
+
+                  <div class="form-check form-switch">
+                    {{ property_form.balcony(class="form-check-input", id="balcony", value=1) }}
+                    <label class="form-check-label" for="balcony"><i class="fas fa-building"></i> Balcony</label>
+                  </div>
+
+                  <div class="form-check form-switch">
+                    {{ property_form.pet_friendly(class="form-check-input", id="pet_friendly", value=1) }}
+                    <label class="form-check-label" for="pet_friendly"><i class="fas fa-paw"></i> Pet Friendly</label>
+                  </div>
+
+                  <div class="form-check form-switch">
+                    {{ property_form.bbq_area(class="form-check-input", id="bbq_area", value=1) }}
+                    <label class="form-check-label" for="bbq_area"><i class="fas fa-hamburger"></i> BBQ Area</label>
+                  </div>
+
+                  <div class="form-check form-switch">
+                    {{ property_form.jacuzzi(class="form-check-input", id="jacuzzi") }}
+                    <label class="form-check-label" for="jacuzzi"><i class="fas fa-hot-tub"></i> Jacuzzi</label>
+                  </div>
+
+                  <div class="form-check form-switch">
+                    {{ property_form.tennis_court(class="form-check-input", id="tennis_court") }}
+                    <label class="form-check-label" for="tennis_court"><i class="fas fa-table-tennis"></i> Tennis
+                      Court</label>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Next</button>
+                </form>
+              </div>
+
+              <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
+                <form id="addressForm" method="POST" action="{{ url_for('property_routes.manage_property') }}"
+                  onsubmit="return submitAddress(event)">
+                
+                  {{ address_form.hidden_tag() }}
+                  <div class="row mb-3">
+                    <label for="autocomplete" class="col-sm-2 col-form-label">Street Address</label>
+                    <div class="col-sm-10">
+                      <input type="text" id="autocomplete" name="autocomplete" class="form-control"
+                        placeholder="Enter street address" onFocus="geolocate()"
+                        value="{{ address_form.street_address.data }}" />
+                    </div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <label for="country" class="col-sm-2 col-form-label">Building/ Complex Name</label>
+                    <div class="col-sm-10">
+                      {{ address_form.building(class="form-control") }}
+                    </div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <label for="country" class="col-sm-2 col-form-label">Door Number</label>
+                    <div class="col-sm-10">
+                      {{ address_form.door_number(class="form-control") }}
+                    </div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <label for="suburb" class="col-sm-2 col-form-label">suburb</label>
+                    <div class="col-sm-10">
+                      {{ address_form.suburb(class="form-control") }}
+                    </div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <label for="city" class="col-sm-2 col-form-label">City</label>
+                    <div class="col-sm-10">
+                      {{ address_form.city(class="form-control") }}
+                    </div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <label for="country" class="col-sm-2 col-form-label">Country</label>
+                    <div class="col-sm-10">
+                      {{ address_form.country(class_='form-control', id='country') }}
+                    </div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <label for="state" class="col-sm-2 col-form-label">State</label>
+                    <div class="col-sm-10">
+                      {{ address_form.state(class_='form-control', id='state') }}
+                    </div>
+                  </div>
+
+                  {{ address_form.latitude(class="form-control", type="hidden", id="latitude") }}
+                  {{ address_form.longitude(class="form-control", type="hidden", id="longitude") }}
+                  <button type="submit" class="btn btn-primary">Next</button>
+                </form>
+              </div>
+
+              <div class="tab-pane fade" id="photos" role="tabpanel" aria-labelledby="photos-tab">
+                <form id="photoForm" method="POST" action="{{ url_for('property_routes.manage_property_photos') }}"
+                  enctype="multipart/form-data" onsubmit="return submitPhotos(event)">
+                  {{ photo_form.hidden_tag() }}
+                  <div id="photos-tab" class="tab-pane fade" role="tabpanel" aria-labelledby="photos-tab">
+                    <div class="row mb-3">
+                      <label for="photos" class="col-sm-2 col-form-label">Photos</label>
+                      <div class="col-sm-10">
+                        <input type="file" class="form-control" id="photos" name="photos" multiple accept="image/*">
+                      </div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <div class="col-sm-10">
+                        <div id="image-preview"></div>
+                      </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                      {% if property %}
+                      Update Property
+                      {% else %}
+                      Add Property
+                      {% endif %}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <div class="tab-pane fade" id="photos" role="tabpanel" aria-labelledby="photos-tab">
+                <form id="photoForm" method="POST" action="{{ url_for('property_routes.manage_property_photos') }}" enctype="multipart/form-data" onsubmit="return submitPhotos(event)">
+                  {{ photo_form.hidden_tag() }}
+                  <div id="photos-content"> <div class="row mb-3"> 
+                    </div>
+                </form>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCGQgUa65hjx3emcjnLwxMV4LUyeQBrDbk&libraries=places&callback=initMap">
+</script>
+
+<!-- <script>
+function initAutocomplete() {
+  // Create the autocomplete object, restricting the search to geographical location types.
+  const autocomplete = new google.maps.places.Autocomplete(
+    document.getElementById('autocomplete'),
+    { types: ['geocode'] }
+  );
+
+  // When the user selects an address from the dropdown, populate the hidden fields.
+  autocomplete.addListener('place_changed', function () {
+    const place = autocomplete.getPlace();
+
+    let city = '', state = '', country = '', suburb = '';
+    place.address_components.forEach(component => {
+      const types = component.types;
+      if (types.includes('locality')) {
+        city = component.long_name;
+      } else if (types.includes('administrative_area_level_1')) {
+        state = component.long_name;
+      } else if (types.includes('country')) {
+        country = component.long_name;
+      } else if (types.includes('sublocality_level_1')) {  // Extract suburb
+        suburb = component.long_name;
+      }
+    });
+
+    document.getElementById('city').value = city;
+    document.getElementById('state').value = state;
+    document.getElementById('country').value = country;
+    document.getElementById('suburb').value = suburb;  // Set suburb value
+    document.getElementById('latitude').value = place.geometry.location.lat();
+    document.getElementById('longitude').value = place.geometry.location.lng();
+  });
+}
+
+// Load the script once the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", initAutocomplete);
+
+document.addEventListener('DOMContentLoaded', function () {
+  const countrySelect = document.getElementById('country');
+  const stateSelect = document.getElementById('state');
+
+  countrySelect.addEventListener('change', function () {
+    const countryId = this.value;
+    fetch('/get_states/' + countryId)  // Replace with your actual route
+      .then(response => response.json())
+      .then(states => {
+        stateSelect.innerHTML = ''; // Clear existing options
+        states.forEach(state => {
+          const option = document.createElement('option');
+          option.value = state.id;
+          option.text = state.name;  // Assuming 'name' is the state name attribute
+          stateSelect.add(option);
+        });
+      });
+  });
+});
+
+const photoInput = document.getElementById('photos');
+const imagePreview = document.getElementById('image-preview');
+
+photoInput.addEventListener('change', function () {
+  imagePreview.innerHTML = ''; // Clear previous previews
+
+  for (let i = 0; i < this.files.length; i++) {
+    const file = this.files[i];
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.classList.add('preview-image');
+      img.style.maxWidth = '200px';
+      img.style.maxHeight = '150px';
+      img.style.marginRight = '10px';
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
+      deleteButton.style.marginLeft = '10px';
+      deleteButton.addEventListener('click', function () {
+        // Remove the image from the preview
+        img.remove();
+        deleteButton.remove();
+
+        // Also, remove the file from the input (if you want to prevent upload)
+        const dt = new DataTransfer()
+        const { files } = photoInput
+        for(let i = 0; i < files.length; i++) {
+          const file = files[i]
+          if (file !== this.files[i]) dt.items.add(file) // here you exclude the file. thus removing it.
+        }
+        photoInput.files = dt.files // Assign the updates list
+      });
+
+      const container = document.createElement('div');
+      container.appendChild(img);
+      container.appendChild(deleteButton);
+      imagePreview.appendChild(container);
+    }
+
+    reader.readAsDataURL(file);
+  }
+});
+
+function submitPropertyDetails(event) {
+  event.preventDefault(); // Prevent default form submission
+  // Add any necessary validation or data processing here
+  document.getElementById('propertyForm').submit();
+}
+
+function submitAddress(event) {
+  event.preventDefault(); // Prevent default form submission
+  // Add any necessary validation or data processing here
+  document.getElementById('addressForm').submit();
+}
+
+function submitPhotos(event) {
+  event.preventDefault(); // Prevent default form submission
+  // Add any necessary validation or data processing here
+  document.getElementById('photoForm').submit();
+}
+</script> -->
+<!-- <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places&callback=initMap">
+</script> -->
+
+<script>
+  function initAutocomplete() {
+    const autocomplete = new google.maps.places.Autocomplete(
+      document.getElementById('autocomplete'),
+      { types: ['geocode'] }
+    );
+
+    autocomplete.addListener('place_changed', function () {
+      const place = autocomplete.getPlace();
+      let city = '', state = '', country = '', suburb = '';
+      place.address_components.forEach(component => {
+        const types = component.types;
+        if (types.includes('locality')) city = component.long_name;
+        if (types.includes('administrative_area_level_1')) state = component.long_name;
+        if (types.includes('country')) country = component.long_name;
+        if (types.includes('sublocality_level_1')) suburb = component.long_name;
+      });
+      document.getElementById('city').value = city;
+      document.getElementById('state').value = state;
+      document.getElementById('country').value = country;
+      document.getElementById('suburb').value = suburb;
+      document.getElementById('latitude').value = place.geometry.location.lat();
+      document.getElementById('longitude').value = place.geometry.location.lng();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", initAutocomplete);
+
+  document.getElementById('country').addEventListener('change', function() {
+    const countryValue = this.value;
+    // You can add logic here to filter states or other dependent fields based on selected country
+  });
+
+  document.getElementById('photos').addEventListener('change', function(event) {
+    const files = event.target.files;
+    const preview = document.getElementById('image-preview');
+    preview.innerHTML = '';
+    
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.width = '100px'; // Set width for the image preview
+        img.style.margin = '5px';
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+</script>
+{% endblock %}

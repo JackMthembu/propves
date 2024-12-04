@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}{{ listing.property.title }}{% endblock %}
+
+{% block head %}
+    <meta name="description" content="{{ listing.property.description | truncate(150) }}">
+    <meta property="og:title" content="{{ listing.property.title }}">
+    <meta property="og:description" content="{{ listing.property.description | truncate(150) }}">
+    <meta property="og:image" content="{{ url_for('static', filename='uploads/property_photos/' ~ (thumbnail_photo | default('default_thumbnail.png')), _external=True) }}">
+    <meta name="description" content="{{ listing.property.description | truncate(150) }}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:type" content="website">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="listing-details">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 mb-4">
+                {% if all_photos|length > 0 %}
+                    <div id="carousel-{{ listing.id }}" class="carousel slide carousel-fade" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            {% for photo in all_photos %}
+                                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                    <img src="{{ url_for('static', filename='uploads/property_photos/' ~ photo) }}" class="d-block w-100 img-fluid" alt="Photo of {{ listing.property.title }}" loading="lazy">
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carousel-{{ listing.id }}" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carousel-{{ listing.id }}" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+
+                    <a href="#" data-toggle="modal" data-target="#photoAlbumModal" onclick="loadPhotoAlbum({{ listing.id }})">View Photo Album</a>
+
+                    <div class="modal fade" id="photoAlbumModal" tabindex="-1" role="dialog" aria-labelledby="photoAlbumModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                            <div id="photoAlbumModalContent" class="modal-content">
+                                </div> 
+                        </div>
+                    </div>
+
+                    <script>
+                    function loadPhotoAlbum(listingId) {
+                        // Fetch the photo album content using AJAX
+                        $('#photoAlbumModalContent').load('/photo_album/' + listingId); 
+                    }
+                    </script>
+
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/property_photos/default1.png') }}" alt="Default Listing Image" class="d-block w-100 img-fluid" loading="lazy">
+                {% endif %}
+            </div>
+        </div> 
+
+        <div class="row">
+            <div class="col-md-8"> 
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h1 class="display-5">{{ listing.property.title }}</h1>
+                        <p class="lead">{{ listing.property.description }}</p>
+
+                        <div class="property-details mt-4">
+                            <h2>Property Details</h2>
+                            <p>City: {{ city }}</p>
+                            <p>State: {{ state_id }}</p>
+                            <p>Country: {{ country_id }}</p>
+
+                            <h2>Features</h2>
+                            <ul>
+                                {% for feature, value in property_features.items() %}
+                                    {% if value %}
+                                        <li>{{ feature.capitalize() }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                        {% if show_schedule_button %}
+                            <button id="schedule-button" data-listing-id="{{ listing.id }}">Schedule a Viewing</button>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div> 
+
+            </div>
+        </div>
+
+        <div id="loading-spinner" class="spinner-border text-primary" role="status" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        document.getElementById('schedule-button').addEventListener('click', function() {
+            var listingId = this.dataset.listingId;
+            // Fetch availability data for the listing
+            fetch('/listing/' + listingId + '/get_availability')
+                .then(response => response.json())
+                .then(availability => {
+                    // Initialize and display the calendar with availability data
+                    // You'll need to use a JavaScript calendar library here (e.g., FullCalendar)
+                    // ...
+                });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="{{ url_for('static', filename='js/listing.js') }}" defer></script>
+{% endblock %}
