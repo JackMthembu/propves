@@ -780,6 +780,7 @@ def list_transactions():
                          today=datetime.today())
 
 @transaction_routes.route('/transactions/<int:transaction_id>', methods=['PUT'])
+@transaction_routes.route('/api/transactions/<int:transaction_id>', methods=['PUT'])  # Legacy support
 @login_required
 def update_transaction(transaction_id):
     try:
@@ -1061,6 +1062,7 @@ def create_transaction():
         return jsonify({'error': str(e)}), 400
 
 @transaction_routes.route('/transactions/<int:id>', methods=['PUT'])
+@transaction_routes.route('/api/transactions/<int:id>', methods=['PUT'])  # Legacy support
 def update_transaction_api(id):
     try:
         transaction = Transaction.query.get_or_404(id)
@@ -1091,6 +1093,7 @@ def update_transaction_api(id):
         return jsonify({'error': str(e)}), 400
 
 @transaction_routes.route('/transactions/<int:transaction_id>/update', methods=['PUT'])
+@transaction_routes.route('/api/transactions/<int:transaction_id>/update', methods=['PUT'])  # Legacy support
 def update_transaction_alt(transaction_id):
     try:
         transaction = Transaction.query.get_or_404(transaction_id)
@@ -1121,6 +1124,7 @@ def update_transaction_alt(transaction_id):
         return jsonify({'error': str(e)}), 400
 
 @transaction_routes.route('/transactions/<int:transaction_id>/split', methods=['POST'])
+@transaction_routes.route('/api/transactions/<int:transaction_id>/split', methods=['POST'])  # Legacy support
 @login_required
 def split_transaction(transaction_id):
     try:
@@ -1166,6 +1170,7 @@ def split_transaction(transaction_id):
         return jsonify({'error': str(e)}), 400
 
 @transaction_routes.route('/transactions/<int:transaction_id>/portfolio', methods=['POST'])
+@transaction_routes.route('/api/transactions/<int:transaction_id>/portfolio', methods=['POST'])  # Legacy support
 @login_required
 def mark_portfolio_transaction(transaction_id):
     try:
@@ -1293,6 +1298,7 @@ def save_transactions():
     return redirect(url_for('transaction_routes.list_transactions'))
 
 @transaction_routes.route('/update_transaction/<int:transaction_id>', methods=['POST'])
+@transaction_routes.route('/api/update_transaction/<int:transaction_id>', methods=['POST'])  # Legacy support
 @login_required
 def update_transaction_form(transaction_id):
     form = TransactionForm()
