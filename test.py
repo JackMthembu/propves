@@ -14,7 +14,7 @@ from models import Owner, Property
 from flask_wtf.csrf import generate_csrf
 import spacy
 from fuzzywuzzy import fuzz
-from forms import TransactionForm, TransactionFilterForm
+from forms import PortfolioTransactionsForm, TransactionForm, TransactionFilterForm
 from werkzeug.exceptions import BadRequest, Unauthorized, NotFound
 from sqlalchemy.exc import SQLAlchemyError
 import logging
@@ -27,6 +27,7 @@ from typing import Dict, List
 from flask_paginate import Pagination, get_page_args
 from sqlalchemy import desc
 from sqlalchemy.sql import extract, func
+from dataclasses import asdict
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ class TransactionError(Exception):
     pass
 
 # Create a blueprint for transaction routes
-transaction_routes = Blueprint('transaction_routes', __name__)
+transaction_routes = Blueprint('transaction_routes', __name__, url_prefix='/transactions')
 
 def classify_account(account_name):
     """
@@ -778,45 +779,67 @@ def list_transactions():
                          account_classifications=account_classifications,
                          today=datetime.today())
 
-@transaction_routes.route('/transaction/<int:transaction_id>/delete', methods=['POST'])
+@transaction_routes.route('/transactions/<int:transaction_id>', methods=['PUT'])
+@transaction_routes.route('/api/transactions/<int:transaction_id>', methods=['PUT'])  # Legacy support
 @login_required
-def delete_portfolio_transaction(transaction_id):
+def update_transaction(transaction_id):
     try:
-        # Get the transaction
+        data = request.json
         transaction = Transaction.query.get_or_404(transaction_id)
         
-        # Get owner associated with current user
-        owner = Owner.query.filter_by(user_id=current_user.id).first()
-        if not owner:
-            current_app.logger.warning(f"Owner not found for user {current_user.id}")
-            flash('Permission denied: Owner not found', 'error')
-            return redirect(url_for('transaction_routes.portfolio_transactions'))
+        # Verify user has permission to update this transaction
+        if transaction.owner_id != Owner.query.filter_by(user_id=current_user.id).first().id:
+            return jsonify({'error': 'Unauthorized'}), 403
 
-        # Permission check
-        if transaction.owner_id != owner.id:
-            current_app.logger.warning(f"Unauthorized deletion attempt for transaction {transaction_id}")
-            flash('Permission denied: Not authorized to delete this transaction', 'error')
-            return redirect(url_for('transaction_routes.portfolio_transactions'))
+        # Update transaction fields if provided
+        if 'transaction_date' in data:
+            try:
+                transaction.transaction_date = datetime.strptime(data['transaction_date'], '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({'error': 'Invalid date format'}), 400
 
-        # Check if transaction is reconciled
-        if transaction.is_reconciled:
-            current_app.logger.warning(f"Attempted to delete reconciled transaction {transaction_id}")
-            flash('Cannot delete reconciled transactions', 'error')
-            return redirect(url_for('transaction_routes.portfolio_transactions'))
+        if 'property_id' in data:
+            # Verify property exists and belongs to user
+            property_exists = Property.query.filter_by(
+                id=data['property_id'], 
+                owner_id=Owner.query.filter_by(user_id=current_user.id).first().id
+            ).first()
+            if not property_exists and data['property_id'] != 'portfolio':
+                return jsonify({'error': 'Invalid property'}), 400
+            transaction.property_id = data['property_id']
 
-        # Delete the transaction
-        db.session.delete(transaction)
+        # Update other fields
+        if 'account' in data:
+            transaction.account = data['account']
+        if 'description' in data:
+            transaction.description = data['description']
+        if 'debit_amount' in data:
+            transaction.debit_amount = float(data['debit_amount'])
+        if 'credit_amount' in data:
+            transaction.credit_amount = float(data['credit_amount'])
+        if 'is_reconciled' in data:
+            transaction.is_reconciled = bool(data['is_reconciled'])
+
         db.session.commit()
         
-        current_app.logger.info(f"Successfully deleted transaction {transaction_id}")
-        flash('Transaction deleted successfully', 'success')
-        
+        return jsonify({
+            'success': True,
+            'message': 'Transaction updated successfully',
+            'transaction': {
+                'id': transaction.id,
+                'transaction_date': transaction.transaction_date.strftime('%Y-%m-%d'),
+                'property_id': transaction.property_id,
+                'account': transaction.account,
+                'description': transaction.description,
+                'debit_amount': float(transaction.debit_amount) if transaction.debit_amount else 0.0,
+                'credit_amount': float(transaction.credit_amount) if transaction.credit_amount else 0.0,
+                'is_reconciled': transaction.is_reconciled
+            }
+        }), 200
+
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error deleting transaction {transaction_id}: {str(e)}")
-        flash(f'Failed to delete transaction: {str(e)}', 'error')
-    
-    return redirect(url_for('transaction_routes.portfolio_transactions'))
+        return jsonify({'error': str(e)}), 500
 
 @transaction_routes.route('/transactions/save_all', methods=['POST'])
 @login_required
@@ -853,40 +876,99 @@ def save_all_transactions():
 
 @transaction_routes.route('/portfolio/transactions', methods=['GET'])
 @login_required
-def get_portfolio_transactions():
+def portfolio_transactions():
     try:
-        # Get and validate pagination parameters
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         
-        # Get owner
         owner = Owner.query.filter_by(user_id=current_user.id).first()
         if not owner:
-            return jsonify({'error': 'Owner not found'}), 404
+            logger.error(f"Owner not found for user_id: {current_user.id}")
+            flash('Owner account not found', 'error')
+            return render_template('transaction/portfolio_transactions.html', 
+                                transactions=[],
+                                pagination={'pages': 0, 'page': 1},
+                                properties=[],
+                                form=TransactionForm(),
+                                summary={'total_income': 0, 'total_expenses': 0, 'net_cash_flow': 0},
+                                account_classifications={},
+                                today=datetime.today(),
+                                title='Portfolio Transactions',
+                                error='Owner account not found')
 
-        # Query transactions
-        query = Transaction.query.filter_by(
-            owner_id=owner.id,
-            is_reconciled=False
-        ).order_by(Transaction.transaction_date.desc())
+        total_income = db.session.query(func.sum(Transaction.credit_amount))\
+            .filter(Transaction.owner_id == owner.id).scalar() or 0
+        
+        total_expenses = db.session.query(func.sum(Transaction.debit_amount))\
+            .filter(Transaction.owner_id == owner.id).scalar() or 0
+        
+        net_cash_flow = total_income - total_expenses
 
-        # Paginate results
-        pagination = query.paginate(page=page, per_page=per_page)
+        summary = {
+            'total_income': total_income,
+            'total_expenses': total_expenses,
+            'net_cash_flow': net_cash_flow
+        }
+
+        account_classifications = {
+            "Assets": ["Cash", "Accounts Receivable", "Prepaid Expenses", "Real Estate Properties", "Equipment"],
+            "Liabilities": ["Accounts Payable", "Unearned Revenue", "Mortgage Payable", "Accrued Expenses"],
+            "Equity": ["Owner's Capital", "Retained Earnings", "Common Stock"],
+            "Revenue": ["Rental Income", "Parking Fees", "Maintenance Fee Income"],
+            "Expenses": ["Property Taxes", "Utilities", "Insurance", "Maintenance and Repairs"]
+        }
+
+        query = Transaction.query.filter_by(owner_id=owner.id)
         
-        # Return results
-        return jsonify({
-            'transactions': [t.to_dict() for t in pagination.items],
-            'total': pagination.total,
-            'pages': pagination.pages,
-            'current_page': page
-        }), 200
-        
-    except ValueError as e:
-        logger.error(f"Error in get_portfolio_transactions: {str(e)}")
-        return jsonify({'error': 'Invalid parameter value'}), 400
+        if not request.args.get('include_reconciled', '').lower() == 'true':
+            query = query.filter(Transaction.is_reconciled == False)
+
+        pagination = query.order_by(Transaction.transaction_date.desc()).paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+
+        properties = Property.query.filter_by(owner_id=owner.id).all()
+        properties_data = [{
+            'id': p.id,
+            'title': p.title,
+            'description': p.description,
+        } for p in properties]
+
+        form = TransactionForm()
+        property_choices = [
+            ('portfolio', 'Portfolio (Fixed Amount)'), 
+            ('all', 'All Properties (Split Equally)')
+        ] + [(str(p.id), p.title) for p in properties]
+        form.property_id.choices = property_choices
+
+        template_data = {
+            'transactions': pagination.items if pagination else [],
+            'pagination': pagination if pagination else {'pages': 0, 'page': 1},
+            'properties': properties_data,
+            'form': form,
+            'summary': summary,
+            'account_classifications': account_classifications,
+            'today': datetime.today(),
+            'title': 'Portfolio Transactions'
+        }
+
+        return render_template('transaction/portfolio_transactions.html', **template_data)
+
     except Exception as e:
-        logger.error(f"Unexpected error in get_portfolio_transactions: {str(e)}")
-        return jsonify({'error': 'Internal server error'}), 500
+        logger.error(f"Error in portfolio_transactions: {str(e)}")
+        flash('An error occurred while loading transactions', 'error')
+        return render_template('transaction/portfolio_transactions.html', 
+                            transactions=[],
+                            pagination={'pages': 0, 'page': 1},
+                            properties=[],
+                            form=TransactionForm(),
+                            summary={'total_income': 0, 'total_expenses': 0, 'net_cash_flow': 0},
+                            account_classifications={},
+                            today=datetime.today(),
+                            title='Portfolio Transactions',
+                            error='An error occurred while loading transactions')
 
 @transaction_routes.route('/portfolio/transactions/create', methods=['POST'])
 @login_required
@@ -951,7 +1033,7 @@ def create_portfolio_transaction():
     
     return jsonify({'status': 'error', 'message': 'Invalid form data', 'errors': form.errors}), 400
 
-@transaction_routes.route('/api/transactions', methods=['POST'])
+@transaction_routes.route('/transactions', methods=['POST'])
 @login_required
 def create_transaction():
     try:
@@ -979,7 +1061,8 @@ def create_transaction():
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@transaction_routes.route('/api/transactions/<int:id>', methods=['PUT'])
+@transaction_routes.route('/transactions/<int:id>', methods=['PUT'])
+@transaction_routes.route('/api/transactions/<int:id>', methods=['PUT'])  # Legacy support
 def update_transaction_api(id):
     try:
         transaction = Transaction.query.get_or_404(id)
@@ -1009,7 +1092,8 @@ def update_transaction_api(id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@transaction_routes.route('/api/transactions/<int:transaction_id>/update', methods=['PUT'])
+@transaction_routes.route('/transactions/<int:transaction_id>/update', methods=['PUT'])
+@transaction_routes.route('/api/transactions/<int:transaction_id>/update', methods=['PUT'])  # Legacy support
 def update_transaction_alt(transaction_id):
     try:
         transaction = Transaction.query.get_or_404(transaction_id)
@@ -1039,7 +1123,8 @@ def update_transaction_alt(transaction_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@transaction_routes.route('/api/transactions/<int:transaction_id>/split', methods=['POST'])
+@transaction_routes.route('/transactions/<int:transaction_id>/split', methods=['POST'])
+@transaction_routes.route('/api/transactions/<int:transaction_id>/split', methods=['POST'])  # Legacy support
 @login_required
 def split_transaction(transaction_id):
     try:
@@ -1084,7 +1169,8 @@ def split_transaction(transaction_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-@transaction_routes.route('/api/transactions/<int:transaction_id>/portfolio', methods=['POST'])
+@transaction_routes.route('/transactions/<int:transaction_id>/portfolio', methods=['POST'])
+@transaction_routes.route('/api/transactions/<int:transaction_id>/portfolio', methods=['POST'])  # Legacy support
 @login_required
 def mark_portfolio_transaction(transaction_id):
     try:
@@ -1211,9 +1297,10 @@ def save_transactions():
     
     return redirect(url_for('transaction_routes.list_transactions'))
 
-@transaction_routes.route('/transaction/<int:transaction_id>/update', methods=['POST'])
+@transaction_routes.route('/update_transaction/<int:transaction_id>', methods=['POST'])
+@transaction_routes.route('/api/update_transaction/<int:transaction_id>', methods=['POST'])  # Legacy support
 @login_required
-def update_transaction(transaction_id):
+def update_transaction_form(transaction_id):
     form = TransactionForm()
     
     if form.validate_on_submit():
@@ -1251,7 +1338,7 @@ def update_transaction(transaction_id):
     
     return redirect(url_for('transaction_routes.list_transactions'))
 
-@transaction_routes.route('/api/monthly-financials')
+@transaction_routes.route('/monthly-financials')
 @login_required
 def monthly_financials():
     try:
@@ -1323,7 +1410,7 @@ def monthly_financials():
         current_app.logger.error(f"Error in monthly_financials: {str(e)}")
         return jsonify({'error': 'Failed to fetch monthly financials'}), 500
 
-@transaction_routes.route('/api/financial-data/<period>')
+@transaction_routes.route('/financial-data/<period>')
 def get_financial_data(period):
     # Get current date
     today = datetime.now()
@@ -1387,7 +1474,7 @@ def get_financial_data(period):
         'period': period
     })
 
-@transaction_routes.route('/api/expenses-data')
+@transaction_routes.route('/expenses-data')
 @login_required
 def get_expenses_data():
     try:
@@ -1494,3 +1581,172 @@ def determine_expense_account(description: str) -> str:
         return 'Security'
     else:
         return 'Administrative Expenses'  # Default expense account
+    
+
+@transaction_routes.route('/transactions/portfolio/transactions/<int:transaction_id>/update', methods=['PUT'])
+@login_required
+def update_portfolio_transaction(transaction_id):
+    try:
+        # Get the transaction and verify ownership
+        transaction = Transaction.query.get_or_404(transaction_id)
+        owner = Owner.query.filter_by(user_id=current_user.id).first()
+        
+        if not owner or transaction.owner_id != owner.id:
+            return jsonify({'error': 'Unauthorized'}), 403
+            
+        # Get JSON data from request
+        data = request.get_json()
+        
+        # Update transaction fields
+        if 'transaction_date' in data:
+            transaction.transaction_date = datetime.strptime(data['transaction_date'], '%Y-%m-%d')
+        if 'property_id' in data:
+            transaction.property_id = None if data['property_id'] == 'portfolio' else int(data['property_id'])
+            transaction.is_portfolio = (data['property_id'] == 'portfolio')
+        if 'account' in data:
+            transaction.account = data['account']
+        if 'description' in data:
+            transaction.description = data['description']
+        if 'debit_amount' in data:
+            transaction.debit_amount = data['debit_amount']
+        if 'credit_amount' in data:
+            transaction.credit_amount = data['credit_amount']
+        if 'is_reconciled' in data:
+            transaction.is_reconciled = data['is_reconciled']
+            
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Transaction updated successfully',
+            'transaction': {
+                'id': transaction.id,
+                'transaction_date': transaction.transaction_date.strftime('%Y-%m-%d'),
+                'property_id': 'portfolio' if transaction.is_portfolio else transaction.property_id,
+                'account': transaction.account,
+                'description': transaction.description,
+                'debit_amount': float(transaction.debit_amount) if transaction.debit_amount else None,
+                'credit_amount': float(transaction.credit_amount) if transaction.credit_amount else None,
+                'is_reconciled': transaction.is_reconciled
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating transaction: {str(e)}")
+        return jsonify({'error': str(e)}), 400
+
+@transaction_routes.route('/save_portfolio_transactions', methods=['POST'])
+@login_required
+def save_portfolio_transactions():
+    try:
+        # Get owner associated with current user
+        owner = Owner.query.filter_by(user_id=current_user.id).first()
+        if not owner:
+            return jsonify({'error': 'Owner not found'}), 404
+
+        # Get JSON data from request
+        data = request.get_json()
+        if not data or 'transactions' not in data:
+            return jsonify({'error': 'No transaction data provided'}), 400
+
+        saved_transactions = []
+        properties = Property.query.filter_by(owner_id=owner.id).all()
+
+        for trans_data in data['transactions']:
+            if trans_data.get('property') == 'all':
+                # Handle split transactions
+                amount = trans_data.get('debit_amount') or trans_data.get('credit_amount')
+                split_amount = amount / len(properties)
+                
+                for property in properties:
+                    transaction = Transaction(
+                        transaction_date=datetime.strptime(trans_data['transaction_date'], '%Y-%m-%d'),
+                        property_id=property.id,
+                        account=trans_data['account'],
+                        description=f"{trans_data['description']} (Split)",
+                        debit_amount=split_amount if trans_data.get('debit_amount') else None,
+                        credit_amount=split_amount if trans_data.get('credit_amount') else None,
+                        is_reconciled=trans_data.get('is_reconciled', False),
+                        owner_id=owner.id
+                    )
+                    db.session.add(transaction)
+                    saved_transactions.append(transaction)
+            else:
+                # Handle single transaction
+                transaction = Transaction(
+                    transaction_date=datetime.strptime(trans_data['transaction_date'], '%Y-%m-%d'),
+                    property_id=None if trans_data['property'] == 'portfolio' else int(trans_data['property']),
+                    account=trans_data['account'],
+                    description=trans_data['description'],
+                    debit_amount=trans_data.get('debit_amount'),
+                    credit_amount=trans_data.get('credit_amount'),
+                    is_reconciled=trans_data.get('is_reconciled', False),
+                    owner_id=owner.id,
+                    is_portfolio=trans_data['property'] == 'portfolio'
+                )
+                db.session.add(transaction)
+                saved_transactions.append(transaction)
+
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Transactions saved successfully',
+            'transactions': [{
+                'id': t.id,
+                'transaction_date': t.transaction_date.strftime('%Y-%m-%d'),
+                'property_id': 'portfolio' if t.is_portfolio else t.property_id,
+                'account': t.account,
+                'description': t.description,
+                'debit_amount': float(t.debit_amount) if t.debit_amount else None,
+                'credit_amount': float(t.credit_amount) if t.credit_amount else None,
+                'is_reconciled': t.is_reconciled
+            } for t in saved_transactions]
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error saving transactions: {str(e)}")
+        return jsonify({'error': str(e)}), 400
+
+@transaction_routes.route('/portfolio_transactions')
+@login_required
+def portfolio_transactions():
+    form = PortfolioTransactionsForm()
+    
+    # Get the current user's owner record
+    owner = Owner.query.filter_by(user_id=current_user.id).first()
+    if not owner:
+        flash('Owner not found', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    # Fetch transactions for the current owner
+    transactions = Transaction.query.filter_by(owner_id=owner.id).all()
+
+    # Populate the form with existing transactions
+    for transaction in transactions:
+        form.transactions.append_entry({
+            'date': transaction.transaction_date,
+            'property': transaction.property_id or 'portfolio',
+            'account': transaction.account,
+            'description': transaction.description,
+            'debit': transaction.debit_amount,
+            'credit': transaction.credit_amount,
+            'reconciled': transaction.is_reconciled
+        })
+
+    # Fetch properties and account classifications for filters
+    properties = Property.query.filter_by(owner_id=owner.id).all()
+    account_classifications = ACCOUNT_CLASSIFICATIONS
+
+    return render_template(
+        'transaction/portfolio_transactions.html',
+        form=form,
+        properties=properties,
+        account_classifications=account_classifications,
+        transactions=transactions
+    )
+
+@transaction_routes.route('/portfolio-transactions')
+def portfolio_transactions():
+    transactions = Transaction.query.all()  # Fetch transactions from the database
+    return render_template('transaction/portfolio_transactions.html', transactions=transactions)

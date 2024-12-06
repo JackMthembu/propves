@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request, current_app
-from models import State, Country, Budget, Owner
+from models import State, Country, Budget, Owner, Transaction
 from flask_login import login_required, current_user
-from datetime import datetime
-from sqlalchemy import extract
+from datetime import datetime, timedelta
+from sqlalchemy import extract, func
 from extensions import db
 
 api_routes = Blueprint('api_routes', __name__)
@@ -79,3 +79,75 @@ def get_current_year_budget():
     except Exception as e:
         current_app.logger.error(f"Error in get_current_year_budget: {str(e)}")
         return jsonify({'error': 'Failed to retrieve budget data'}), 500
+
+@api_routes.route('/api/monthly-financials')
+@login_required
+def monthly_financials():
+    try:
+        # Get current year
+        current_year = datetime.now().year
+        
+        # Get owner's transactions
+        owner = Owner.query.filter_by(user_id=current_user.id).first()
+        if not owner:
+            return jsonify({'error': 'Owner not found'}), 404
+
+        # Base query for owner's transactions in current year
+        base_query = Transaction.query.filter(
+            Transaction.owner_id == owner.id,
+            extract('year', Transaction.transaction_date) == current_year
+        )
+
+        # Initialize monthly data
+        months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        monthly_income = [0] * 12
+        monthly_expenses = [0] * 12
+        monthly_cashflow = [0] * 12
+
+        # Get monthly income (Revenue transactions)
+        income_results = db.session.query(
+            extract('month', Transaction.transaction_date).label('month'),
+            func.sum(Transaction.amount).label('total')
+        ).filter(
+            Transaction.owner_id == owner.id,
+            Transaction.main_category == 'Revenue',
+            extract('year', Transaction.transaction_date) == current_year
+        ).group_by(
+            extract('month', Transaction.transaction_date)
+        ).all()
+
+        # Get monthly expenses (Expenses transactions)
+        expense_results = db.session.query(
+            extract('month', Transaction.transaction_date).label('month'),
+            func.sum(Transaction.amount).label('total')
+        ).filter(
+            Transaction.owner_id == owner.id,
+            Transaction.main_category == 'Expenses',
+            extract('year', Transaction.transaction_date) == current_year
+        ).group_by(
+            extract('month', Transaction.transaction_date)
+        ).all()
+
+        # Populate monthly arrays
+        for month, total in income_results:
+            monthly_income[int(month) - 1] = float(total or 0)
+
+        for month, total in expense_results:
+            monthly_expenses[int(month) - 1] = float(total or 0)
+
+        # Calculate monthly cashflow
+        for i in range(12):
+            monthly_cashflow[i] = monthly_income[i] - monthly_expenses[i]
+
+        data = {
+            'months': months,
+            'monthly_income': monthly_income,
+            'monthly_expenses': monthly_expenses,
+            'monthly_cashflow': monthly_cashflow
+        }
+
+        return jsonify(data)
+
+    except Exception as e:
+        current_app.logger.error(f"Error in monthly_financials: {str(e)}")
+        return jsonify({'error': 'Failed to fetch monthly financials'}), 500

@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
               name: 'Expenses',
               data: data.monthly_expenses
             }, {
-              name: 'Cash Flow',
+              name: 'Earnings',
               data: data.monthly_cashflow
             }]
           });
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
               name: 'Expenses',
               data: data.monthly_expenses
             }, {
-              name: 'Cash Flow',
+              name: 'Earnings',
               data: data.monthly_cashflow
             }],
             chart: {

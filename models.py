@@ -349,10 +349,43 @@ class SubscriptionUpdates(db.Model):
 
 class Transaction(db.Model):
     __tablename__ = 'transaction'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    transaction_date = db.Column(db.Date, nullable=False)
+    processed_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    last_modified = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    description = db.Column(db.String(200), nullable=True)
+    reference_number = db.Column(db.String(50), nullable=True)
+
+    main_category = db.Column(db.String(50), nullable=False)  # Assets, Liabilities, Income, etc.
+    sub_category = db.Column(db.String(50), nullable=True)   # Current Assets, Fixed Assets, etc.
+    account = db.Column(db.String(50), nullable=False)        # Specific account
+
+    # Document tracking
+    document = db.Column(db.String(255), nullable=True)
+    document_type = db.Column(db.String(10))
+    extracted_data = db.Column(JSONEncodedDict, nullable=True)
+    confidence_score = db.Column(db.Float, nullable=True)
+    
+    # Relationships
+    property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), nullable=True)
+    
+    # Status tracking
+    is_verified = db.Column(db.Boolean, default=False)
+    is_reconciled = db.Column(db.Boolean, default=False)
+    is_portfolio = db.Column(db.Boolean, default=False)
+
+
+
+class Records(db.Model):
+    __tablename__ = 'records'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     
     # Transaction details
-    transaction_date = db.Column(db.DateTime, nullable=False)
+    transaction_date = db.Column(db.Date, nullable=False)
     processed_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     last_modified = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     

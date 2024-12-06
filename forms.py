@@ -10,7 +10,7 @@ from wtforms_sqlalchemy.fields import QuerySelectField
 from models import Country, Currency, db
 from datetime import datetime, date, timedelta
 
-from app_constants import ACCOUNTS, MAIN_CATEGORIES, SUBCATEGORIES
+from app_constants import ACCOUNTS, MAIN_CATEGORIES, SUB_CATEGORIES
 
 class SearchForm(FlaskForm):
     location = StringField('Location', validators=[Optional()], render_kw={"placeholder": "Where to?"})
@@ -419,38 +419,37 @@ class AccountForm(FlaskForm):
 
 class TransactionForm(FlaskForm):
     transaction_date = DateField('Date', validators=[DataRequired()])
-    property_id = SelectField('Property', choices=[], coerce=int)  # Changed coerce to int
+    property_id = SelectField('Property', coerce=int, validators=[DataRequired()])
     account = SelectField('Account', choices=[], validators=[DataRequired()])
     description = StringField('Description', validators=[Optional()])
-    debit_amount = DecimalField('Debit', places=2, validators=[Optional()])
-    credit_amount = DecimalField('Credit', places=2, validators=[Optional()])
+    Aamount = DecimalField('Debit', places=2, validators=[Optional()])
     is_reconciled = BooleanField('Reconciled')
     submit = SubmitField('Submit')
 
-    def __init__(self, *args, **kwargs):
-        super(TransactionForm, self).__init__(*args, **kwargs)
-        # Populate account choices using the helper function
-        self.account.choices = get_account_choices()
+#     def __init__(self, *args, **kwargs):
+#         super(TransactionForm, self).__init__(*args, **kwargs)
+#         # Populate account choices using the helper function
+#         self.account.choices = get_account_choices()
 
-    def validate(self):
-        if not super(TransactionForm, self).validate():
-            return False
+#     def validate(self):
+#         if not super(TransactionForm, self).validate():
+#             return False
 
-        # Ensure either debit or credit is filled, but not both
-        if bool(self.debit_amount.data) == bool(self.credit_amount.data):
-            self.debit_amount.errors.append('Please enter either a debit or credit amount, not both')
-            return False
+#         # Ensure either debit or credit is filled, but not both
+#         if bool(self.debit_amount.data) == bool(self.credit_amount.data):
+#             self.debit_amount.errors.append('Please enter either a debit or credit amount, not both')
+#             return False
 
-        # Ensure amounts are positive
-        if self.debit_amount.data and self.debit_amount.data <= 0:
-            self.debit_amount.errors.append('Amount must be positive')
-            return False
+#         # Ensure amounts are positive
+#         if self.debit_amount.data and self.debit_amount.data <= 0:
+#             self.debit_amount.errors.append('Amount must be positive')
+#             return False
         
-        if self.credit_amount.data and self.credit_amount.data <= 0:
-            self.credit_amount.errors.append('Amount must be positive')
-            return False
+#         if self.credit_amount.data and self.credit_amount.data <= 0:
+#             self.credit_amount.errors.append('Amount must be positive')
+#             return False
 
-        return True
+#         return True
 
 class TransactionFilterForm(FlaskForm):
     """Form for filtering transactions"""

@@ -9,7 +9,6 @@ from werkzeug.utils import secure_filename
 from extensions import db
 from forms import ProfileForm, ProfilePicForm
 from models import Country, Property
-from app_constants import ACCOUNT_CLASSIFICATIONS
 
 main = Blueprint('main', __name__)
 

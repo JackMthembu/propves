@@ -1,150 +1,118 @@
-# Main categories
-MAIN_CATEGORIES = [
-    "Assets",
-    "Liabilities",
-    "Equity",
-    "Revenue",
-    "Expenses"
-]
-# Update SUBCATEGORIES to match
-SUBCATEGORIES = {
-    "Assets": [
-        "Current Assets",
-        "Non-Current Assets"
+MAIN_CATEGORIES = {
+    "Assets": ["Current Asset", "Non-Current Asset"],
+    "Liabilities": ["Current Liability", "Non-Current Liability"],
+    "Equity": ["Equity"],
+    "Revenue": ["Income"],
+    "Expenses": [
+        "Administrative Expenses",
+        "Utilities",
+        "Common Area Expenses",
+        "Financial Expenses",
+        "Marketing Expenses",
+        "Property Management Expenses",
     ],
-    "Liabilities": [
-        "Current Liabilities",
-        "Current Liabilities (Unearned Revenue)",
-        "Non-Current Liabilities (Long-Term Debt)"
+}
+
+SUB_CATEGORIES = {
+    "Current Asset": [
+        "Accounts Receivable",
+        "Prepaid Rent",
+        "Prepaid Insurance",
+    ],
+    "Non-Current Asset": [
+        "Property Plant and Equipment",
+        "Leasehold Improvements",
+    ],
+    "Current Liability": [
+        "Accounts Payable",
+        "Unearned Rent",
+        "Deferred Revenue",
+    ],
+    "Non-Current Liability": [
+        "Mortgage Payable",
+        "Long-Term Debt",
     ],
     "Equity": [
-        "Retained Earnings (Current Year)",
-        "Owner's Withdrawals",
         "Contributed Capital",
-        "Retained Earnings (Accumulated)"
+        "Retained Earnings (Current Year)",
+        "Retained Earnings (Accumulated)",
+        "Owner's Withdrawals",
     ],
-    "Revenue": [
+    "Income": [
         "Rental Income",
-        "Other Revenue"
+        "Other Revenue",
+        "Parking Fees",
+        "Pet Fees",
     ],
-    "Expenses": [
-        "Operating Expenses (Administrative)",
-        "Operating Expenses (Insurance)",
-        "Operating Expenses (Professional Fees)",
-        "Operating Expenses (Repairs and Maintenance)",
-        "Operating Expenses (Marketing)",
-        "Operating Expenses (Property Taxes)",
-        "Operating Expenses (Security)",
-        "Operating Expenses (Utilities)",
-        "Operating Expenses (Common Area)",
-        "Operating Expenses (Rent)",
-        "Financial Expenses",
-        "Interest Expenses"
-    ]
+    "Administrative Expenses": [
+        "Property Management Fees",
+        "Property Insurance",
+        "Pest Control",
+        "Signage",
+    ],
+    "Utilities": [
+        "Lighting",
+        "Waste Management",
+        "HVAC Maintenance",
+    ],
+    "Common Area Expenses": [
+        "Common Area Utilities",
+        "Landscaping",
+        "Snow Removal",
+    ],
+    "Financial Expenses": [
+        "Bank Fees",
+        "Credit Card Processing Fees",
+        "Loan Processing Fees",
+    ],
+    "Marketing Expenses": [
+        "Marketing and Advertising",
+    ],
+    "Property Management Expenses": [
+        "Elevator Maintenance",
+        "Lobby Maintenance",
+        "Parking Lot Maintenance",
+    ],
 }
 
 ACCOUNTS = {
-    # Asset Accounts
-    "CURRENT ASSETS": [
-        "Accounts Receivable",
-        "Prepaid Rent",
-        "Prepaid Insurance"
-    ],
-
-    "NON-CURRENT ASSETS": [
-        "Property, Plant, and Equipment",
-        "Leasehold Improvements"
-    ],
-
-    # Liability Accounts
-    "CURRENT LIABILITIES": [
-        "Mortgage Payable",
-        "Unearned Rent",
-        "Accounts Payable",
-        "Deferred Revenue",
-        "Long-Term Debt"
-    ],
-
-    "NON-CURRENT LIABILITIES": [
-        "Long-Term Debt"
-    ],
-
-    # Equity Accounts
-    "EQUITY": [
-        "Retained Earnings (Current Year)",
-        "Owner's Withdrawals",
-        "Contributed Capital",
-        "Retained Earnings (Accumulated)"
-    ],
-
-    # Revenue Accounts
-    "REVENUE": [
-        "Rental Income",
-        "Other Revenue"
-    ],
-
-    # Expense Accounts
-    "ADMINISTRATIVE EXPENSES": [
-        "Administrative Expenses",
-        "Property Management Fees"
-    ],
-
-    "INSURANCE": [
-        "Insurance",
-        "Property Insurance"
-    ],
-
-    "PROFESSIONAL FEES": [
-        "Legal and Professional Fees"
-    ],
-
-    "REPAIRS AND MAINTENANCE": [
-        "Maintenance and Repairs",
-        "Pest Control",
-        "HVAC Maintenance",
-        "Elevator Maintenance",
-        "Lobby Maintenance",
-        "Parking Lot Maintenance"
-    ],
-
-    "MARKETING EXPENSES": [
-        "Marketing and Advertising",
-        "Signage"
-    ],
-
-    "PROPERTY_TAXES": [
-        "Property Taxes",
-        "Property Tax Assessments"
-    ],
-
-    "SECURITY": [
-        "Security Services",
-        "Security Systems"
-    ],
-
-    "UTILITIES": [
-        "Utilities",
-        "Common Area Utilities",
-        "Lighting",
-        "Waste Management"
-    ],
-
-    "COMMON AREA EXPENSES": [
-        "Cleaning Services",
-        "Common Area Maintenance (CAM)",
-        "Landscaping",
-        "Snow Removal"
-    ],
-
-
-    "FINANCIAL EXPENSES": [
-        "Bank Fees",
-        "Credit Card Processing Fees",
-        "Late Payment Penalties",
-        "Loan Processing Fees",
-        "Mortgage Interest"
-    ]
+    "Accounts Receivable": ("Assets", "Current Asset"),
+    "Prepaid Rent": ("Assets", "Current Asset"),
+    "Prepaid Insurance": ("Assets", "Current Asset"),
+    "Property Plant and Equipment": ("Assets", "Non-Current Asset"),
+    "Leasehold Improvements": ("Assets", "Non-Current Asset"),
+    "Accounts Payable": ("Liabilities", "Current Liability"),
+    "Unearned Rent": ("Liabilities", "Current Liability"),
+    "Deferred Revenue": ("Liabilities", "Current Liability"),
+    "Mortgage Payable": ("Liabilities", "Non-Current Liability"),
+    "Long-Term Debt": ("Liabilities", "Non-Current Liability"),
+    "Contributed Capital": ("Equity", "Equity"),
+    "Retained Earnings (Current Year)": ("Equity", "Equity"),
+    "Retained Earnings (Accumulated)": ("Equity", "Equity"),
+    "Owner's Withdrawals": ("Equity", "Equity"),
+    "Rental Income": ("Revenue", "Income"),
+    "Other Revenue": ("Revenue", "Income"),
+    "Parking Fees": ("Revenue", "Income"),
+    "Pet Fees": ("Revenue", "Income"),
+    "Property Management Fees": ("Expenses", "Administrative Expenses"),
+    "Property Insurance": ("Expenses", "Administrative Expenses"),
+    "Pest Control": ("Expenses", "Administrative Expenses"),
+    "Signage": ("Expenses", "Administrative Expenses"),
+    "Lighting": ("Expenses", "Utilities"),
+    "Waste Management": ("Expenses", "Utilities"),
+    "HVAC Maintenance": ("Expenses", "Utilities"),
+    "Common Area Utilities": ("Expenses", "Common Area Expenses"),
+    "Landscaping": ("Expenses", "Common Area Expenses"),
+    "Snow Removal": ("Expenses", "Common Area Expenses"),
+    "Bank Fees": ("Expenses", "Financial Expenses"),
+    "Credit Card Processing Fees": ("Expenses", "Financial Expenses"),
+    "Loan Processing Fees": ("Expenses", "Financial Expenses"),
+    "Marketing and Advertising": ("Expenses", "Marketing Expenses"),
+    "Elevator Maintenance": ("Expenses", "Property Management Expenses"),
+    "Lobby Maintenance": ("Expenses", "Property Management Expenses"),
+    "Parking Lot Maintenance": ("Expenses", "Property Management Expenses"),
 }
+
 
 # Flat list of all accounts (if needed)
 ALL_ACCOUNTS = [
@@ -275,8 +243,7 @@ ACCOUNT_CLASSIFICATIONS = {
         'Storage Unit Rental',
         'Utility Reimbursements'
     ],
-    'Expenses': {
-        'Operating Expenses': [
+    'Expenses': [
             'Administrative Expenses',
             'Insurance',
             'Legal and Professional Fees',
@@ -286,9 +253,7 @@ ACCOUNT_CLASSIFICATIONS = {
             'Property Management Fees',
             'Property Taxes',
             'Security Services',
-            'Utilities'
-        ],
-        'Common Area Expenses': [
+            'Utilities',
             'Common Area Maintenance (CAM)',
             'Common Area Utilities',
             'Landscaping',
@@ -297,18 +262,14 @@ ACCOUNT_CLASSIFICATIONS = {
             'Parking Lot Maintenance',
             'Security Systems',
             'Signage',
-            'Snow Removal'
-        ],
-        'Occupancy Expenses': [
+            'Snow Removal',
             'Cleaning Services',
             'Elevator Maintenance',
             'Maintenance and Repairs',
             'Lease Payments',
             'Rent',
             'Tenant Improvements',
-            'Waste Management'
-        ],
-        'Financial Expenses': [
+            'Waste Management',
             'Bank Fees',
             'Credit Card Processing Fees',
             'Late Payment Penalties',
@@ -316,9 +277,18 @@ ACCOUNT_CLASSIFICATIONS = {
             'Mortgage Interest',
             'Property Insurance',
             'Property Tax Assessments'
-        ]
-    }
+    ]
 }
+
+class GAAPClassifier:
+    CLASSIFICATION = {
+        "Assets": "Debit",
+        "Liabilities": "Credit",
+        "Equity": "Credit",
+        "Revenue": "Credit",
+        "Expenses": "Debit",
+    }
+
 
 TRANSACTION_CATEGORIES = {
     'Assets': {
@@ -355,5 +325,17 @@ TRANSACTION_CATEGORIES = {
         }
     }
 }
+
+# Maping 
+FINANCIAL_EXPENSES_MAPPING = {
+    'Bank Fees': 'Financial Expenses',
+    'Credit Card Processing Fees': 'Financial Expenses',
+    'Late Payment Penalties': 'Financial Expenses',
+    'Loan Processing Fees': 'Financial Expenses',
+    'Mortgage Interest': 'Financial Expenses',
+    'Property Insurance': 'Financial Expenses',
+    'Property Tax Assessments': 'Financial Expenses'
+}
+
 
 
