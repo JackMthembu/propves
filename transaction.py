@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from datetime import datetime
 from models import db, Transaction, Property, Owner
 from forms import TransactionForm
-from app_constants import ACCOUNT_CLASSIFICATIONS, GAAPClassifier, ACCOUNTS, MAIN_CATEGORIES, SUB_CATEGORIES
+from app_constants import ACCOUNT_CLASSIFICATIONS, GAAPClassifier, ACCOUNTS
 
 # Create a blueprint for accounting routes if not already existing
 transaction_routes = Blueprint('transaction_routes', __name__, url_prefix='/transactions')

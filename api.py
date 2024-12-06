@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app
 from models import State, Country, Budget, Owner, Transaction
 from flask_login import login_required, current_user
-from datetime import datetime, timedelta
+from datetime import datetime
 from sqlalchemy import extract, func
 from extensions import db
 
@@ -151,3 +151,37 @@ def monthly_financials():
     except Exception as e:
         current_app.logger.error(f"Error in monthly_financials: {str(e)}")
         return jsonify({'error': 'Failed to fetch monthly financials'}), 500
+
+@api_routes.route('/api/expenses-data')
+@login_required
+def get_expenses_data():
+    # Get current month's start and end dates
+    today = datetime.now()
+    start_date = datetime(today.year, today.month, 1)
+    if today.month == 12:
+        end_date = datetime(today.year + 1, 1, 1)
+    else:
+        end_date = datetime(today.year, today.month + 1, 1)
+
+    # Query transactions grouped by sub_category for expenses
+    expenses = db.session.query(
+        Transaction.sub_category,
+        func.sum(Transaction.amount).label('total')
+    ).filter(
+        Transaction.transaction_date >= start_date,
+        Transaction.transaction_date < end_date,
+        Transaction.main_category == 'Expenses',
+        Transaction.owner_id == current_user.id
+    ).group_by(Transaction.sub_category).all()
+
+    # Get unique sub-categories from the expenses query
+    categories = [expense.sub_category for expense in expenses]
+    
+    # Create series with the corresponding totals
+    series = [float(expense.total) for expense in expenses]
+
+    return jsonify({
+        'labels': categories,
+        'series': series,
+        'currencySymbol': '$'
+    })

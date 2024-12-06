@@ -76,11 +76,10 @@
                                     {% for transaction in transactions %}
                                         <tr data-id="{{ transaction.id }}" class="editable-row">
                                             <td>
-                                                {% if transaction.transaction_date %}
-                                                    {{ transaction.transaction_date.strftime('%Y-%m-%d') }}
-                                                {% else %}
-                                                    N/A
-                                                {% endif %}
+                                                <input type="text" 
+                                                       class="form-control form-control-sm datepicker" 
+                                                       name="transaction_date_{{ transaction.id }}" 
+                                                       value="{% if transaction.transaction_date %}{{ transaction.transaction_date.strftime('%Y-%m-%d') }}{% endif %}">
                                             </td>
                                             <td class="editable" data-field="property">
                                                 <select class="form-select form-select-sm" name="property_id_{{ transaction.id }}">
