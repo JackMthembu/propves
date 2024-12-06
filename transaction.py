@@ -403,11 +403,11 @@ def transactions():
 def transactions_save():
     """Handle the creation and updating of transactions."""
     current_app.logger.info("=== Starting transaction save ===")
-    
+
     # Log the incoming request data
     current_app.logger.debug(f"Form data: {request.form.to_dict()}")
     current_app.logger.debug(f"Headers: {dict(request.headers)}")
-    
+
     try:
         # Get owner information
         owner = Owner.query.filter_by(user_id=current_user.id).first()
@@ -416,7 +416,6 @@ def transactions_save():
             flash('Owner not found', 'error')
             return redirect(url_for('transaction_routes.transactions'))
 
-        # Log the owner information
         current_app.logger.debug(f"Owner found: {owner.id}")
 
         action = request.form.get('action', '')
@@ -431,9 +430,9 @@ def transactions_save():
             # Handle new transaction creation
             processed_date_str = request.form.get('processed_date')
             current_app.logger.debug(f"Received processed date: {processed_date_str}")
-            
+
             try:
-                transaction_date = datetime.strptime(processed_date_str, '%Y-%m-%d').date()
+                transaction_date = datetime.strptime(processed_date_str, '%Y-%m-%d').date() if processed_date_str else None
                 current_app.logger.debug(f"Parsed transaction date: {transaction_date}")
             except (ValueError, TypeError) as e:
                 current_app.logger.error(f"Date parsing error: {str(e)}")
@@ -443,12 +442,12 @@ def transactions_save():
             property_id = request.form.get('new_property_id') or None
             if property_id:
                 property_id = int(property_id)
+
             account = request.form.get('new_account')
             description = request.form.get('new_description')
             amount = float(request.form.get('new_amount', 0))
             is_reconciled = 'new_is_reconciled' in request.form
 
-            # Log the parsed values
             current_app.logger.debug(f"""
                 Parsed transaction values:
                 - Date: {transaction_date}
@@ -478,13 +477,13 @@ def transactions_save():
                     main_category=main_category,
                     sub_category=sub_category
                 )
-                
+
                 db.session.add(new_transaction)
-                current_app.logger.debug("Added transaction to session")
-                
+                current_app.logger.debug("Added new transaction to session")
+
                 db.session.commit()
-                current_app.logger.debug("Successfully committed transaction")
-                
+                current_app.logger.debug("Successfully committed new transaction")
+
                 flash('New transaction added successfully', 'success')
 
             except ValueError as e:
@@ -492,46 +491,62 @@ def transactions_save():
                 flash(f'Error determining categories: {str(e)}', 'error')
                 db.session.rollback()
             except Exception as e:
-                current_app.logger.error(f"Unexpected error: {str(e)}")
+                current_app.logger.error(f"Unexpected error during save_new: {str(e)}", exc_info=True)
                 flash(f'An unexpected error occurred: {str(e)}', 'error')
                 db.session.rollback()
 
         elif action.startswith('save_'):
             # Handle existing transaction update
-            transaction_id = int(action.split('_')[1])
-            transaction = Transaction.query.get(transaction_id)
-            if not transaction or transaction.owner_id != owner.id:
-                flash('Transaction not found or access denied', 'error')
-                return redirect(url_for('transaction_routes.transactions'))
+            try:
+                transaction_id = int(action.split('_')[1])
+                transaction = Transaction.query.get(transaction_id)
+                if not transaction or transaction.owner_id != owner.id:
+                    flash('Transaction not found or access denied', 'error')
+                    return redirect(url_for('transaction_routes.transactions'))
 
-            transaction_date_str = request.form.get(f'transaction_date_{transaction_id}')
-            transaction.transaction_date = datetime.strptime(transaction_date_str, '%Y-%m-%d') if transaction_date_str else None
-            property_id = request.form.get(f'property_id_{transaction_id}') or None
-            if property_id:
-                property_id = int(property_id)
-            transaction.property_id = property_id
-            transaction.account = request.form.get(f'account_{transaction_id}')
-            transaction.description = request.form.get(f'description_{transaction_id}')
-            transaction.amount = float(request.form.get(f'amount_{transaction_id}', 0))
-            transaction.is_reconciled = f'is_reconciled_{transaction_id}' in request.form
-            transaction.last_modified = datetime.utcnow()
+                transaction_date_str = request.form.get(f'transaction_date_{transaction_id}')
+                if transaction_date_str:
+                    transaction.transaction_date = datetime.strptime(transaction_date_str, '%Y-%m-%d').date()
+                else:
+                    transaction.transaction_date = None
 
-            db.session.commit()
-            flash('Transaction updated successfully', 'success')
-            current_app.logger.debug(f"Updated transaction {transaction_id}: {transaction}")
+                property_id = request.form.get(f'property_id_{transaction_id}') or None
+                if property_id:
+                    property_id = int(property_id)
+                transaction.property_id = property_id
+                transaction.account = request.form.get(f'account_{transaction_id}')
+                transaction.description = request.form.get(f'description_{transaction_id}')
+                transaction.amount = float(request.form.get(f'amount_{transaction_id}', 0))
+                transaction.is_reconciled = f'is_reconciled_{transaction_id}' in request.form
+                transaction.last_modified = datetime.utcnow()
+
+                db.session.commit()
+                flash('Transaction updated successfully', 'success')
+                current_app.logger.debug(f"Updated transaction {transaction_id}: {transaction}")
+
+            except Exception as e:
+                current_app.logger.error(f"Error updating transaction: {str(e)}", exc_info=True)
+                db.session.rollback()
+                flash('Error updating transaction', 'error')
 
         elif action.startswith('delete_'):
             # Handle transaction deletion
-            transaction_id = int(action.split('_')[1])
-            transaction = Transaction.query.get(transaction_id)
-            if not transaction or transaction.owner_id != owner.id:
-                flash('Transaction not found or access denied', 'error')
-                return redirect(url_for('transaction_routes.transactions'))
+            try:
+                transaction_id = int(action.split('_')[1])
+                transaction = Transaction.query.get(transaction_id)
+                if not transaction or transaction.owner_id != owner.id:
+                    flash('Transaction not found or access denied', 'error')
+                    return redirect(url_for('transaction_routes.transactions'))
 
-            db.session.delete(transaction)
-            db.session.commit()
-            flash('Transaction deleted successfully', 'success')
-            current_app.logger.debug(f"Deleted transaction {transaction_id}")
+                db.session.delete(transaction)
+                db.session.commit()
+                flash('Transaction deleted successfully', 'success')
+                current_app.logger.debug(f"Deleted transaction {transaction_id}")
+
+            except Exception as e:
+                current_app.logger.error(f"Error deleting transaction: {str(e)}", exc_info=True)
+                db.session.rollback()
+                flash('Error deleting transaction', 'error')
 
         else:
             flash('Invalid action', 'error')
@@ -542,153 +557,37 @@ def transactions_save():
         flash(f'An error occurred: {str(e)}', 'error')
     finally:
         current_app.logger.info("=== Ending transaction save ===")
-    
+
     return redirect(url_for('transaction_routes.transactions'))
 
-@transaction_routes.route('/transactions/<int:transaction_id>', methods=['PUT'])
-@login_required
-def update_transaction(transaction_id):
-    """Update an existing transaction via AJAX or API call."""
-    try:
-        # Verify owner access
-        owner = Owner.query.filter_by(user_id=current_user.id).first()
-        if not owner:
-            return jsonify({'error': 'Owner not found'}), 404
-
-        transaction = Transaction.query.get(transaction_id)
-        if not transaction or transaction.owner_id != owner.id:
-            return jsonify({'error': 'Transaction not found or access denied'}), 403
-
-        data = request.get_json()
-
-        # Update transaction fields
-        if 'transaction_date' in data:
-            transaction_date_str = data['transaction_date']
-            transaction.transaction_date = datetime.strptime(transaction_date_str, '%Y-%m-%d') if transaction_date_str else None
-        if 'property_id' in data:
-            transaction.property_id = data['property_id']
-        if 'account' in data:
-            transaction.account = data['account']
-        if 'description' in data:
-            transaction.description = data['description']
-        if 'amount' in data:
-            transaction.amount = float(data['amount'])
-        if 'is_reconciled' in data:
-            transaction.is_reconciled = data['is_reconciled']
-
-        transaction.last_modified = datetime.utcnow()
-        db.session.commit()
-
-        return jsonify({
-            'message': 'Transaction updated successfully',
-            'transaction': {
-                'id': transaction.id,
-                'transaction_date': transaction.transaction_date.strftime('%Y-%m-%d') if transaction.transaction_date else None,
-                'property_id': transaction.property_id,
-                'account': transaction.account,
-                'description': transaction.description,
-                'amount': float(transaction.amount),
-                'is_reconciled': transaction.is_reconciled
-            }
-        })
-
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error in update_transaction: {str(e)}")
-        return jsonify({'error': 'Failed to update transaction'}), 500
-
-@transaction_routes.route('/transactions/<int:transaction_id>', methods=['DELETE'])
-@login_required
-def delete_transaction(transaction_id):
-    """Delete a transaction via AJAX or API call."""
-    try:
-        # Verify owner access
-        owner = Owner.query.filter_by(user_id=current_user.id).first()
-        if not owner:
-            return jsonify({'error': 'Owner not found'}), 404
-
-        transaction = Transaction.query.get(transaction_id)
-        if not transaction or transaction.owner_id != owner.id:
-            return jsonify({'error': 'Transaction not found or access denied'}), 403
-
-        db.session.delete(transaction)
-        db.session.commit()
-
-        return jsonify({'message': 'Transaction deleted successfully'})
-
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error in delete_transaction: {str(e)}")
-        return jsonify({'error': 'Failed to delete transaction'}), 500
 
 def save_transaction(transaction_data):
+    """Helper function to save a transaction to the database."""
     try:
         account = transaction_data.get('account')
-        main_category = get_main_category_from_sub_category(sub_category)
+        # Determine sub_category first
         sub_category = get_sub_category_from_account(account)
-        
-        # Log the transaction data for debugging
-        logger.debug(f"Saving transaction with account: {account}, main_category: {main_category}, sub_category: {sub_category}")
-        
-        # Now include both categories in your transaction insert
+        main_category = get_main_category_from_sub_category(sub_category)
+
+        current_app.logger.debug(
+            f"Saving transaction with account: {account}, main_category: {main_category}, sub_category: {sub_category}"
+        )
+
+        # Include both categories in your transaction insert
         transaction = Transaction(
             account=account,
             main_category=main_category,
             sub_category=sub_category,
-            # ... other fields ...
+            # ... other fields from transaction_data ...
         )
         db.session.add(transaction)
         db.session.commit()
-        
+
     except ValueError as e:
-        # Handle the case where we couldn't determine the categories
-        logger.error(f"Error determining categories: {str(e)}")
+        current_app.logger.error(f"Error determining categories: {str(e)}")
         db.session.rollback()
         raise
     except Exception as e:
-        # Log any other exceptions
-        logger.error(f"Error saving transaction: {str(e)}")
+        current_app.logger.error(f"Error saving transaction: {str(e)}", exc_info=True)
         db.session.rollback()
         raise
-
-@transaction_routes.route('/transactions/overview')
-@login_required
-def transactions_overview():
-    try:
-        # Use cached owner from g
-        owner = g.owner
-        if not owner:
-            flash('Owner account not found', 'error')
-            return redirect(url_for('main.index'))
-
-        # Get pagination parameters
-        page = request.args.get('page', 1, type=int)
-        per_page = 20
-
-        # Query transactions with owner filter
-        transactions_query = Transaction.query\
-            .filter_by(owner_id=owner.id)\
-            .order_by(Transaction.transaction_date.desc())
-
-        # Apply pagination
-        pagination = transactions_query.paginate(
-            page=page,
-            per_page=per_page,
-            error_out=False
-        )
-        
-        # Get properties using cached owner
-        properties = Property.query.filter_by(owner_id=owner.id).all()
-
-        return render_template(
-            'transaction/transactions.html',
-            transactions=pagination.items,
-            pagination=pagination,
-            properties=properties,
-            account_classifications=ACCOUNT_CLASSIFICATIONS
-        )
-
-    except Exception as e:
-        current_app.logger.error(f"Error in transactions_overview: {str(e)}")
-        flash('Error loading transactions', 'error')
-        return redirect(url_for('main.index'))
