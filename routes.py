@@ -1,21 +1,22 @@
 from ast import main
 import os
-from datetime import datetime, timedelta
-from collections import defaultdict
-
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, url_for
 from flask_login import current_user, login_required
-from werkzeug.utils import secure_filename
-from extensions import db
-from forms import ProfileForm, ProfilePicForm
-from models import Country, Property
+from models import Property, Listing, RentalAgreement
 
 main = Blueprint('main', __name__)
 
 @main.route('/')
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    listing = Listing.query.first()
+
+    if listing is None:
+        return render_template('dashboard.html', listing=None, rental_agreements=[])
+
+    rental_agreements = RentalAgreement.query.filter_by(listing_id=listing.id).all()
+
+    return render_template('dashboard.html', listing=listing, rental_agreements=rental_agreements)
 
 @main.route('/pricing-rtl')
 def pricing_rtl():

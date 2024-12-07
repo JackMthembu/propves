@@ -267,7 +267,7 @@ def property_list():
 
         except Exception as e:
             current_app.logger.error(f"Error processing property {property.id}: {str(e)}")
-            db.session.rollback()
+            db.session.rollback()  
             properties_data.append({
                 'property': property,
                 'thumbnail': property.thumbnail,
@@ -276,7 +276,7 @@ def property_list():
             })
 
     form = FlaskForm()  # Create an empty form for CSRF protection
-    return render_template('property/property_list.html', properties=properties_data, form=form)
+    return render_template('property/property_list.html', properties=properties_data, form=form, listing=None, rental_agreements=[])
 
 
 @property_routes.route('/property/edit_features/<property_id>', methods=['GET', 'POST'])
@@ -961,73 +961,3 @@ def create_listing(property_id):
         # Log form errors for debugging
         current_app.logger.error(f"Form errors: {form.errors}")
         return jsonify({"errors": form.errors}), 400
-
-# @property_routes.route('/property/toggle_listing_status/<int:listing_id>', methods=['POST'])
-# @login_required
-# def toggle_listing_status(listing_id):
-#     try:
-#         # Fetch the listing directly using listing_id
-#         listing = Listing.query.get_or_404(listing_id)
-#         property = listing.property  # Access the related Property object
-#         current_user_owner = Owner.query.filter_by(user_id=current_user.id).first()
-        
-#         if not current_user_owner or property.owner_id != current_user_owner.id:
-#             abort(403)
-
-#         # Get latest rental agreement
-#         latest_agreement = RentalAgreement.query.filter_by(
-#             property_id=property.id
-#         ).order_by(RentalAgreement.date_created.desc()).first()
-
-#         # Determine status based on conditions
-#         if latest_agreement and latest_agreement.status == 'accepted':
-#             listing.status = False  # Ensure listing is inactive if property is occupied
-#             db.session.commit()
-#         elif listing.status is True:
-#             if latest_agreement and latest_agreement.status == 'pending':
-#                 listing_status = 'Pending'  # Active enquiry
-#             else:
-#                 listing_status = 'Listed'  # Available to tenants
-#         else:
-#             listing_status = 'Unlisted'  # Not available
-
-#         # Redirect to the correct endpoint
-#         return redirect(url_for('property_routes.property_list'))
-
-#     except Exception as e:
-#         db.session.rollback()
-#         current_app.logger.error(f"Error toggling listing status: {str(e)}")
-#         flash('Error updating listing status.', 'danger')
-#         return redirect(url_for('property_routes.property_list'))
-
-# @property_routes.route('/property/edit_listing/<int:listing_id>', methods=['GET', 'POST'])
-# @login_required
-# def edit_listing(listing_id):
-#     """Edit the listing details for a property"""
-#     # Fetch the listing directly using listing_id
-#     listing = Listing.query.get_or_404(listing_id)
-#     property = listing.property  # Access the related Property object
-
-#     form = ListingForm(obj=listing)  # Prepopulate the form with existing listing data
-
-#     if form.validate_on_submit():
-#         try:
-#             # Update listing details
-#             listing.deposit = form.deposit.data
-#             listing.admin_fee = form.admin_fee.data
-#             listing.listing_type = form.listing_type.data
-#             listing.monthly_rental = form.monthly_rental.data
-#             listing.available_start_date = form.available_start_date.data
-#             listing.available_end_date = form.available_end_date.data
-#             listing.viewing_availibility_dates = form.viewing_availibility_dates.data
-            
-#             db.session.commit()  # Commit the changes
-#             flash('Listing updated successfully!', 'success')
-#             return redirect(url_for('property_routes.manage_property', property_id=property.id))
-
-#         except Exception as e:
-#             db.session.rollback()
-#             current_app.logger.error(f"Error updating listing: {str(e)}")
-#             flash('Error updating listing.', 'danger')
-
-#     return render_template('property/edit_listing.html', property=property, form=form)

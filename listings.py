@@ -74,7 +74,10 @@ def toggle_listing_status(listing_id):
 @listing_routes.route('/listing/edit_listing/<int:listing_id>', methods=['GET', 'POST'])
 @login_required
 def edit_listing(listing_id):
-    listing = Listing.query.get_or_404(listing_id)
+    listing = Listing.query.get(listing_id)
+    if listing is None:
+        return redirect(url_for('some_error_page'))
+
     property = listing.property
     form = ListingForm(obj=listing)
 
