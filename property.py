@@ -132,7 +132,10 @@ def edit_details(property_id):
         form = PropertyDetailsForm()
         
         if form.validate_on_submit():
+<<<<<<< HEAD
             print("Form data:", form.data)  # Log the form data
+=======
+>>>>>>> origin/main
             try:
                 # Get or create property
                 if property_id == 'new':
@@ -205,6 +208,7 @@ def edit_details(property_id):
 
 
 @property_routes.route('/property/property_list')
+<<<<<<< HEAD
 @property_routes.route('/properties')
 @login_required
 def property_list():
@@ -253,6 +257,22 @@ def property_list():
                 listing_status = 'Unlisted'  # No listing exists
 
             # Get thumbnail
+=======
+@login_required
+def property_list():
+    """Display list of all properties owned by the current user"""
+    properties = []
+    owner = Owner.query.filter_by(user_id=current_user.id).first()
+    if owner:
+        properties = Property.query.filter_by(owner_id=owner.id).all()
+
+    properties_data = []
+    for property in properties:
+        try:
+            listing = Listing.query.filter_by(property_id=property.id).first()
+            listing_status = 'Listed' if listing and listing.status else 'Unlisted'
+
+>>>>>>> origin/main
             thumbnail = None
             if property.photos:
                 thumbnail = next((photo for photo in property.photos if photo.is_thumbnail), 
@@ -262,6 +282,7 @@ def property_list():
                 'property': property,
                 'thumbnail': thumbnail,
                 'listing_status': listing_status,
+<<<<<<< HEAD
                 'listing': latest_listing
             })
 
@@ -278,6 +299,15 @@ def property_list():
     form = FlaskForm()  # Create an empty form for CSRF protection
     return render_template('property/property_list.html', properties=properties_data, form=form, listing=None, rental_agreements=[])
 
+=======
+                'listing': listing
+            })
+        except Exception as e:
+            current_app.logger.error(f"Error processing property {property.id}: {str(e)}")
+            continue
+
+    return render_template('property/property_list.html', properties=properties_data)
+>>>>>>> origin/main
 
 @property_routes.route('/property/edit_features/<property_id>', methods=['GET', 'POST'])
 @login_required
@@ -643,6 +673,84 @@ def check_api_key():
     key = current_app.config.get('GOOGLE_MAPS_API_KEY')
     return f"API Key exists: {bool(key)}, First few chars: {key[:10] if key else 'None'}"
 
+<<<<<<< HEAD
+=======
+@property_routes.route('/property/create_listing/<property_id>', methods=['GET', 'POST'])
+@login_required
+def create_listing(property_id):
+    property = Property.query.get_or_404(property_id)
+    current_user_owner = Owner.query.filter_by(user_id=current_user.id).first()
+    
+    # Check ownership
+    if not current_user_owner or property.owner_id != current_user_owner.id:
+        abort(403)
+    
+    # Get the most recent listing, regardless of status
+    latest_listing = Listing.query.filter_by(
+        property_id=property.id
+    ).order_by(Listing.date_created.desc()).first()
+    
+    form = ListingForm(obj=latest_listing)
+
+    if form.validate_on_submit():
+        try:
+            # Start database transaction
+            db.session.begin_nested()
+
+            # Validate dates
+            if form.available_end_date.data and form.available_start_date.data > form.available_end_date.data:
+                flash('Start date must be before end date.', 'danger')
+                return render_template('property/create_listing.html', 
+                                    form=form, 
+                                    property=property,
+                                    listing=latest_listing)
+
+            # Deactivate all existing listings for this property
+            Listing.query.filter_by(
+                property_id=property.id,
+                status=True
+            ).update({'status': False})
+            
+            # Create new listing record
+            new_listing = Listing(
+                deposit=form.deposit.data,
+                monthly_rental=form.monthly_rental.data,
+                available_start_date=form.available_start_date.data,
+                available_end_date=form.available_end_date.data,
+                status=True,
+                property_id=property.id
+            )
+            
+            db.session.add(new_listing)
+            
+            # Commit the transaction
+            db.session.commit()
+            
+            flash('Listing updated successfully!', 'success')
+            return redirect(url_for('property_routes.property_list'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error managing listing: {str(e)}")
+            flash('Error managing listing.', 'danger')
+            return render_template('property/create_listing.html', 
+                                form=form, 
+                                property=property,
+                                listing=latest_listing)
+    
+    # For GET requests, pre-populate with latest listing data
+    elif request.method == 'GET' and latest_listing:
+        form.deposit.data = latest_listing.deposit
+        form.monthly_rental.data = latest_listing.monthly_rental
+        form.available_start_date.data = latest_listing.available_start_date
+        form.available_end_date.data = latest_listing.available_end_date
+    
+    return render_template('property/create_listing.html', 
+                         form=form, 
+                         property=property,
+                         listing=latest_listing)
+
+>>>>>>> origin/main
 @property_routes.route('/property/set_thumbnail/<int:photo_id>', methods=['POST'])
 @login_required
 def set_thumbnail(photo_id):
@@ -707,6 +815,70 @@ def toggle_listing(property_id):
         
     return redirect(url_for('property_routes.property_list'))
 
+<<<<<<< HEAD
+=======
+@property_routes.route('/properties')
+@login_required
+def properties():
+    current_user_owner = Owner.query.filter_by(user_id=current_user.id).first()
+    if not current_user_owner:
+        abort(403)
+
+    properties_data = []
+    properties = Property.query.filter_by(owner_id=current_user_owner.id).all()
+
+    for property in properties:
+        try:
+            # Get latest listing
+            latest_listing = db.session.query(Listing).filter(
+                Listing.property_id == property.id
+            ).order_by(
+                Listing.date_created.desc()
+            ).first()
+
+            # Get latest rental agreement
+            latest_agreement = db.session.query(
+                RentalAgreement.status,
+                RentalAgreement.date_created
+            ).filter(
+                RentalAgreement.property_id == property.id
+            ).order_by(
+                RentalAgreement.date_created.desc()
+            ).first()
+
+            # Determine status based on conditions
+            if latest_agreement and latest_agreement.status == 'accepted':
+                listing_status = 'Occupied'
+                if latest_listing:
+                    latest_listing.status = False  # Ensure listing is inactive if property is occupied
+                    db.session.commit()
+            elif latest_agreement and latest_agreement.status == 'pending':
+                listing_status = 'Pending Application'
+            elif latest_listing and latest_listing.status is True:  # Explicitly check for True
+                listing_status = 'Listed'
+            else:
+                listing_status = 'Unlisted'
+
+            properties_data.append({
+                'property': property,
+                'thumbnail': property.thumbnail,
+                'listing_status': listing_status,
+                'listing': latest_listing
+            })
+
+        except Exception as e:
+            current_app.logger.error(f"Error processing property {property.id}: {str(e)}")
+            db.session.rollback()
+            properties_data.append({
+                'property': property,
+                'thumbnail': property.thumbnail,
+                'listing_status': 'Error',
+                'listing': None
+            })
+
+    return render_template('property/property_list.html', properties=properties_data)
+
+>>>>>>> origin/main
 @property_routes.route('/property/duplicate/<property_id>')
 @login_required
 def duplicate_property(property_id):
@@ -868,6 +1040,42 @@ def delete_property(property_id):
             'message': 'Failed to delete property'
         }), 400
 
+<<<<<<< HEAD
+=======
+@property_routes.route('/property/toggle_listing_status/<int:property_id>', methods=['POST'])
+@login_required
+def toggle_listing_status(property_id):
+    try:
+        property = Property.query.get_or_404(property_id)
+        current_user_owner = Owner.query.filter_by(user_id=current_user.id).first()
+        
+        if not current_user_owner or property.owner_id != current_user_owner.id:
+            abort(403)
+
+        # Get latest listing
+        latest_listing = Listing.query.filter_by(
+            property_id=property_id
+        ).order_by(Listing.date_created.desc()).first()
+
+        if latest_listing:
+            # Explicitly set to True or False
+            latest_listing.status = False if latest_listing.status is True else True
+            db.session.commit()
+            
+            status = "Listed" if latest_listing.status is True else "Unlisted"
+            flash(f'Property successfully {status}!', 'success')
+        else:
+            flash('No listing found for this property.', 'warning')
+
+        return redirect(url_for('property_routes.properties'))
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error toggling listing status: {str(e)}")
+        flash('Error updating listing status.', 'danger')
+        return redirect(url_for('property_routes.properties'))
+
+>>>>>>> origin/main
 @property_routes.route('/property/<int:property_id>/upload-photos', methods=['POST'])
 @login_required
 def upload_photos(property_id):
@@ -913,6 +1121,7 @@ def upload_photos(property_id):
         db.session.rollback()
         flash(f'Error uploading photos: {str(e)}', 'error')
     
+<<<<<<< HEAD
     return redirect(url_for('property_routes.edit_photos', property_id=property_id))
 
 
@@ -961,3 +1170,6 @@ def create_listing(property_id):
         # Log form errors for debugging
         current_app.logger.error(f"Form errors: {form.errors}")
         return jsonify({"errors": form.errors}), 400
+=======
+    return redirect(url_for('property_routes.edit_photos', property_id=property_id))
+>>>>>>> origin/main

@@ -271,6 +271,7 @@
   <script src="{{ url_for('static', filename='js/expenses_chart.js') }}"></script>
   <script src="{{ url_for('static', filename='js/budget_chart.js') }}"></script>
   <script src="{{ url_for('static', filename='js/polar_financial_chart.js') }}"></script>
+<<<<<<< HEAD
 
   <script>
       const availabilityData = {{ listing.viewing_availibility_dates | tojson if listing and listing.viewing_availibility_dates else '[]' }};
@@ -278,3 +279,6 @@
   <!-- Other content goes here -->
   {% endblock %}
   <!-- Other content -->
+=======
+{% endblock %}
+>>>>>>> origin/main

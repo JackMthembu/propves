@@ -11,8 +11,14 @@ from auth import auth_routes
 from extensions import db, mail, login_manager, migrate
 from subscriptions import subscription_routes
 from accounting import accounting_routes
+<<<<<<< HEAD
 from listings import listing_routes
 from wishlist import wishlist_routes
+=======
+# from listings import listing_routes
+from wishlist import wishlist_routes
+# from scheduling import calendar_routes
+>>>>>>> origin/main
 from flask_wtf.csrf import CSRFProtect
 from rentals import rental_routes
 from config import Config
@@ -112,7 +118,10 @@ def create_app():
     app.register_blueprint(accounting_routes, url_prefix='/accounting')
     app.register_blueprint(transaction_routes)
     app.register_blueprint(api_routes)
+<<<<<<< HEAD
     app.register_blueprint(listing_routes)
+=======
+>>>>>>> origin/main
 
     cache.init_app(app)
 
@@ -183,7 +192,11 @@ def create_app():
     print(app.url_map)
 
     # Set a secure secret key
+<<<<<<< HEAD
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+=======
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secure-secret-key')
+>>>>>>> origin/main
     
     # CSRF Configuration
     csrf.init_app(app)
@@ -218,6 +231,11 @@ def get_cached_user():
 if __name__ == '__main__':
     app = create_app()
     with app.app_context():
+<<<<<<< HEAD
         # app.run(debug=True)
         app.run(debug=True, port=5001)
+=======
+        app.run(debug=True)
+        # app.run(debug=True, port=5001)
+>>>>>>> origin/main
         # app.run(host='0.0.0.0', port=8000)

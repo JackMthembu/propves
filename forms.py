@@ -339,6 +339,7 @@ class SubscriptionUpdatesForm(FlaskForm):
     submit = SubmitField('Add Update')
 
 class ListingForm(FlaskForm):
+<<<<<<< HEAD
     deposit = DecimalField('Deposit', validators=[DataRequired()])
     admin_fee = DecimalField('Admin Fee', validators=[Optional()], default=0.00)
     monthly_rental = DecimalField('Monthly Rental', validators=[DataRequired()])
@@ -362,6 +363,32 @@ class ListingForm(FlaskForm):
         if not re.match(pattern, field.data):
             raise ValidationError('Invalid date format. Use YYYY-MM-DD HH:MM - HH:MM, YYYY-MM-DD HH:MM - HH:MM.')
 
+=======
+    deposit = DecimalField('Security Deposit', 
+                         validators=[Optional(), NumberRange(min=0)],
+                         places=2)
+    monthly_rental = DecimalField('Monthly Rental', 
+                               validators=[DataRequired(), NumberRange(min=0)],
+                               places=2)
+    admin_fee = DecimalField('Admin Fee', 
+                            validators=[Optional(), NumberRange(min=0)],
+                            places=2)
+    listing_type = SelectField('Listing Type', 
+                              choices=[('student accommodation', 'Student Accommodation'), 
+                                     ('room rental', 'Room Rental'),
+                                     ('shorty-term', 'Shorty-Term Rental'),
+                                     ('family rental', 'Family Rental'),
+                                     ('rental unit', 'Rental Unit'),
+                                     ('shared unit', 'Shared Rental Unit')],
+                              validators=[DataRequired()])
+    available_start_date = DateField('Available From', 
+                                  validators=[DataRequired()],
+                                  default=date.today)
+    available_end_date = DateField('Available Until', 
+                                validators=[Optional()])
+    submit = SubmitField('Create Listing')
+
+>>>>>>> origin/main
 class ExpensesOverviewForm(FlaskForm):
     start_date = DateField('Start Date', 
                           validators=[DataRequired()], 

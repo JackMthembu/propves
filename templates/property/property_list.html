@@ -58,11 +58,17 @@
                                         <td>{{ property_data.property.type }}</td>
                                         <td>{{ property_data.property.sqm }} sqft</td>
                                         <td>
+<<<<<<< HEAD
                                             {% if not property_data.listing_status %}
                                                 <span class="badge bg-secondary">Unlisted</span>
                                             {% elif property_data.listing_status == 'Occupied' %}
                                                 <span class="badge bg-success">{{ property_data.listing_status }}</span>
                                             {% elif property_data.listing_status == 'Pending' %}
+=======
+                                            {% if property_data.listing_status == 'Occupied' %}
+                                                <span class="badge bg-success">{{ property_data.listing_status }}</span>
+                                            {% elif property_data.listing_status == 'Pending Application' %}
+>>>>>>> origin/main
                                                 <span class="badge bg-warning">{{ property_data.listing_status }}</span>
                                             {% elif property_data.listing_status == 'Listed' %}
                                                 <span class="badge bg-primary">{{ property_data.listing_status }}</span>
@@ -83,7 +89,11 @@
                                                 </a>
                                                 {% if property_data.listing_status == 'Unlisted' %}
                                                     {% if property_data.property.title and property_data.property.type and property_data.property.sqm and property_data.property.bedroom and property_data.property.bathroom and property_data.thumbnail %}
+<<<<<<< HEAD
                                                         <a href="{{ url_for('listing_routes.create_listing', property_id=property_data.property.id) }}" 
+=======
+                                                        <a href="{{ url_for('property_routes.create_listing', property_id=property_data.property.id) }}" 
+>>>>>>> origin/main
                                                            class="btn btn-sm btn-success">
                                                             <i class="bi bi-house-add"></i> List Property
                                                         </a>
@@ -104,9 +114,14 @@
                                                     {% endif %}
                                                 {% else %}
                                                     <div class="listing-status">
+<<<<<<< HEAD
                                                         {% if property_data.listing_status != 'Occupied' and property_data.listing_status != 'Pending' %}
                                                             <form action="{{ url_for('listing_routes.toggle_listing_status', listing_id=property_data.property.id) }}" method="POST" class="d-inline">
                                                                 {{ form.csrf_token }}
+=======
+                                                        {% if property_data.listing_status != 'Occupied' and property_data.listing_status != 'Pending Application' %}
+                                                            <form action="{{ url_for('property_routes.toggle_listing_status', property_id=property_data.property.id) }}" method="POST" class="d-inline">
+>>>>>>> origin/main
                                                                 <button type="submit" class="btn btn-sm {% if property_data.listing_status == 'Listed' %}btn-warning{% else %}btn-success{% endif %}">
                                                                     {% if property_data.listing_status == 'Listed' %}
                                                                         Unlist Property
