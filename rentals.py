@@ -1,17 +1,9 @@
 from datetime import datetime, timedelta
-<<<<<<< HEAD
 from flask import Blueprint, app, current_app, make_response, render_template, request, redirect, url_for, flash, abort
 from flask_mail import Mail, Message
 from weasyprint import HTML
 from extensions import db
 from models import RentalAgreement, Property, Listing, User
-=======
-from flask import Blueprint, app, make_response, render_template, request, redirect, url_for, flash, abort
-from flask_mail import Mail, Message
-from weasyprint import HTML
-from extensions import db
-from models import RentalAgreement, Calendar, Property, Listing, User
->>>>>>> origin/main
 from flask_login import current_user, login_required
 
 mail = Mail()    
@@ -73,7 +65,6 @@ def create_agreement(listing_id):
             vat_inclusion=vat_inclusion,
             water=water,
             electricity=electricity,
-<<<<<<< HEAD
             daily_compounding=daily_compounding,
             status='pending'
         )
@@ -81,22 +72,6 @@ def create_agreement(listing_id):
         db.session.commit()
 
         send_lease_ready_email(tenant_id, agreement)
-=======
-            daily_compounding=daily_compounding
-        )
-        db.session.add(agreement)
-        
-
-        # Update calendar status to 'pending offer'
-        calendar_entries = Calendar.query.filter_by(property_id=property.id).all()
-        for entry in calendar_entries:
-            if entry.date_start <= date_start and entry.date_end >= date_end:
-                entry.status = 'pending offer'
-
-        db.session.commit()
-
-        send_lease_ready_email(tenant_id, agreement.id)
->>>>>>> origin/main
 
         # Generate lease and convert to PDF
         html = render_template('lease_template.html', agreement=agreement, property=property)
@@ -110,23 +85,15 @@ def create_agreement(listing_id):
     return render_template('create_agreement.html', listing=listing, property=property)
 
 
-<<<<<<< HEAD
 def send_lease_ready_email(tenant_id, agreement):
-=======
-def send_lease_ready_email(tenant_id, agreement_id):
->>>>>>> origin/main
     tenant = User.query.get(tenant_id)
     if not tenant:
         return  # Handle case where tenant is not found
 
-<<<<<<< HEAD
     agreement_url = url_for('rental_routes.rental_agreement', 
                           agreement_id=agreement.id, 
                           _external=True)
 
-=======
-    # Construct the email
->>>>>>> origin/main
     msg = Message(
         'Your Lease Agreement is Ready',
         sender='notifications@propves.com',
@@ -135,18 +102,10 @@ def send_lease_ready_email(tenant_id, agreement_id):
     msg.body = f"""
     Dear {tenant.first_name},
 
-<<<<<<< HEAD
     Your lease agreement for property ID {agreement.property_id} is ready for your acceptance.
 
     Please review and accept the agreement within 48 hours at:
     {agreement_url}
-=======
-    Your lease agreement for property ID {agreement_id.property_id} is ready for your acceptance.
-
-    Please review and accept the agreement within 48 hours.
-
-    [Link to accept the agreement]
->>>>>>> origin/main
 
     If you do not accept the agreement within 48 hours, it will be automatically rejected.
 
@@ -154,7 +113,6 @@ def send_lease_ready_email(tenant_id, agreement_id):
     The Rental Team
     """
 
-<<<<<<< HEAD
     mail.send(msg)
 
 @rental_routes.route('/rental_agreement/<int:agreement_id>', methods=['GET', 'POST'])
@@ -220,7 +178,3 @@ def rental_agreement(agreement_id):
                          agreement=agreement,
                          property=property,
                          listing=listing)
-=======
-    # Send the email
-    mail.send(msg)
->>>>>>> origin/main

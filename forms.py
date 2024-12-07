@@ -339,7 +339,6 @@ class SubscriptionUpdatesForm(FlaskForm):
     submit = SubmitField('Add Update')
 
 class ListingForm(FlaskForm):
-<<<<<<< HEAD
     deposit = DecimalField('Deposit', validators=[DataRequired()])
     admin_fee = DecimalField('Admin Fee', validators=[Optional()], default=0.00)
     monthly_rental = DecimalField('Monthly Rental', validators=[DataRequired()])
@@ -363,32 +362,6 @@ class ListingForm(FlaskForm):
         if not re.match(pattern, field.data):
             raise ValidationError('Invalid date format. Use YYYY-MM-DD HH:MM - HH:MM, YYYY-MM-DD HH:MM - HH:MM.')
 
-=======
-    deposit = DecimalField('Security Deposit', 
-                         validators=[Optional(), NumberRange(min=0)],
-                         places=2)
-    monthly_rental = DecimalField('Monthly Rental', 
-                               validators=[DataRequired(), NumberRange(min=0)],
-                               places=2)
-    admin_fee = DecimalField('Admin Fee', 
-                            validators=[Optional(), NumberRange(min=0)],
-                            places=2)
-    listing_type = SelectField('Listing Type', 
-                              choices=[('student accommodation', 'Student Accommodation'), 
-                                     ('room rental', 'Room Rental'),
-                                     ('shorty-term', 'Shorty-Term Rental'),
-                                     ('family rental', 'Family Rental'),
-                                     ('rental unit', 'Rental Unit'),
-                                     ('shared unit', 'Shared Rental Unit')],
-                              validators=[DataRequired()])
-    available_start_date = DateField('Available From', 
-                                  validators=[DataRequired()],
-                                  default=date.today)
-    available_end_date = DateField('Available Until', 
-                                validators=[Optional()])
-    submit = SubmitField('Create Listing')
-
->>>>>>> origin/main
 class ExpensesOverviewForm(FlaskForm):
     start_date = DateField('Start Date', 
                           validators=[DataRequired()], 
@@ -451,31 +424,6 @@ class TransactionForm(FlaskForm):
     Aamount = DecimalField('Debit', places=2, validators=[Optional()])
     is_reconciled = BooleanField('Reconciled')
     submit = SubmitField('Submit')
-
-#     def __init__(self, *args, **kwargs):
-#         super(TransactionForm, self).__init__(*args, **kwargs)
-#         # Populate account choices using the helper function
-#         self.account.choices = get_account_choices()
-
-#     def validate(self):
-#         if not super(TransactionForm, self).validate():
-#             return False
-
-#         # Ensure either debit or credit is filled, but not both
-#         if bool(self.debit_amount.data) == bool(self.credit_amount.data):
-#             self.debit_amount.errors.append('Please enter either a debit or credit amount, not both')
-#             return False
-
-#         # Ensure amounts are positive
-#         if self.debit_amount.data and self.debit_amount.data <= 0:
-#             self.debit_amount.errors.append('Amount must be positive')
-#             return False
-        
-#         if self.credit_amount.data and self.credit_amount.data <= 0:
-#             self.credit_amount.errors.append('Amount must be positive')
-#             return False
-
-#         return True
 
 class TransactionFilterForm(FlaskForm):
     """Form for filtering transactions"""

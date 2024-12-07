@@ -139,34 +139,11 @@ class User(UserMixin, db.Model):
             return self.currency.symbol
         return '$'  # Default fallback symbol
 
-<<<<<<< HEAD
-=======
-
-class Calendar(db.Model):
-    __tablename__ = 'calendar'
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
-    date_start = db.Column(db.Date, nullable=False)
-    date_end = db.Column(db.Date, nullable=False)
-    date = db.Column(db.Date, nullable=False)
-    status = db.Column(db.String(20), nullable=False)  # e.g., 'available', 'booked', 'maintenance'
-    notes = db.Column(db.Text)
-    
-    # Relationship
-    property = db.relationship('Property', back_populates='calendar')
-
-    def __repr__(self):
-        return f'<Calendar {self.property_id} - {self.date}>'
-
-
->>>>>>> origin/main
 class Listing(db.Model):
     __tablename__ = 'listing'
 
     id = db.Column(db.Integer, primary_key=True)
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
-<<<<<<< HEAD
     deposit = db.Column(db.Numeric, nullable=False)
     admin_fee = db.Column(db.Numeric, nullable=False)
     listing_type = db.Column(db.String, nullable=False)
@@ -175,15 +152,6 @@ class Listing(db.Model):
     available_end_date = db.Column(db.Date, nullable=True)
     viewing_availibility_dates = db.Column(db.String(2000), nullable=True)  # Increase length if needed
     status = db.Column(db.Integer, nullable=False)
-=======
-    deposit = db.Column(db.Numeric(10, 2))
-    admin_fee = db.Column(db.Numeric(10, 2))
-    listing_type = db.Column(db.String(20), nullable=False) # 'student accommodation', 'room rental', 'shorty-term rental', 'family rental'
-    monthly_rental = db.Column(db.Numeric(10, 2), nullable=False)
-    available_start_date = db.Column(db.Date, nullable=False)
-    available_end_date = db.Column(db.Date)
-    status = db.Column(db.Boolean, default=True)  # True = active, False = inactive
->>>>>>> origin/main
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -245,18 +213,6 @@ class Owner(db.Model):
     properties = db.relationship('Property', back_populates='property_owner')
     managers = db.relationship('Manager', back_populates='owner')
 
-<<<<<<< HEAD
-=======
-    @classmethod
-    def get_or_create(cls, user_id):
-        owner = cls.query.filter_by(user_id=user_id).first()
-        if not owner:
-            owner = cls(user_id=user_id)
-            db.session.add(owner)
-            db.session.commit()
-        return owner
-
->>>>>>> origin/main
     def __repr__(self):
         return f'<Owner {self.id} user_id={self.user_id}>'
 
@@ -395,7 +351,6 @@ class Transaction(db.Model):
     is_reconciled = db.Column(db.Boolean, default=False)
     is_portfolio = db.Column(db.Boolean, default=False)
 
-<<<<<<< HEAD
     def to_dict(self):
         return {
             'id': self.id,
@@ -418,9 +373,6 @@ class Transaction(db.Model):
             'is_reconciled': self.is_reconciled,
             'is_portfolio': self.is_portfolio
         }
-=======
-
->>>>>>> origin/main
 
 class Records(db.Model):
     __tablename__ = 'records'
@@ -593,13 +545,10 @@ class Property(db.Model):
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
 
-<<<<<<< HEAD
     #Lising
     status = db.Column(db.String(20), default=False) #unlisted #listed #occupied 
 
 
-=======
->>>>>>> origin/main
     # Foreign Keys
     state_id = db.Column(db.String(3), db.ForeignKey('state.id'), nullable=True)
     country_id = db.Column(db.String(2), db.ForeignKey('country.id'), nullable=True)
@@ -611,10 +560,6 @@ class Property(db.Model):
     currency = db.relationship('Currency', backref='properties')
     property_owner = db.relationship('Owner', back_populates='properties')
     rental_agreements = db.relationship('RentalAgreement', back_populates='property')
-<<<<<<< HEAD
-=======
-    calendar = db.relationship('Calendar', back_populates='property', lazy='dynamic')
->>>>>>> origin/main
     photos = db.relationship('Photo', 
                            back_populates='property',
                            cascade="all, delete-orphan")
@@ -655,7 +600,6 @@ class Property(db.Model):
             'type': self.type,
         }
 
-<<<<<<< HEAD
     @classmethod
     def autocomplete_search(cls, query, limit=10):
         """
@@ -673,8 +617,6 @@ class Property(db.Model):
             )
         ).limit(limit).all()
 
-=======
->>>>>>> origin/main
 class City(db.Model):
     __tablename__ = 'city'
 
@@ -710,7 +652,6 @@ class MonthlyExpenses(db.Model):
     other_city_charges = db.Column(db.Numeric(10, 2), default=0)
     
     # Relationships
-<<<<<<< HEAD
     property = db.relationship('Property', backref='monthly_expenses')
 
 class Enquiry(db.Model):
@@ -731,6 +672,3 @@ class Enquiry(db.Model):
 
     def __repr__(self):
         return f"<Enquiry {self.id} for Listing {self.listing_id}>"
-=======
-    property = db.relationship('Property', backref='monthly_expenses')
->>>>>>> origin/main
