@@ -183,7 +183,7 @@ def create_app():
     print(app.url_map)
 
     # Set a secure secret key
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secure-secret-key')
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
     
     # CSRF Configuration
     csrf.init_app(app)

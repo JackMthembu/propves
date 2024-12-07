@@ -144,15 +144,14 @@ class Listing(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
-    deposit = db.Column(db.Numeric(10, 2))
-    admin_fee = db.Column(db.Numeric(10, 2))
-    listing_type = db.Column(db.String(20), nullable=False) # 'student accommodation', 'room rental', 'shorty-term rental', 'family rental'
-    monthly_rental = db.Column(db.Numeric(10, 2), nullable=False)
+    deposit = db.Column(db.Numeric, nullable=False)
+    admin_fee = db.Column(db.Numeric, nullable=False)
+    listing_type = db.Column(db.String, nullable=False)
+    monthly_rental = db.Column(db.Numeric, nullable=False)
     available_start_date = db.Column(db.Date, nullable=False)
-    available_end_date = db.Column(db.Date)
-    viewing_availibility_date = db.Column(db.Date, nullable=False)
-    viewing_availibility = db.Column(db.String(20), nullable=False) #available #not_available
-    status = db.Column(db.Boolean, default=True)  # True = open, False = occupied
+    available_end_date = db.Column(db.Date, nullable=True)
+    viewing_availibility_dates = db.Column(db.String(2000), nullable=True)  # Increase length if needed
+    status = db.Column(db.Integer, nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -213,15 +212,6 @@ class Owner(db.Model):
     user = db.relationship('User', back_populates='owner')
     properties = db.relationship('Property', back_populates='property_owner')
     managers = db.relationship('Manager', back_populates='owner')
-
-    @classmethod
-    def get_or_create(cls, user_id):
-        owner = cls.query.filter_by(user_id=user_id).first()
-        if not owner:
-            owner = cls(user_id=user_id)
-            db.session.add(owner)
-            db.session.commit()
-        return owner
 
     def __repr__(self):
         return f'<Owner {self.id} user_id={self.user_id}>'

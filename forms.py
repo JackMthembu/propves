@@ -339,29 +339,28 @@ class SubscriptionUpdatesForm(FlaskForm):
     submit = SubmitField('Add Update')
 
 class ListingForm(FlaskForm):
-    deposit = DecimalField('Security Deposit', 
-                         validators=[Optional(), NumberRange(min=0)],
-                         places=2)
-    monthly_rental = DecimalField('Monthly Rental', 
-                               validators=[DataRequired(), NumberRange(min=0)],
-                               places=2)
-    admin_fee = DecimalField('Admin Fee', 
-                            validators=[Optional(), NumberRange(min=0)],
-                            places=2)
-    listing_type = SelectField('Listing Type', 
-                              choices=[('student accommodation', 'Student Accommodation'), 
-                                     ('room rental', 'Room Rental'),
-                                     ('shorty-term', 'Shorty-Term Rental'),
-                                     ('family rental', 'Family Rental'),
-                                     ('rental unit', 'Rental Unit'),
-                                     ('shared unit', 'Shared Rental Unit')],
-                              validators=[DataRequired()])
-    available_start_date = DateField('Available From', 
-                                  validators=[DataRequired()],
-                                  default=date.today)
-    available_end_date = DateField('Available Until', 
-                                validators=[Optional()])
+    deposit = DecimalField('Deposit', validators=[DataRequired()])
+    admin_fee = DecimalField('Admin Fee', validators=[Optional()], default=0.00)
+    monthly_rental = DecimalField('Monthly Rental', validators=[DataRequired()])
+    available_start_date = DateField('Available From', validators=[DataRequired()])
+    available_end_date = DateField('Available Until', validators=[Optional()])
+    viewing_availibility_dates = StringField('Viewing Availability Dates')
+    listing_type = SelectField('Viewing Availability', 
+                                     choices=[
+                                         ('student_accommodation', 'Student Accommodation'),
+                                         ('room', 'Room'),
+                                         ('family_home', 'Family Home'),
+                                         ('vaccaion_rental', 'Vaccation Rental')
+                                     ],
+                                     default='flexible',
+                                     validators=[DataRequired()])
     submit = SubmitField('Create Listing')
+
+    def validate_viewing_availibility_dates(form, field):
+        # Regex to match the expected format
+        pattern = r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2} - \d{2}:\d{2}(, \d{4}-\d{2}-\d{2} \d{2}:\d{2} - \d{2}:\d{2})*$'
+        if not re.match(pattern, field.data):
+            raise ValidationError('Invalid date format. Use YYYY-MM-DD HH:MM - HH:MM, YYYY-MM-DD HH:MM - HH:MM.')
 
 class ExpensesOverviewForm(FlaskForm):
     start_date = DateField('Start Date', 

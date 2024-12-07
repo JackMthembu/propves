@@ -32,7 +32,7 @@
                             {% endif %}
                         </h5>
 
-                        <form method="POST" class="needs-validation" novalidate>
+                        <form method="POST" action="{{ url_for('property_routes.create_listing', property_id=property.id) }}" class="needs-validation" novalidate>
                             {{ form.csrf_token }}
 
                             <div class="row mb-3">
@@ -96,6 +96,17 @@
                                 </div>
                             </div>
 
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">Viewing Availability</label>
+                                    <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#viewingAvailabilityModal">
+                                        <i class="bi bi-calendar-plus me-2"></i> Set Viewing Availability
+                                    </button>
+                                    <!-- Hidden inputs for form submission -->
+                                    <input type="hidden" id="viewing_availibility_dates" name="viewing_availibility_dates">
+                                </div>
+                            </div>
+
                             <div class="text-center">
                                 <button type="submit" class="btn btn-primary">
                                     {% if existing_listing %}
@@ -117,6 +128,26 @@
                     <div class="card-body">
                         <h5 class="card-title">Property Summary</h5>
                         <div class="property-summary">
+                            {% if property.photos %}
+                                {% for photo in property.photos %}
+                                    {% if photo.is_thumbnail %}
+                                        <div class="mb-3">
+                                            <img src="{{ url_for('static', filename=photo.file_path) }}" 
+                                                 alt="Property thumbnail"
+                                                 class="img-thumbnail"
+                                                 style="max-width: 200px; height: auto;"
+                                                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/property_photos/default.png') }}';">
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <div class="mb-3">
+                                    <img src="{{ url_for('static', filename='uploads/property_photos/default.png') }}" 
+                                         alt="Default property image"
+                                         class="img-thumbnail"
+                                         style="max-width: 200px; height: auto;">
+                                </div>
+                            {% endif %}
                             <p><strong>Title:</strong> {{ property.title }}</p>
                             <p><strong>Type:</strong> {{ property.type }}</p>
                             <p><strong>Address:</strong> {{ property.street_address }}, {{ property.city }}</p>
@@ -124,28 +155,198 @@
                             <p><strong>Bathrooms:</strong> {{ property.bathroom }}</p>
                             <p><strong>Square Feet:</strong> {{ property.sqm }}</p>
                         </div>
+                        <div class="viewing-times-summary">
+                            <h4 class="mt-3">Viewing Times</h4>
+                            <div id="viewing-times-display">
+                                <p class="text-muted">No viewing times set</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+    <!-- Viewing Availability Modal -->
+    <div class="modal fade" id="viewingAvailabilityModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Set Viewing Availability</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control" id="viewing_date">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="viewing_time" step="1800">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Duration</label>
+                                <select class="form-select" id="viewing_duration">
+                                    <option value="30">30 minutes</option>
+                                    <option value="60">1 hour</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="save_availability">
+                                <i class="bi bi-plus-circle me-2"></i>Add Time Slot
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">Added Time Slots</h6>
+                                    <div id="availability_list" class="list-group list-group-flush">
+                                        <!-- Time slots will be added here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </main>
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 <script>
-// Add date validation
-document.addEventListener('DOMContentLoaded', function() {
-    const startDate = document.getElementById('available_start_date');
-    const endDate = document.getElementById('available_end_date');
+    document.addEventListener('DOMContentLoaded', function() {
+    let availabilityDates = new Map();
+    const viewingDateInput = document.getElementById('viewing_date');
+    const viewingTimeInput = document.getElementById('viewing_time');
+    const availabilityList = document.getElementById('availability_list');
 
-    startDate.addEventListener('change', function() {
-        endDate.min = this.value;
+    // Add availability entry
+    document.getElementById('save_availability').addEventListener('click', function() {
+        const date = viewingDateInput.value;
+        const startTime = viewingTimeInput.value;
+        const duration = parseInt(document.getElementById('viewing_duration').value);
+        
+        if (!date || !startTime) {
+            alert('Please select both date and start time');
+            return;
+        }
+
+        // Calculate end time
+        const [hours, minutes] = startTime.split(':');
+        const startDateTime = new Date(date);
+        startDateTime.setHours(parseInt(hours), parseInt(minutes));
+        const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
+        const endTime = endDateTime.toTimeString().slice(0, 5);
+
+        const dateTimeKey = `${date}T${startTime}`;
+        availabilityDates.set(dateTimeKey, {
+            startTime: startTime,
+            endTime: endTime
+        });
+
+        updateAvailabilityList();
+        updateHiddenInputs();
     });
 
-    endDate.addEventListener('change', function() {
-        startDate.max = this.value;
-    });
+    function updateAvailabilityList() {
+        availabilityList.innerHTML = '';
+        const sortedDates = Array.from(availabilityDates.entries())
+            .sort((a, b) => new Date(a[0]) - new Date(b[0]));
+
+        sortedDates.forEach(([dateTime, details]) => {
+            const date = new Date(dateTime);
+            const entry = document.createElement('div');
+            entry.className = 'list-group-item';
+            entry.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold">${date.toLocaleDateString()}</div>
+                        <small class="text-muted">${details.startTime} - ${details.endTime}</small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeAvailability('${dateTime}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            availabilityList.appendChild(entry);
+        });
+
+        updateViewingTimesDisplay();
+    }
+
+    function updateHiddenInputs() {
+        // Create a comma-separated list of "YYYY-MM-DD HH:MM - HH:MM"
+        if (availabilityDates.size > 0) {
+            const sortedDates = Array.from(availabilityDates.entries())
+                .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+                .map(([dateTime, details]) => {
+                    const [date] = dateTime.split('T');
+                    return `${date} ${details.startTime} - ${details.endTime}`;
+                });
+
+            document.getElementById('viewing_availibility_dates').value = sortedDates.join(', ');
+        } else {
+            document.getElementById('viewing_availibility_dates').value = '';
+        }
+    }
+
+    const viewingTimesDisplay = document.getElementById('viewing-times-display');
+
+    function updateViewingTimesDisplay() {
+        if (availabilityDates.size === 0) {
+            viewingTimesDisplay.innerHTML = '<p class="text-muted">No viewing times set</p>';
+            return;
+        }
+
+        const sortedDates = Array.from(availabilityDates.entries())
+            .sort((a, b) => new Date(a[0]) - new Date(b[0]));
+
+        viewingTimesDisplay.innerHTML = sortedDates.map(([dateTime, details]) => {
+            const date = new Date(dateTime);
+            return `
+                <div class="viewing-time-entry mb-2">
+                    <div class="fw-bold">${date.toLocaleDateString()}</div>
+                    <small class="text-muted">${details.startTime} - ${details.endTime}</small>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.removeAvailability = function(dateTime) {
+        availabilityDates.delete(dateTime);
+        updateAvailabilityList();
+        updateHiddenInputs();
+        updateViewingTimesDisplay();
+    };
+
+    // Initialize hidden inputs
+    updateHiddenInputs();
 });
+
+</script>
+<script>
+    // Assuming you are using jQuery forAJAX
+    $('#createListingForm').on('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        $.ajax({
+            type: 'POST',
+            url: $(this).attr('action'),
+            data: $(this).serialize(),
+            success: function(response) {
+                // Show popup notice
+                alert(response.message); // Replace with your preferred popup method
+                // Optionally, redirect or update the UI
+            },
+            error: function(xhr) {
+                // Handle errors
+                alert('An error occurred: ' + xhr.responseText);
+            }
+        });
+    });
 </script>
 {% endblock %} 
