@@ -1,0 +1,76 @@
+<form id="expenseUploadForm" method="POST" action="{{ url_for('update_monthly_expenses', property_id=property.id) }}" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Monthly Expenses</h5>
+            
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.levies.label(class="form-label") }}
+                        {{ form.levies(class="form-control") }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.special_leveies.label(class="form-label") }}
+                        {{ form.special_leveies(class="form-control") }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.rates_taxes.label(class="form-label") }}
+                        {{ form.rates_taxes(class="form-control") }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.security.label(class="form-label") }}
+                        {{ form.security(class="form-control") }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.csos.label(class="form-label") }}
+                        {{ form.csos(class="form-control") }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        {{ form.other.label(class="form-label") }}
+                        {{ form.other(class="form-control") }}
+                    </div>
+                </div>
+                
+                <!-- File Upload Section -->
+                <div class="col-12">
+                    <div class="form-group">
+                        <label for="document" class="form-label">Supporting Document</label>
+                        <input type="file" id="document" name="document" 
+                               class="form-control" accept=".pdf" 
+                               data-browse="Upload PDF">
+                    </div>
+                </div>
+                
+                <!-- Results Container -->
+                <div id="expensesContainer" class="col-12 mt-4"></div>
+                
+                <div class="col-12">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Add this in the head section -->
+<meta name="property-id" content="{{ property.id }}">
+
+<!-- Remove the inline script and add this at the bottom of your template -->
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/monthly_expenses.js') }}"></script>
+{% endblock %}

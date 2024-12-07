@@ -1,0 +1,16 @@
+<h2>My Wishlist</h2>
+
+{% if listings %}
+    <ul>
+        {% for listing in listings %}
+            <li>
+                {{ listing.property.title }} - {{ listing.monthly_rental }}
+                <form method="POST" action="{{ url_for('wishlist_routes.remove_from_wishlist', listing_id=listing.id) }}">
+                    <button type="submit">Remove</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Your wishlist is empty.</p>
+{% endif %}

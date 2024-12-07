@@ -1,0 +1,24 @@
+
+Please enter the commit message for your changes. Lines starting
+with '#' will be ignored, and an empty message aborts the commit.
+
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes to be committed:
+	modified:   .DS_Store
+	modified:   listings.py
+	modified:   models.py
+	modified:   property.py
+	modified:   rentals.py
+	modified:   static/.DS_Store
+	modified:   static/css/property.css
+	modified:   templates/base.html
+	modified:   templates/property/create_listing.html
+	modified:   templates/property/edit_address.html
+	modified:   templates/property/edit_details.html
+	modified:   templates/property/edit_features.html
+	modified:   templates/property/edit_photos.html
+	modified:   templates/property/manage_property.html
+	modified:   templates/property/property_list.html
+
