@@ -11,9 +11,8 @@ from auth import auth_routes
 from extensions import db, mail, login_manager, migrate
 from subscriptions import subscription_routes
 from accounting import accounting_routes
-# from listings import listing_routes
+from listings import listing_routes
 from wishlist import wishlist_routes
-# from scheduling import calendar_routes
 from flask_wtf.csrf import CSRFProtect
 from rentals import rental_routes
 from config import Config
@@ -113,6 +112,7 @@ def create_app():
     app.register_blueprint(accounting_routes, url_prefix='/accounting')
     app.register_blueprint(transaction_routes)
     app.register_blueprint(api_routes)
+    app.register_blueprint(listing_routes)
 
     cache.init_app(app)
 

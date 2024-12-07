@@ -83,7 +83,7 @@
                                                 </a>
                                                 {% if property_data.listing_status == 'Unlisted' %}
                                                     {% if property_data.property.title and property_data.property.type and property_data.property.sqm and property_data.property.bedroom and property_data.property.bathroom and property_data.thumbnail %}
-                                                        <a href="{{ url_for('property_routes.create_listing', property_id=property_data.property.id) }}" 
+                                                        <a href="{{ url_for('listing_routes.create_listing', property_id=property_data.property.id) }}" 
                                                            class="btn btn-sm btn-success">
                                                             <i class="bi bi-house-add"></i> List Property
                                                         </a>
@@ -105,7 +105,7 @@
                                                 {% else %}
                                                     <div class="listing-status">
                                                         {% if property_data.listing_status != 'Occupied' and property_data.listing_status != 'Pending' %}
-                                                            <form action="{{ url_for('property_routes.toggle_listing_status', property_id=property_data.property.id) }}" method="POST" class="d-inline">
+                                                            <form action="{{ url_for('listing_routes.toggle_listing_status', listing_id=property_data.property.id) }}" method="POST" class="d-inline">
                                                                 {{ form.csrf_token }}
                                                                 <button type="submit" class="btn btn-sm {% if property_data.listing_status == 'Listed' %}btn-warning{% else %}btn-success{% endif %}">
                                                                     {% if property_data.listing_status == 'Listed' %}
