@@ -27,6 +27,7 @@ from flask_caching import Cache
 from transaction import transaction_routes
 from sqlalchemy.orm import Session
 from api import api_routes
+from messaging import messaging_bp
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -113,7 +114,7 @@ def create_app():
     app.register_blueprint(transaction_routes)
     app.register_blueprint(api_routes)
     app.register_blueprint(listing_routes)
-
+    app.register_blueprint(messaging_bp)
     cache.init_app(app)
 
     # Add user loader
@@ -218,6 +219,6 @@ def get_cached_user():
 if __name__ == '__main__':
     app = create_app()
     with app.app_context():
-        # app.run(debug=True)
-        app.run(debug=True, port=5001)
+        app.run(debug=True)
+        # app.run(debug=True, port=5001)
         # app.run(host='0.0.0.0', port=8000)

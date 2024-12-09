@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Scheduled Enquiries{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/property.css') }}">
+{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Update Rental Listing</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('property_routes.property_list') }}">My Properties</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('property_routes.manage_property', property_id=listing.property_id) }}">{{ listing.title }}</a></li>
+                <li class="breadcrumb-item active">Scheduled Enquiries</li>
+            </ol>
+        </nav>
+    </div>
+<h1>Scheduled Enquiries</h1>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Scheduled Enquiries</h5>
+                    <form method="get" action="{{ url_for('listing_routes.scheduled_enquiries') }}">
+                        <label for="scheduled_date">Scheduled Date:</label>
+                        <input type="date" name="scheduled_date" id="scheduled_date">
+                        
+                        <label for="listing_id">Listing ID:</label>
+                        <input type="text" name="listing_id" id="listing_id">
+                        
+                        <label for="outcomes">Outcomes:</label>
+                        <select name="outcomes" id="outcomes">
+                            <option value="">All</option>
+                            <option value="scheduled">Scheduled</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="accepted">Accepted</option>
+                        </select>
+                        
+                        <button type="submit">Filter</button>
+                    </form>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Listing ID</th>
+                                <th>User ID</th>
+                                <th>Owner ID</th>
+                                <th>Scheduled Date</th>
+                                <th>Created Date</th>
+                                <th>Outcomes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enquiry in enquiries %}
+                            <tr>
+                                <td>{{ enquiry.id }}</td>
+                                <td>{{ enquiry.listing_id }}</td>
+                                <td>{{ enquiry.user_id }}</td>
+                                <td>{{ enquiry.owner_id }}</td>
+                                <td>{{ enquiry.scheduled_date }}</td>
+                                <td>{{ enquiry.created_date }}</td>
+                                <td>{{ enquiry.outcomes }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %} 

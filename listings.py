@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app, jsonify
 from flask_login import login_required, current_user
-from models import Property, Owner, Listing, RentalAgreement
+from models import Enquiry, Property, Owner, Listing, RentalAgreement
 from extensions import db
 from forms import ListingForm
 from datetime import datetime
@@ -101,3 +101,29 @@ def edit_listing(listing_id):
             flash('Error updating listing.', 'danger')
 
     return render_template('listing/edit_listing.html', listing=listing, property=property, form=form)
+
+@listing_routes.route('/listing/scheduled_enquiries', methods=['GET'])
+def scheduled_enquiries():
+    # Get filter parameters from the request
+    scheduled_date = request.args.get('scheduled_date')
+    listing_id = request.args.get('listing_id')
+    outcomes = request.args.get('outcomes')
+
+    # Build the query
+    query = Enquiry.query.filter(Enquiry.scheduled_date >= datetime.utcnow())
+
+    if scheduled_date:
+        query = query.filter(Enquiry.scheduled_date == scheduled_date)
+    if listing_id:
+        query = query.filter(Enquiry.listing_id == listing_id)
+    if outcomes:
+        query = query.filter(Enquiry.outcomes == outcomes)
+
+    enquiries = query.all()
+
+    # Fetch the listing if listing_id is provided
+    listing = None
+    if listing_id:
+        listing = Listing.query.get(listing_id)
+
+    return render_template('listing/scheduled_enquiries.html', enquiries=enquiries, listing=listing)

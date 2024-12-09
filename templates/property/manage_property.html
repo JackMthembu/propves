@@ -1,8 +1,5 @@
 {% extends 'base.html' %}
-<<<<<<< HEAD
 {% block title %}Manage Property{% endblock %}
-=======
->>>>>>> origin/main
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/property.css') }}">
@@ -340,7 +337,6 @@
                 <h5 class="card-title">Settings</h5>
                 <div class="settings-options">
                   <!-- Listing Management -->
-<<<<<<< HEAD
                   {% if property_status == 'Listed' %}
                     <a href="{{ url_for('listing_routes.edit_listing', listing_id=listing.id) }}" 
                        class="btn btn-info w-100 mb-2">
@@ -348,8 +344,14 @@
                     </a>
                     <form method="POST" 
                           action="{{ url_for('listing_routes.toggle_listing_status', listing_id=listing.id) }}" 
-=======
-                  {% if property_status == 'Unlisted' %}
+                          class="mb-2">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-danger w-100"
+                              onclick="return confirm('Are you sure you want to unlist this property?');">
+                        <i class="bi bi-house-dash"></i> Unlist Property
+                      </button>
+                    </form>
+                  {% elif property_status == 'Unlisted' %}
                     {% if property and property.title and property.type and property.sqm and property.bedroom and property.bathroom and property.thumbnail %}
                       <a href="{{ url_for('property_routes.create_listing', property_id=property.id) }}" 
                          class="btn btn-success w-100 mb-2">
@@ -370,50 +372,18 @@
                         <i class="bi bi-exclamation-triangle"></i> Complete Details to List
                       </button>
                     {% endif %}
-                  {% else %}
-                    <form method="POST" 
-                          action="{{ url_for('property_routes.toggle_listing', property_id=property.id) }}" 
->>>>>>> origin/main
-                          class="mb-2">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button type="submit" class="btn btn-danger w-100"
-                              onclick="return confirm('Are you sure you want to unlist this property?');">
-                        <i class="bi bi-house-dash"></i> Unlist Property
-                      </button>
-                    </form>
-<<<<<<< HEAD
-                  {% elif property_status == 'Unlisted' %}
-                    <form method="POST" 
-                          action="{{ url_for('listing_routes.toggle_listing_status', listing_id=listing.id) }}" 
-                          class="mb-2">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button type="submit" class="btn btn-success w-100"
-                              onclick="return confirm('Are you sure you want to list this property?');">
-                        <i class="bi bi-house-add"></i> List Property
-                      </button>
-                    </form>
-=======
->>>>>>> origin/main
                   {% endif %}
 
                   <!-- Rental Agreement Settings -->
                   {% if property_status in ['Listed', 'Pending Application'] %}
-<<<<<<< HEAD
-                    <a href="{{ url_for('property_routes.edit_listing', listing_id=property.id) }}" 
-=======
                     <a href="{{ url_for('property_routes.manage_listing', property_id=property.id) }}" 
->>>>>>> origin/main
                        class="btn btn-info w-100 mb-2">
                       <i class="bi bi-gear"></i> Manage Listing Settings
                     </a>
                   {% endif %}
 
                   {% if property_status == 'Occupied' %}
-<<<<<<< HEAD
-                    <a href="{{ url_for('listing_routes.edit_listing', listing_id=listing.id) }} 
-=======
                     <a href="{{ url_for('property_routes.manage_rental', property_id=property.id) }}" 
->>>>>>> origin/main
                        class="btn btn-info w-100 mb-2">
                       <i class="bi bi-file-text"></i> Manage Rental Agreement
                     </a>
@@ -425,10 +395,7 @@
                      onclick="return confirm('Do you want to create a duplicate of this property?');">
                     <i class="bi bi-files"></i> Duplicate Property
                   </a>
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/main
                   <!-- Delete Property Button -->
                   {% if property_status == 'Occupied' %}
                     <button class="btn btn-outline-danger w-100" disabled
@@ -445,42 +412,6 @@
                       <i class="bi bi-trash"></i> Delete Property
                     </button>
                   {% endif %}
-<<<<<<< HEAD
-                  <a href="{{ url_for('listing_routes.edit_listing', listing_id=property.id) }}" 
-                     class="btn btn-info w-100 mb-2">
-                    <i class="bi bi-pencil"></i> Edit Listing
-                  </a>
-                  <form method="POST" 
-                        action="{{ url_for('listing_routes.toggle_listing_status', listing_id=listing.id) }}" 
-                        class="mb-2">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-danger w-100"
-                            onclick="return confirm('Are you sure you want to unlist this property?');">
-                      <i class="bi bi-house-dash"></i> Unlist Property
-                    </button>
-                  </form>
-
-                  <form method="POST" 
-                        action="{{ url_for('listing_routes.toggle_listing_status', listing_id=listing.id) }}" 
-                        class="mb-2">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-success w-100"
-                            onclick="return confirm('Are you sure you want to list this property?');">
-                      <i class="bi bi-house-add"></i> List Property
-                    </button>
-                  </form>
-
-                  <a href="{{ url_for('listing_routes.edit_listing', listing_id=listing.id) }}" 
-                     class="btn btn-info w-100 mb-2">
-                    <i class="bi bi-gear"></i> Manage Listing Settings
-                  </a>
-
-                  <a href="{{ url_for('listing_routes.edit_listing', listing_id=listing.id) }}" 
-                     class="btn btn-info w-100 mb-2">
-                    <i class="bi bi-file-text"></i> Manage Rental Agreement
-                  </a>
-=======
->>>>>>> origin/main
                 </div>
               </div>
             </div>

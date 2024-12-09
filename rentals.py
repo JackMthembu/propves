@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, app, current_app, make_response, render_template, request, redirect, url_for, flash, abort
+from flask import Blueprint, current_app, make_response, render_template, request, redirect, url_for, flash, abort
 from flask_mail import Mail, Message
 from weasyprint import HTML
 from extensions import db

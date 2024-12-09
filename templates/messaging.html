@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Messaging{% endblock %}
+{% block content %}
+<body>
+    <h1>Messaging</h1>
+    <a href="/messages">Go to Messaging Page</a>
+    <div id="messages"></div>
+    <textarea id="messageContent" placeholder="Type your message here..."></textarea>
+    <button id="sendMessageBtn">Send Message</button>
+
+    <script>
+        const userId = 1; // Replace with the logged-in user's ID
+        const recipientId = 2; // Replace with the recipient's ID
+
+        document.getElementById('sendMessageBtn').addEventListener('click', () => {
+            const content = document.getElementById('messageContent').value;
+            fetch('/send_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender_id: userId,
+                    recipient_id: recipientId,
+                    content: content
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                loadMessages(); // Reload messages after sending
+            });
+        });
+
+        function loadMessages() {
+            fetch(`/messages/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const messagesDiv = document.getElementById('messages');
+                    messagesDiv.innerHTML = '';
+                    data.forEach(msg => {
+                        messagesDiv.innerHTML += `<p><strong>${msg.sender_id}:</strong> ${msg.content} <em>${new Date(msg.timestamp).toLocaleString()}</em></p>`;
+                    });
+                });
+        }
+
+        loadMessages(); // Load messages on page load
+    </script>
+{% endblock %}

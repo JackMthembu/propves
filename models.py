@@ -1,3 +1,4 @@
+from email import message
 import uuid
 from flask import current_app
 from flask_login import UserMixin, current_user
@@ -62,6 +63,11 @@ class User(UserMixin, db.Model):
     managers = db.relationship('Manager', back_populates='user')
     subscription = db.relationship('Subscription', back_populates='user', uselist=False)
     currency = db.relationship('Currency', foreign_keys=[currency_id])
+    sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='sender')
+    received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', backref='recipient')
+    
+    # New relationship for wishlist
+    wishlists = db.relationship('Wishlist', backref='user', lazy=True)
 
     # User cache with 5-minute TTL
     _cache = TTLCache(maxsize=100, ttl=300)
@@ -672,3 +678,14 @@ class Enquiry(db.Model):
 
     def __repr__(self):
         return f"<Enquiry {self.id} for Listing {self.listing_id}>"
+
+class Message(db.Model):
+    __tablename__ = 'message'
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Message {self.id} from {self.sender_id} to {self.recipient_id}>'
