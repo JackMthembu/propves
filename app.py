@@ -1,11 +1,10 @@
 from datetime import timedelta
 from functools import cache
 import os
-from flask import Flask, current_app, jsonify, render_template, session, g, request
+from flask import Flask, current_app, g, request
 from flask_cors import CORS
-from flask_login import current_user, login_required
-from flask_migrate import Migrate
-from models import Country, User, State 
+from flask_login import current_user
+from models import User 
 from property import property_routes
 from auth import auth_routes
 from extensions import db, mail, login_manager, migrate

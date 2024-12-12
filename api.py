@@ -163,6 +163,16 @@ def get_expenses_data():
     else:
         end_date = datetime(today.year, today.month + 1, 1)
 
+    # Define the subcategories to filter
+    subcategories_to_filter = [
+        'Administrative Expenses',
+        'Utilities',
+        'Common Area Expenses',
+        'Financial Expenses',
+        'Marketing Expenses',
+        'Property Management Expenses'
+    ]
+
     # Query transactions grouped by sub_category for expenses
     expenses = db.session.query(
         Transaction.sub_category,
@@ -171,17 +181,14 @@ def get_expenses_data():
         Transaction.transaction_date >= start_date,
         Transaction.transaction_date < end_date,
         Transaction.main_category == 'Expenses',
-        Transaction.owner_id == current_user.id
+        Transaction.owner_id == current_user.id,
+        Transaction.sub_category.in_(subcategories_to_filter)  # Filter by subcategories
     ).group_by(Transaction.sub_category).all()
 
-    # Get unique sub-categories from the expenses query
-    categories = [expense.sub_category for expense in expenses]
-    
-    # Create series with the corresponding totals
-    series = [float(expense.total) for expense in expenses]
+    # Log the results for debugging
+    current_app.logger.debug(f"Filtered expenses: {expenses}")
 
-    return jsonify({
-        'labels': categories,
-        'series': series,
-        'currencySymbol': '$'
-    })
+    # Create series with the corresponding totals
+    series = [{'sub_category': expense.sub_category, 'total': float(expense.total)} for expense in expenses]
+
+    return jsonify(series)  # Return the series directly

@@ -68,7 +68,7 @@
                                 {% for enquiry in enquiries %}
                                 <tr>
                                     <td class="text-center">{{ enquiry.listing.property.title }}</td>
-                                    <td class="text-center">{{ enquiry.tenant.user.name }} {{ enquiry.tenant.user.lastname }}</td>
+                                    <td class="text-center">{{ enquiry.user.name }} {{ enquiry.user.lastname }}</td>
                                     <td class="text-center">{{ enquiry.scheduled_date.strftime('%Y-%m-%d') }}</td>
                                     <td class="text-center">{{ enquiry.scheduled_date.strftime('%H:%M') }}</td>
                                     <td class="text-center">{{ enquiry.outcomes }}</td>
@@ -79,12 +79,20 @@
                                             </button>
                                             <ul class="dropdown-menu" aria-labelledby="actionDropdown">
                                                 <li>
-                                                    <button type="submit" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#generateLeaseModal" data-enquiry-id="{{ enquiry.id }}">
-                                                        <i class="fas fa-file-contract"></i> Generate Lease
-                                                    </button>
+                                                    {% if listing %}
+                                                    <form method="POST" action="{{ url_for('rental_routes.create_agreement', listing_id=listing.id) }}">
+                                                        {{ form.hidden_tag() }}
+                                                        <input type="hidden" name="enquiry_id" value="{{ enquiry.id }}">
+                                                        <button type="submit" name="action" value="generate_lease" class="dropdown-item">
+                                                            <i class="fas fa-file-contract"></i> Generate Lease
+                                                        </button>
+                                                    </form>
+                                                    {% else %}
+                                                    <p>No listing available.</p>
+                                                    {% endif %}
                                                 </li>
                                                 <li>
-                                                    <form method="POST" action="{{ url_for('listing_routes.toggle_enquiry_outcome') }}">
+                                                    <form method="POST" action="{{ url_for('listing_routes.scheduled_enquiries') }}">
                                                         {{ form.hidden_tag() }}
                                                         <input type="hidden" name="enquiry_id" value="{{ enquiry.id }}">
                                                         <button type="submit" name="action" value="reject" class="dropdown-item">
@@ -93,7 +101,7 @@
                                                     </form>
                                                 </li>
                                                 <li>
-                                                    <form method="POST" action="{{ url_for('listing_routes.toggle_enquiry_reschedule') }}">
+                                                    <form method="POST" action="{{ url_for('listing_routes.scheduled_enquiries') }}">
                                                         {{ form.hidden_tag() }}
                                                         <input type="hidden" name="enquiry_id" value="{{ enquiry.id }}">
                                                         <button type="submit" name="action" value="reschedule" class="dropdown-item">
@@ -114,29 +122,4 @@
         </div>
     </section>
 </main>
-
-<!-- Modal for generating lease -->
-<div class="modal fade" id="generateLeaseModal" tabindex="-1" aria-labelledby="generateLeaseModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="generateLeaseModalLabel">Generate Lease</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Load the agreement content here -->
-                {% include "listing/_create_agreement.html" %}
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <form method="POST" action="{% if listing and listing.id %}{{ url_for('rental_routes.create_agreement', listing_id=listing.id) }}{% else %}# {% endif %}">
-                    {{ form.hidden_tag() }}
-                    <input type="hidden" name="enquiry_id" value="{{ enquiry.id }}">
-                    <input type="hidden" name="listing_id" value="{{ listing.id }}">
-                    <button type="submit" class="btn btn-primary">Confirm</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %} 

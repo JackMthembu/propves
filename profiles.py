@@ -1,8 +1,10 @@
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for, jsonify
 from flask_login import current_user, login_required
-from forms import ProfileForm, ProfilePicForm
-from models import Country, User, db, Currency
+from forms import ProfileForm, ProfilePicForm, CompanyForm, SettingsForm
+from models import Country, User, Currency, Company
+from extensions import db
 from werkzeug.utils import secure_filename
+from utils.session import session_scope
 
 import os
 
@@ -164,3 +166,66 @@ def get_currency(country_id):
             'success': False,
             'error': str(e)
         }), 500
+    
+@profile_routes.route('/company', methods=['GET', 'POST'])
+@login_required
+def company():
+    form = CompanyForm()  # Assuming you have a CompanyForm defined in forms.py
+
+    # Check if the user already has a company
+    existing_company = Company.query.filter(Company.users.contains(current_user)).first()
+    if existing_company:
+        # Populate the form with existing company data
+        form.company_name.data = existing_company.company_name
+        form.company_registration_number.data = existing_company.company_registration_number
+        form.tax_number.data = existing_company.tax_number
+
+    if form.validate_on_submit():
+        if existing_company:
+            flash('You already have a company added.', 'danger')
+            return redirect(url_for('profile_routes.company'))
+
+        # Create a new company instance
+        new_company = Company(
+            company_name=form.company_name.data,
+            company_registration_number=form.company_registration_number.data,
+            tax_number=form.tax_number.data
+        )
+
+        # Add the new company to the database
+        db.session.add(new_company)
+        db.session.commit()
+
+        # Update the current user's company_id
+        current_user.company_id = new_company.id
+        db.session.commit()
+
+        flash('Company added successfully!', 'success')
+        return redirect(url_for('profile_routes.company'))
+
+    return render_template('company_settings.html', form=form)
+
+@profile_routes.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    form = SettingsForm(user=current_user)
+
+    if form.validate_on_submit():
+        try:
+            # Log the form data for debugging
+            current_app.logger.debug(f"Form data: {form.data}")
+
+            # Update the user's system preference
+            current_user.system = form.system.data
+            
+            # Use the session_scope context manager
+            with session_scope():
+                db.session.commit()
+            
+            flash('Settings updated successfully!', 'success')
+            return redirect(url_for('profile_routes.settings', success=True))
+        except Exception as e:
+            current_app.logger.error(f"Error updating settings: {str(e)}")
+            flash('An error occurred while updating settings. Please try again.', 'danger')
+
+    return render_template('settings.html', form=form)

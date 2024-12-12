@@ -1,0 +1,187 @@
+<!-- Pop-up Page for Generate Lease -->
+<div class="container" style="max-width: 800px; margin: auto; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); background-color: #fff;">
+    <!-- <h5 class="modal-title" style="text-align: center; margin-bottom: 20px;">Generate Lease</h5> -->
+    <form id="generateLeaseForm" method="POST" action="{% if listing and listing.id %}{{ url_for('rental_routes.create_agreement', listing_id=listing.id) }}{% else %}# {% endif %}" onsubmit="showLoading();">
+        {{ form.hidden_tag() }}
+        <input type="hidden" name="enquiry_id" value="{% if enquiry %}{{ enquiry.id }}{% else %}0{% endif %}">
+        <input type="hidden" name="tenant_name" value="{{ enquiry.tenant.user.name }}">
+        <input type="hidden" name="tenant_lastname" value="{{ enquiry.tenant.user.lastname }}">
+        <input type="hidden" name="tenant_email" value="{{ enquiry.tenant.user.email }}">
+        <input type="hidden" name="tenant_phone" value="{{ enquiry.tenant.user.phone_number }}">
+
+        <input type="hidden" name="owner_id" value="{{ enquiry.owner.id }}">
+        <input type="hidden" name="company_name" value="{{ enquiry.owner.user.company.company_name }}">
+        <input type="hidden" name="street_address" value="{{ enquiry.listing.property.street_address }}">  
+        <input type="hidden" name="listing_id" value="{{ enquiry.listing.id }}">
+        <input type="hidden" name="monthly_rental" value="{{ enquiry.listing.monthly_rental }}">
+
+        <!-- Include the fields from GenerateLeaseForm -->
+        <div class="form-floating mb-3">
+            {{ form.generating_party(class="form-control", id="floatingGeneratingParty", onchange="toggleCompanyFields(this.value)") }}
+            <label for="floatingGeneratingParty">Generate As:</label>
+        </div>
+
+        <h6><strong>Lease Period</strong></h6>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label for="floatingDateStart">{{ form.date_start.label.text }}</label>
+                {% if listing %}
+                    {{ form.date_start(class="form-control", id="floatingDateStart", min=enquiry.listing.available_start_date.strftime('%Y-%m-%d')) }}
+                {% else %}
+                    {{ form.date_start(class="form-control", id="floatingDateStart") }}
+                {% endif %}
+            </div>
+            <div class="col">
+                <label for="floatingDateEnd">{{ form.date_end.label.text }}</label>
+                {{ form.date_end(class="form-control", id="floatingDateEnd") }}
+            </div>
+        </div>
+
+        <h6><strong>Payable Uppon Acceptance:</strong></h6>
+
+        <div class="row mb-3">
+            <label for="floatingDateEnd">Deposit ({{ enquiry.owner.user.currency.symbol }}):</label>
+            <input type="text" class="form-control" id="deposit" value="{{ enquiry.listing.deposit }}" readonly>
+        </div>
+
+        <div class="row mb-3">
+            <label for="floatingDateEnd">Monthly ({{ enquiry.owner.user.currency.symbol }}):</label>
+            <input type="text" class="form-control" id="floatingMonthlyRental" value="{{ enquiry.listing.monthly_rental }}" readonly>
+        </div>
+
+        <div class="row mb-3">
+            <label for="floatingDateEnd">Admin Fees ({{ enquiry.owner.user.currency.symbol }}):</label>
+            <input type="text" class="form-control" id="floatingMonthlyRental" value="{{ enquiry.listing.admin_fee }}" readonly>
+        </div>
+        <div class="row mb-3">
+            <label>Total ({{ enquiry.owner.user.currency.symbol }}):</label>
+            <input type="text" class="form-control" id="total_payable" value="{{ total_payable }}" readonly>
+        </div>
+
+        <h6><strong>Tick if chaarged to the tenant:</strong></h6>
+
+        <div class="row mb-3">
+            <div class="col">
+                <label for="floatingVatInclusion">{{ form.vat_inclusion.label.text }}
+                    <input type="checkbox" class="form-check-input" id="floatingVatInclusion" name="vat_inclusion" {% if form.vat_inclusion.data %}checked{% endif %}>
+                </label>
+            </div>
+
+            <div class="col">
+                <label for="floatingWater">{{ form.water.label.text }}
+                    <input type="checkbox" class="form-check-input" id="floatingWater" name="water" {% if form.water.data %}checked{% endif %}>
+                </label>
+            </div>
+
+            <div class="col">
+                <label for="floatingElectricity">{{ form.electricity.label.text }}
+                    <input type="checkbox" class="form-check-input" id="floatingElectricity" name="electricity" {% if form.electricity.data %}checked{% endif %}>
+                </label>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 50px;"></div>
+
+        <div class="form-floating mb-3">
+            {{ form.daily_compounding(class="form-control", id="floatingDailyCompounding") }}
+            <label for="floatingDailyCompounding">{{ form.daily_compounding.label.text }}</label>
+        </div>
+
+        <div class="form-floating mb-3" id="companyNameField">
+            {{ form.company_name(class="form-control", id="floatingCompanyName", value=enquiry.owner.user.company.company_name, readonly=True) }}
+            <label for="floatingCompanyName">{{ form.company_name.label.text }}</label>
+        </div>
+
+        <div class="form-floating mb-3" id="companyRegistrationNumberField">
+            {{ form.company_registration_number(class="form-control", id="floatingCompanyRegistrationNumber") }}
+            <label for="floatingCompanyRegistrationNumber">{{ form.company_registration_number.label.text }}</label>
+        </div>
+        <div class="modal-footer" style="justify-content: center;">
+            <button type="button" class="btn btn-secondary" onclick="window.history.back();">Back</button>
+            <button type="submit" class="btn btn-primary">Generate</button>
+        </div>
+    </form>
+</div>
+
+<div id="loading" style="display:none; text-align:center;">
+    <h2>Loading...</h2>
+    <p>Please wait while we process your request.</p>
+</div>
+
+<script>
+    function showLoading() {
+        document.getElementById('generateLeaseForm').style.display = 'none';
+        document.getElementById('loading').style.display = 'block';
+    }
+    function toggleCompanyFields(value) {
+        const companyFields = document.getElementById('companyNameField');
+        const registrationField = document.getElementById('companyRegistrationNumberField');
+        if (value === 'owner') {
+            companyFields.style.display = 'none';
+            registrationField.style.display = 'none';
+        } else {
+            companyFields.style.display = 'block';
+            registrationField.style.display = 'block';
+        }
+    }
+</script>
+
+<style>
+.label-spacing {
+    margin-top: 0.5rem; /* Adjust the value as needed */
+}
+
+.container {
+    padding: 30px; /* Increase padding for a more spacious feel */
+    border-radius: 10px; /* Slightly round the corners */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Softer shadow for depth */
+}
+
+.form-floating {
+    margin-bottom: 20px; /* Increase space between form fields */
+}
+
+.input-group {
+    margin-bottom: 15px; /* Space between input groups */
+}
+
+.label-spacing {
+    margin-top: 0.5rem; /* Adjust label spacing */
+}
+
+.btn {
+    margin-top: 20px; /* Space above buttons */
+    padding: 10px 20px; /* Increase button padding for better touch targets */
+}
+
+.row {
+    margin-bottom: 20px; /* Space between rows */
+}
+
+h5.modal-title {
+    margin-bottom: 30px; /* Space below the title */
+    font-weight: 600; /* Make the title bold */
+    font-size: 1.5rem; /* Increase font size for better visibility */
+}
+
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="date"],
+input[type="checkbox"] {
+    border: 1px solid #ced4da; /* Standard border for inputs */
+    border-radius: 5px; /* Rounded corners for inputs */
+    padding: 10px; /* Padding inside inputs */
+    width: 100%; /* Full width for inputs */
+    box-sizing: border-box; /* Include padding in width */
+}
+
+input[type="checkbox"] {
+    margin-right: 10px; /* Space between checkbox and label */
+}
+
+input[readonly] {
+    background-color: #f8f9fa; /* Light background for readonly fields */
+}
+</style>

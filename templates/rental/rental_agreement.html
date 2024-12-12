@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Residential Lease Agreement</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            text-align: center;
+        }
+        .field {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .lease-agreement {
+            white-space: pre-wrap; /* Preserve line breaks and spacing */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Residential Lease Agreement</h1>
+
+        <form method="POST">
+            <h2>Property Details</h2>
+            <div class="field">
+                <label for="property_id">Property ID:</label>
+                <input type="number" id="property_id" name="property_id" value="{{ agreement.property_id }}" readonly>
+            </div>
+
+            <h2>Lessor Details</h2>
+            <div class="field">
+                <label for="generating_party">Generating Party:</label>
+                <select id="generating_party" name="generating_party">
+                    <option value="owner">Owner</option>
+                    <option value="company" {% if agreement.company_name %}selected{% endif %}>Company</option>
+                </select>
+            </div>
+
+            <div class="field" id="company_details" style="display: {% if agreement.company_name %}block{% else %}none{% endif %};">
+                <label for="company_name">Company Name:</label>
+                <input type="text" id="company_name" name="company_name" value="{{ agreement.company_name }}">
+
+                <label for="company_registration_number">Company Registration Number:</label>
+                <input type="text" id="company_registration_number" name="company_registration_number" value="{{ agreement.company_registration_number }}">
+            </div>
+
+            <h2>Tenant Details</h2>
+            <div class="field">
+                <label for="tenant_name">Tenant Name:</label>
+                <input type="text" id="tenant_name" name="tenant_name" value="{{ agreement.tenant.name }}" required> 
+            </div>
+            <div class="field">
+                <label for="tenant_lastname">Tenant Last Name:</label>
+                <input type="text" id="tenant_lastname" name="tenant_lastname" value="{{ agreement.tenant.lastname }}" required>
+            </div>
+            <div class="field">
+                <label for="tenant_email">Tenant Email:</label>
+                <input type="email" id="tenant_email" name="tenant_email" value="{{ agreement.tenant.email }}" required>
+            </div>
+            <div class="field">
+                <label for="tenant_phone">Tenant Phone:</label>
+                <input type="tel" id="tenant_phone" name="tenant_phone" value="{{ agreement.tenant.phone }}" required>
+            </div>
+
+            <h2>Lease Terms</h2>
+            <div class="field">
+                <label for="date_start">Start Date:</label>
+                <input type="date" id="date_start" name="date_start" value="{{ agreement.date_start }}" required>
+            </div>
+            <div class="field">
+                <label for="date_end">End Date:</label>
+                <input type="date" id="date_end" name="date_end" value="{{ agreement.date_end }}" required>
+            </div>
+            <div class="field">
+                <label for="monthly_rental">Monthly Rental:</label>
+                <input type="number" id="monthly_rental" name="monthly_rental" value="{{ agreement.monthly_rental }}" required>
+            </div>
+            <div class="field">
+                <label for="deposit">Deposit:</label>
+                <input type="number" id="deposit" name="deposit" value="{{ agreement.deposit }}" required>
+            </div>
+            <div class="field">
+                <input type="checkbox" id="vat_inclusion" name="vat_inclusion" {% if agreement.vat_inclusion %}checked{% endif %}>
+                <label for="vat_inclusion">VAT Included</label>
+            </div>
+            <div class="field">
+                <input type="checkbox" id="water" name="water" {% if agreement.water %}checked{% endif %}>
+                <label for="water">Water Included</label>
+            </div>
+            <div class="field">
+                <input type="checkbox" id="electricity" name="electricity" {% if agreement.electricity %}checked{% endif %}>
+                <label for="electricity">Electricity Included</label>
+            </div>
+            <div class="field">
+                <label for="daily_compounding">Daily Compounding (optional):</label>
+                <input type="number" id="daily_compounding" name="daily_compounding" value="{{ agreement.daily_compounding }}">
+            </div>
+
+            <input type="submit" value="Generate Lease">
+        </form>
+
+        <div class="lease-agreement">
+            <h2>Lease Agreement</h2>
+            <p>This Residential Lease Agreement ("Agreement") is entered into on this {{ agreement.date_start.strftime('%d') }} day of {{ agreement.date_start.strftime('%B') }}, {{ agreement.date_start.strftime('%Y') }}, by and between:</p>
+
+            <p><strong>Landlord:</strong><br>
+            Name: {% if agreement.company_name %}{{ agreement.company_name }}{% else %}{{ owner.name }}{% endif %}<br>
+            Address: <br>
+            City/State/ZIP: </p>
+
+            <p>and</p>
+
+            <p><strong>Tenant:</strong><br>
+            Name(s): {{ agreement.tenant.name }} {{ agreement.tenant.lastname }}<br>
+            Address: <br>
+            City/State/ZIP: </p>
+
+            <p><strong>1. Property:</strong><br>
+            The Landlord hereby leases to the Tenant the residential property located at:<br>
+            Address: <br>
+            City/State/ZIP: <br>
+            ("Premises").</p>
+
+            <p><strong>2. Term:</strong><br>
+            This lease shall begin on {{ agreement.date_start.strftime('%B %d, %Y') }} and shall end on {{ agreement.date_end.strftime('%B %d, %Y') }}.</p> 
+
+            <p><strong>3. Rent:</strong><br>
+            The Tenant agrees to pay a monthly rent of ${{ agreement.monthly_rental }}, payable in advance on the  day of each month to the Landlord at the address stated above or to:<br>
+            Payment Method: </p>
+
+            <p><strong>4. Security Deposit:</strong><br>
+            The Tenant shall pay a security deposit of ${{ agreement.deposit }} upon signing this Agreement. The security deposit shall be held to cover damages beyond normal wear and tear and unpaid rent. The deposit will be returned within  days of lease termination, less any deductions.</p>
+
+            <p><strong>5. Utilities:</strong><br>
+            The following utilities and services will be paid as follows:</p>
+            <ul>
+                <li>Electricity: {% if agreement.electricity %}Landlord{% else %}Tenant{% endif %}</li>
+                <li>Water/Sewer: {% if agreement.water %}Landlord{% else %}Tenant{% endif %}</li>
+                <li>Gas: </li>
+                <li>Trash: </li>
+                <li>Internet/Cable: </li>
+            </ul>
+
+            <p><strong>6. Occupants:</strong><br>
+            The Premises shall only be occupied by the Tenant and the following individuals:<br>
+            Names: </p>
+
+            <p><strong>7. Use of Premises:</strong><br>
+            The Tenant shall use the Premises solely for residential purposes and shall not engage in illegal activities. Subleasing or assigning this lease is prohibited without prior written consent from the Landlord.</p>
+
+            <p><strong>8. Maintenance and Repairs:</strong><br>
+            The Tenant shall keep the Premises clean and in good condition. The Tenant shall promptly notify the Landlord of any damage or necessary repairs. The Landlord is responsible for repairs not caused by the Tenant’s negligence.</p>
+
+            <p><strong>9. Alterations:</strong><br>
+            The Tenant shall not make any alterations to the Premises without the Landlord’s prior written consent.</p>
+
+            <p><strong>10. Pets:</strong><br>
+            </p>
+
+            <p><strong>11. Entry:</strong><br>
+            The Landlord may enter the Premises for inspection, repairs, or showings with  hours’ notice to the Tenant, except in emergencies.</p>
+
+            <p><strong>12. Termination:</strong><br>
+            At the end of the lease term, the Tenant shall vacate the Premises, removing all personal property and returning all keys to the Landlord.</p>
+
+            <p><strong>13. Governing Law:</strong><br>
+            This Agreement shall be governed by the laws of the State of .</p>
+
+            <p><strong>14. Additional Terms:</strong><br>
+            </p>
+
+            <p><strong>15. Entire Agreement:</strong><br>
+            This Agreement constitutes the entire agreement between the parties and supersedes all prior understandings. Modifications must be made in writing and signed by both parties.</p>
+
+            <p><strong>Landlord Signature:</strong><br>
+            _________________________<br>
+            Date: _________________________</p>
+
+            <p><strong>Tenant Signature(s):</strong><br>
+            _________________________<br>
+            Date: _________________________</p>
+        </div>
+    </div>
+
+    <script>
+        const generatingPartySelect = document.getElementById('generating_party');
+        const companyDetailsDiv = document.getElementById('company_details');
+
+        generatingPartySelect.addEventListener('change', () => {
+            if (generatingPartySelect.value === 'company') {
+                companyDetailsDiv.style.display = 'block';
+            } else {
+                companyDetailsDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

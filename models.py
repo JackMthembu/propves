@@ -33,11 +33,11 @@ class JSONEncodedDict(TypeDecorator):
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
-    name = db.Column(db.String(50), nullable=True)
-    lastname = db.Column(db.String(50), nullable=True)
+    name = db.Column(db.String(50), nullable=False)
+    lastname = db.Column(db.String(50), nullable=False)
     username = db.Column(db.String(50), nullable=False, unique=True)
     email = db.Column(db.String(100), nullable=False, unique=True)
-    role = db.Column(db.String(20), nullable=True, default='user')
+    role = db.Column(db.String(20), nullable=True, default='Landlord')
     password_hash = db.Column('password_hash', db.String(255), nullable=False)
     verification = db.Column(db.String(20), nullable=False, default='unverified')
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -52,20 +52,37 @@ class User(UserMixin, db.Model):
     employer = db.Column(db.String(100), nullable=True)
     monthly_income = db.Column(db.Numeric(10,2), nullable=True)
     next_of_keen_contacts = db.Column(db.String(150), nullable=True)
-    subscription_id = db.Column(db.Integer, db.ForeignKey('subscription.id'))
-    country_id = db.Column(db.String(3), db.ForeignKey('country.id'), nullable=True)
+    subscription_id = db.Column(db.Integer, db.ForeignKey('subscription.id'), nullable=True)
     currency_id = db.Column(db.String(3), db.ForeignKey('currency.id'), nullable=True)
+    id_number = db.Column(db.String(100), nullable=True, unique=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True)
+
+    # Address
+    street_address = db.Column(db.String(255), nullable=True)
+    building = db.Column(db.String(255), nullable=True)
+    door_number = db.Column(db.String(20), nullable=True)
+    suburb = db.Column(db.String(100), nullable=True)
+    city = db.Column(db.String(100), nullable=True)
+    state_id = db.Column(db.String(3), db.ForeignKey('state.id'), nullable=True)
+    country_id = db.Column(db.String(3), db.ForeignKey('country.id'), nullable=True)
+
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True)
+
+    # Setting
+    system = db.Column(db.String(20), default='Imperial')
 
     # Relationships
     country = db.relationship('Country', backref='users')
-    rental_agreements = db.relationship('RentalAgreementUser', back_populates='user')
+    state = db.relationship('State', backref='users')
     owner = db.relationship('Owner', back_populates='user', uselist=False)
+    # tenant = db.relationship('Tenant', back_populates='user', uselist=False)
     managers = db.relationship('Manager', back_populates='user')
     subscription = db.relationship('Subscription', back_populates='user', uselist=False)
     currency = db.relationship('Currency', foreign_keys=[currency_id])
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='sender')
     received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', backref='recipient')
-    
+    company = db.relationship('Company', back_populates='users')
+
     # New relationship for wishlist
     wishlists = db.relationship('Wishlist', backref='user', lazy=True)
 
@@ -151,7 +168,6 @@ class Listing(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
     deposit = db.Column(db.Numeric, nullable=False)
-    admin_fee = db.Column(db.Numeric, nullable=False)
     listing_type = db.Column(db.String, nullable=False)
     monthly_rental = db.Column(db.Numeric, nullable=False)
     available_start_date = db.Column(db.Date, nullable=False)
@@ -216,11 +232,22 @@ class Owner(db.Model):
     
     # Relationships
     user = db.relationship('User', back_populates='owner')
-    properties = db.relationship('Property', back_populates='property_owner')
+    properties = db.relationship('Property', back_populates='owner')
     managers = db.relationship('Manager', back_populates='owner')
+    rental_agreements = db.relationship('RentalAgreement', back_populates='owner')
 
     def __repr__(self):
         return f'<Owner {self.id} user_id={self.user_id}>'
+
+class Company(db.Model):
+    __tablename__ = 'company'
+
+    id = db.Column(db.Integer, primary_key=True)
+    company_name = db.Column(db.String(100), nullable=False)
+    company_registration_number = db.Column(db.String(100), nullable=False)
+    tax_number =  db.Column(db.String(100), nullable=False)
+    users = db.relationship('User', back_populates='company')
+
 
 class Manager(db.Model):
     __tablename__ = 'manager'
@@ -240,6 +267,24 @@ class Tenant(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     user = db.relationship('User', backref='tenant', lazy=True)
+    rental_agreements = db.relationship('RentalAgreement', back_populates='tenant')
+    enquiry_tenant = db.relationship('Enquiry', back_populates='tenant')
+    
+    # Add this line to define the relationship with Sponsor
+    sponsors = db.relationship('Sponsor', back_populates='tenant', lazy=True)
+
+class Sponsor(db.Model):
+    __tablename__ = 'sponsor'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=False)
+
+    user = db.relationship('User', backref='sponsor', lazy=True)
+    rental_agreements = db.relationship('RentalAgreement', back_populates='sponsor')
+    
+    # Add this line to define the relationship with Tenant
+    tenant = db.relationship('Tenant', back_populates='sponsors')
 
 class RentalAgreement(db.Model):
     __tablename__ = 'rental_agreement'
@@ -261,34 +306,29 @@ class RentalAgreement(db.Model):
     daily_compounding = db.Column(db.Numeric(10, 2), default=0.0)
     
     # Inclusions
-    vat_inclusion = db.Column(db.Boolean, default=False)
-    water = db.Column(db.Boolean, default=False)
+    water_sewer = db.Column(db.Boolean, default=False)
     electricity = db.Column(db.Boolean, default=False)
+    gas = db.Column(db.Boolean, default=False)
+    waste_management = db.Column(db.Boolean, default=False)
+    internet = db.Column(db.Boolean, default=False)
+
+
+    #Users
+    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=False)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'), nullable=False)
     
     # Relationships
-    rental_users = db.relationship('RentalAgreementUser', back_populates='rental_agreement')
     property = db.relationship('Property', back_populates='rental_agreements')
     listing = db.relationship('Listing', back_populates='rental_agreements')
     rental_updates = db.relationship('RentalUpdates', back_populates='rental_agreement')
+    owner = db.relationship('Owner', back_populates='rental_agreements')
+    tenant = db.relationship('Tenant', back_populates='rental_agreements')
+    sponsor = db.relationship('Sponsor', back_populates='rental_agreements')
 
     def __repr__(self):
         return f"<RentalAgreement {self.id} for Property {self.property_id}>"
-
-class RentalAgreementUser(db.Model):
-    __tablename__ = 'rental_agreement_user'
-
-    id = db.Column(db.Integer, primary_key=True)
-    rental_agreement_id = db.Column(db.Integer, db.ForeignKey('rental_agreement.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    role = db.Column(db.String(50), nullable=False)  # tenant, guarantor, agent, etc.
-    
-    # Relationships
-    rental_agreement = db.relationship('RentalAgreement', back_populates='rental_users')
-    user = db.relationship('User', back_populates='rental_agreements')
-
-    def __repr__(self):
-        return f"<RentalAgreementUser {self.user_id} ({self.role})>"
-    
+  
 class RentalUpdates(db.Model):
     __tablename__ = 'rental_updates'
 
@@ -546,14 +586,12 @@ class Property(db.Model):
     door_number = db.Column(db.String(20))
     suburb = db.Column(db.String(100))
     city = db.Column(db.String(100))
-    state = db.Column(db.String(100))
-    country = db.Column(db.String(100))
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
 
     #Lising
     status = db.Column(db.String(20), default=False) #unlisted #listed #occupied 
-
+    max_occupants = db.Column(db.Integer)
 
     # Foreign Keys
     state_id = db.Column(db.String(3), db.ForeignKey('state.id'), nullable=True)
@@ -564,7 +602,7 @@ class Property(db.Model):
     state = db.relationship('State', backref='properties')
     country = db.relationship('Country', backref='properties')
     currency = db.relationship('Currency', backref='properties')
-    property_owner = db.relationship('Owner', back_populates='properties')
+    owner = db.relationship('Owner', back_populates='properties')
     rental_agreements = db.relationship('RentalAgreement', back_populates='property')
     photos = db.relationship('Photo', 
                            back_populates='property',
@@ -665,7 +703,7 @@ class Enquiry(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), nullable=False)
     scheduled_date = db.Column(db.DateTime, nullable=False)
     created_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -673,7 +711,7 @@ class Enquiry(db.Model):
 
     # Relationships
     listing = db.relationship('Listing', backref='enquiries')
-    user = db.relationship('User', backref='enquiries')
+    tenant = db.relationship('Tenant', backref='enquiries')
     owner = db.relationship('Owner', backref='enquiries')
 
     def __repr__(self):

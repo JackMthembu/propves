@@ -1,8 +1,4 @@
 {% extends 'base.html' %}
-<<<<<<< HEAD
-{% block title %}Edit Details{% endblock %}
-=======
->>>>>>> origin/main
 
 {% block content %}
 <main id="main" class="main">
@@ -12,7 +8,7 @@
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
         <li class="breadcrumb-item"><a href="{{ url_for('property_routes.property_list') }}">My Properties</a></li>
-        <li class="breadcrumb-item"><a href="{{ back_url }}">Manage Property</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('property_routes.manage_property', property_id=property_data.property.id) }}">Manage Property</a></li>
         <li class="breadcrumb-item active">Basic Details</li>
       </ol>
     </nav>
@@ -113,6 +109,14 @@
                     {{ form.sqm(class="form-control" + (" is-invalid" if form.sqm.errors else ""), type="number", step="0.01") }}
                     {% if form.sqm.errors %}
                         <div class="invalid-feedback">{{ form.sqm.errors[0] }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="col">
+                    <label for="max_occupants" class="form-label">Maximum Occupants</label>
+                    {{ form.max_occupants(class="form-control" + (" is-invalid" if form.max_occupants.errors else ""), type="number", min="1") }}
+                    {% if form.max_occupants.errors %}
+                        <div class="invalid-feedback">{{ form.max_occupants.errors[0] }}</div>
                     {% endif %}
                 </div>
               </div>

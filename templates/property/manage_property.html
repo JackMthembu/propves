@@ -82,6 +82,15 @@
                   <span class="feature-name">{{ property.garage }} Parking</span>
                 </div>
                 {% endif %}
+                
+                {% if property.max_occupants %}
+                <div class="feature-item">
+                  <span class="feature-icon">
+                    <i class="bi bi-person-fill"></i>
+                  </span>
+                  <span class="feature-name">Max Occupants: {{ property.max_occupants }}</span>
+                </div>
+                {% endif %}
               </div>
 
               <!-- Features Preview -->

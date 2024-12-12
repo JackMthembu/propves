@@ -10,6 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import FlaskForm
 from wtforms import BooleanField
 from cachetools import TTLCache
+from markupsafe import Markup
 
 auth_routes = Blueprint('auth_routes', __name__)
 
@@ -168,8 +169,87 @@ def resend_verification():
         token = user.generate_verification_token(current_app.config['SECRET_KEY'])
         verification_url = url_for('auth_routes.verify_email', token=token, _external=True)
 
+        # Set up email details
+        subject = 'Welcome to PropVes - Please Verify Your Email'
+        sender = current_app.config['MAIL_DEFAULT_SENDER']
+        recipients = [user.email]
+
+        # HTML and plain-text versions of the email
+        body = f'''Hello {user.name},
+
+To get started, please verify your email address by clicking the following link: {verification_url}
+
+If you didn't create this account, please ignore this email.
+
+Best regards,
+The PropVes Team'''
+
+        html = f'''
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #333;">Hello {user.name},</h2>
+                
+                <p>To get started, please verify your email address:</p>
+                
+                <p style="text-align: center; margin: 30px 0;">
+                    <a href="{verification_url}" 
+                       style="background-color: #60D0AC; 
+                              color: white; 
+                              padding: 12px 25px; 
+                              text-decoration: none; 
+                              border-radius: 5px; 
+                              font-weight: bold;">
+                        Verify Email
+                    </a>
+                </p>
+                
+                <p style="color: #666; font-size: 0.9em;">
+                    If the button doesn't work, copy and paste this link into your browser:<br>
+                    <a href="{verification_url}" style="color: #60D0AC;">{verification_url}</a>
+                </p>
+                
+                <p style="color: #666; font-size: 0.9em;">
+                    If you didn't create this account, please ignore this email.
+                </p>
+                
+                <p style="margin-top: 30px;">
+                    Best regards,<br>
+                    The PropVes Team
+                </p>
+            </div>
+        '''
+
+        # Send the verification email
+        msg = Message(subject=subject, sender=sender, recipients=recipients, body=body, html=html)
+        mail.send(msg)
+
+        flash('A new verification email has been sent. Please check your inbox.', 'success')
+        return redirect(url_for('auth_routes.login'))
+
+    return render_template('resend_verification.html', form=form)
+
+
+@auth_routes.route('/resend_verification_token', methods=['GET', 'POST'])
+def resend_verification_token():
+    form = ResendVerificationForm()
+
+    if form.validate_on_submit():
+        # Find the user by email
+        user = User.query.filter_by(email=form.email.data).first()
+
+        if not user:
+            flash('No account found with that email address.', 'danger')
+            return redirect(url_for('auth_routes.resend_verification_token'))
+
+        if user.verification == 'verified':
+            flash('Your account is already verified.', 'info')
+            return redirect(url_for('auth_routes.login'))
+
+        # Generate new verification token
+        token = user.generate_verification_token(current_app.config['SECRET_KEY'])
+        verification_url = url_for('auth_routes.verify_email', token=token, _external=True)
+
         # Email details
-        subject = 'Resend Email Verification'
+        subject = 'Resend Email Verification Token'
         sender = current_app.config['MAIL_DEFAULT_SENDER']
         recipients = [user.email]
         body = f'Please verify your email by clicking the following link: {verification_url}'
@@ -186,7 +266,7 @@ def resend_verification():
         flash('A new verification email has been sent. Please check your inbox.', 'success')
         return redirect(url_for('auth_routes.login'))
 
-    return render_template('resend_verification.html', form=form)
+    return render_template('resend_verification_token.html', form=form)
 
 
 @auth_routes.route('/reset_password/<token>', methods=['GET', 'POST'])
@@ -302,57 +382,6 @@ def change_password():
 
     return render_template('change_password.html', form=form)
 
-# @auth_routes.route('/login', methods=['GET', 'POST'])
-# def login():
-#     if current_user.is_authenticated:
-#         return redirect(url_for('route.dashboard'))
-
-#     form = LoginForm()
-#     if form.validate_on_submit():
-#         login_field = form.login_field.data
-#         password = form.password.data
-
-#         user = User.query.filter(
-#             (User.email == login_field) | (User.username == login_field)
-#         ).first()
-
-#         if user:
-#             if user.account_locked:
-#                 flash('Your account is locked due to multiple failed login attempts. Please contact support.', 'danger')
-#                 return redirect(url_for('auth_routes.login'))
-
-#             if user.verification != 'verified':
-#                 flash('Your account is not verified. Please check your email for the verification link.', 'warning')
-#                 return redirect(url_for('auth_routes.login'))
-
-#             if user.check_password(password):
-#                 login_user(user)
-#                 session.permanent = True
-
-#                 user.last_login = datetime.utcnow()
-#                 user.failed_login_attempts = 0
-#                 db.session.commit()
-
-#                 selected_subscription_id = session.pop('selected_subscription_id', None)
-#                 if selected_subscription_id:
-#                     user.subscription_id = selected_subscription_id
-#                     db.session.commit()
-#                     flash('Subscription updated successfully!', 'success')
-
-#                 flash('Logged in successfully!', 'success')
-#                 return redirect(url_for('main.dashboard'))  
-#             else:
-#                 user.failed_login_attempts += 1
-#                 if user.failed_login_attempts >= 5:
-#                     user.account_locked = True
-#                     flash('Your account has been locked due to multiple failed login attempts.', 'danger')
-#                 else:
-#                     flash('Invalid username or password', 'danger')
-#                 db.session.commit()
-#         else:
-#             flash('Invalid username or password', 'danger')
-#     return render_template('login.html', form=form)
-
 
 @auth_routes.route('/login', methods=['GET', 'POST'])
 def login():
@@ -371,7 +400,7 @@ def login():
                 return redirect(url_for('auth_routes.login'))
 
             if user.verification != 'verified':
-                flash('Your account is not verified. Please check your email for the verification link.', 'warning')
+                flash(Markup('Your account is not verified. Please check your email for the verification link. If you did not receive it, you can <a href="' + url_for('auth_routes.resend_verification') + '">resend the verification email</a>. Please note that your verification email might be in your spam folder.'), 'warning')
                 return redirect(url_for('auth_routes.login'))
 
             if user.check_password(password):

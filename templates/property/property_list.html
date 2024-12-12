@@ -41,7 +41,7 @@
                                                 <div class="photo-item">
                                                     <img src="{{ url_for('static', filename=property_data.thumbnail.file_path) }}" 
                                                          alt="Property photo"
-                                                         class="img-thumbnail"
+                                                         class="flex-shrink-0"
                                                          style="max-width: 100px; height: auto; object-fit: cover;"
                                                          onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/property_photos/default.png') }}';">
                                                 </div>

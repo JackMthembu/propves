@@ -208,9 +208,6 @@
             <li class="dropdown-footer">
               <a href="{{ url_for('messaging.inbox') }}"">Show all messages</a>
             </li>
-            <li class="dropdown-footer"></li>
-              <a href="{{ url_for('messaging.inbox') }}">Show all Messages</a>
-            </li>
           </ul><!-- End Messages Dropdown Items -->
 
         </li><!-- End Messages Nav -->
@@ -247,8 +244,28 @@
 
             <li>
               <a class="dropdown-item d-flex align-items-center" href="{{ url_for('auth_routes.change_password') }}">
-                <i class="bi bi-gear"></i>
+                <i class="bi bi-lock"></i>
                 <span>Password Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{{ url_for('profile_routes.company') }}">
+                <i class="bi bi-building"></i>
+                <span>Company Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{{ url_for('profile_routes.settings') }}">
+                <i class="bi bi-gear"></i>
+                <span>General Settings</span>
               </a>
             </li>
             <li>
@@ -286,71 +303,61 @@
     <ul class="sidebar-nav" id="sidebar-nav">
 
       <li class="nav-item">
-        <a class="nav-link collapsed" href="{{ ('/') }}">
+        <a class="nav-link {{ 'active' if request.endpoint == 'main.dashboard' else '' }}" href="{{ url_for('main.dashboard') }}">
           <i class="bi bi-grid"></i>
           <span>Dashboard</span>
         </a>
       </li>
-
       <li class="nav-item">
-        <a class="nav-link collapsed" href="{{ url_for('property_routes.property_list') }}">          <i class="bi bi-house"></i>
-          <span>My Properties</span>
+        <a class="nav-link {{ 'active' if request.endpoint == 'property_routes.property_list' else '' }}" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#" onclick="toggleActive(this)">
+          <i class="bi bi-house"></i><span>Rental Properties</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
+        <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li>
+            <a class="{{ 'active' if request.endpoint == 'property_routes.property_list' else '' }}" href="{{ url_for('property_routes.property_list') }}">
+              <i class="bi bi-circle"></i><span>My Properties</span>
+            </a>
+          </li>
+          <li>
+            <a class="{{ 'active' if request.endpoint == 'listing_routes.scheduled_enquiries' else '' }}" href="{{ url_for('listing_routes.scheduled_enquiries') }}">
+              <i class="bi bi-circle"></i><span>Scheduled Viewings</span>
+            </a>
+          </li>
+        </ul>
       </li>
 
       <li class="nav-item">
-        <a class="nav-link collapsed" href="{{ url_for('property_routes.property_list') }}">
-          <i class="bi bi-people
-          "></i>
+        <a class="nav-link {{ 'active' if request.endpoint == 'property_routes.property_list' else '' }}" href="{{ url_for('property_routes.property_list') }}">
+          <i class="bi bi-people"></i>
           <span>Tenants</span>
         </a>
       </li>
 
       <li class="nav-item">
-        <a class="nav-link collapsed" href="{{ url_for('main.maintenance') }}">
+        <a class="nav-link {{ 'active' if request.endpoint == 'main.maintenance' else '' }}" href="{{ url_for('main.maintenance') }}">
           <i class="bi bi-wrench"></i>
           <span>Maintenance</span>
         </a>
       </li>
 
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+        <a class="nav-link {{ 'active' if request.endpoint in ['transaction_routes.transactions', 'accounting_routes.get_budget_overview'] else '' }}" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-calculator"></i><span>Financial</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+        <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
           <li>
-            <a href="{{ url_for('transaction_routes.transactions') }}">
+            <a class="{{ 'active' if request.endpoint == 'transaction_routes.transactions' else '' }}" href="{{ url_for('transaction_routes.transactions') }}">
               <i class="bi bi-circle"></i><span>Transactions</span>
             </a>
           </li>
           <li>
-            <a href="components-alerts.html">
-              <i class="bi bi-circle"></i><span>Rental Income</span>
-            </a>
-          </li>
-          <li>
-            <a href="#">
-              <i class="bi bi-circle"></i><span>Manage Expenses</span>
-            </a>
-          </li>
-          <li>
-            <a href="{{ url_for('accounting_routes.get_budget_overview') }}">
-              <i class="bi bi-circle"></i><span>Budget</span>
+            <a class="{{ 'active' if request.endpoint == 'accounting_routes.get_budget_overview' else '' }}" href="{{ url_for('accounting_routes.get_budget_overview') }}">
+              <i class="bi bi-circle"></i><span>Budget Management</span>
             </a>
           </li>
           <li>
             <a href="components-badges.html">
-              <i class="bi bi-circle"></i><span>Income Statement</span>
-            </a>
-          </li>
-          <li>
-            <a href="components-breadcrumbs.html">
-              <i class="bi bi-circle"></i><span>Balance Sheet</span>
-            </a>
-          </li>
-          <li>
-            <a href="components-buttons.html">
-              <i class="bi bi-circle"></i><span>Cash Flow Statement</span>
+              <i class="bi bi-circle"></i><span>Financial Reports</span>
             </a>
           </li>
         </ul>
@@ -407,6 +414,29 @@
     });
   </script> -->
   {% block scripts %}{% endblock %}
+
+  <script>
+    function toggleActive(element) {
+      // Collapse all other nav items
+      const allNavLinks = document.querySelectorAll('.sidebar-nav .nav-link');
+      allNavLinks.forEach(link => {
+        if (link !== element) {
+          link.classList.remove('active');
+          const target = document.querySelector(link.getAttribute('data-bs-target'));
+          if (target) {
+            target.classList.remove('show');
+          }
+        }
+      });
+
+      // Toggle the clicked nav item
+      element.classList.toggle('active');
+      const target = document.querySelector(element.getAttribute('data-bs-target'));
+      if (target) {
+        target.classList.toggle('show');
+      }
+    }
+  </script>
 
 </body>
 </html>

@@ -2,8 +2,8 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from models import Enquiry, Property, Owner, Listing, RentalAgreement
 from extensions import db
-from forms import ListingForm
-from datetime import datetime
+from forms import GenerateLeaseForm, ListingForm
+from datetime import date, datetime, timedelta
 
 listing_routes = Blueprint('listing_routes', __name__)
 
@@ -103,27 +103,86 @@ def edit_listing(listing_id):
     return render_template('listing/edit_listing.html', listing=listing, property=property, form=form)
 
 @listing_routes.route('/listing/scheduled_enquiries', methods=['GET'])
+@login_required
 def scheduled_enquiries():
-    # Get filter parameters from the request
-    scheduled_date = request.args.get('scheduled_date')
-    listing_id = request.args.get('listing_id')
-    outcomes = request.args.get('outcomes')
-
     # Build the query
     query = Enquiry.query.filter(Enquiry.scheduled_date >= datetime.utcnow())
+
+    # Optional filtering parameters
+    scheduled_date = request.args.get('scheduled_date')
+    listing_id = request.args.get('listing_id')
+    tenant_id = request.args.get('tenant_id')
 
     if scheduled_date:
         query = query.filter(Enquiry.scheduled_date == scheduled_date)
     if listing_id:
         query = query.filter(Enquiry.listing_id == listing_id)
-    if outcomes:
-        query = query.filter(Enquiry.outcomes == outcomes)
+        listing = Listing.query.get(listing_id)
+    else:
+        listing = None
 
     enquiries = query.all()
 
-    # Fetch the listing if listing_id is provided
-    listing = None
-    if listing_id:
-        listing = Listing.query.get(listing_id)
+    # Initialize the form with default values
+    form = GenerateLeaseForm()
+    
+    # If an enquiry exists, try to populate form with relevant data
+    if enquiries:
+        first_enquiry = enquiries[0]
+        if first_enquiry.listing:
+            form.monthly_rental.data = first_enquiry.listing.monthly_rental
+            form.deposit.data = first_enquiry.listing.deposit
+            form.date_start.data = date.today()
+            form.date_end.data = date.today() + timedelta(days=365)
 
-    return render_template('listing/scheduled_enquiries.html', enquiries=enquiries, listing=listing)
+    # Pass the first enquiry to the template if it exists
+    enquiry = enquiries[0] if enquiries else None
+
+    return render_template(
+        'listing/scheduled_enquiries.html', 
+        enquiries=enquiries, 
+        listing=listing, 
+        form=form, 
+        enquiry=enquiry
+    )
+
+@listing_routes.route('/toggle_enquiry_outcome', methods=['POST'])
+@login_required
+def toggle_enquiry_outcome():
+    enquiry_id = request.form.get('enquiry_id')
+    # Assuming you have a function to get the enquiry by ID
+    enquiry = get_enquiry_by_id(enquiry_id)  # Replace with your actual function
+
+    if enquiry:
+        enquiry.outcomes = 'Rejected'  # Set the outcome to 'Rejected'
+        # Save the changes to the database
+        save_enquiry(enquiry)  # Replace with your actual save function
+        flash('Enquiry status updated to Rejected.', 'success')
+    else:
+        flash('Enquiry not found.', 'error')
+
+    return redirect(url_for('listing_routes.scheduled_enquiries'))  # Redirect back to the scheduled enquiries page
+
+@listing_routes.route('/toggle_enquiry_reschedule', methods=['POST'])
+@login_required
+def toggle_enquiry_reschedule():
+    enquiry_id = request.form.get('enquiry_id')
+    # Assuming you have a function to get the enquiry by ID
+    enquiry = get_enquiry_by_id(enquiry_id)  # Replace with your actual function
+
+    if enquiry:
+        enquiry.outcomes = 'Rescheduled'  # Set the outcome to 'Rejected'
+        # Save the changes to the database
+        save_enquiry(enquiry)  # Replace with your actual save function
+        flash('Enquiry status updated to Rescheduled.', 'success')
+    else:
+        flash('Enquiry not found.', 'error')
+
+    return redirect(url_for('listing_routes.scheduled_enquiries'))
+
+def save_enquiry(enquiry):
+    db.session.add(enquiry)
+    db.session.commit()
+
+def get_enquiry_by_id(enquiry_id):
+    return Enquiry.query.get(enquiry_id)

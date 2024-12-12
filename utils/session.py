@@ -3,7 +3,7 @@ from flask import current_app
 from extensions import db
 
 @contextmanager
-def session_scope(self):
+def session_scope():
     try:
         yield db.session
         db.session.commit()

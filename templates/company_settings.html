@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Company Settings{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle"></div>
+      <h1>Company Settings</h1>
+    <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard')}}">Dashboard</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('profile_routes.profile_settings')}}">Profile Settings</a></li>
+          <li class="breadcrumb-item active">Company Settings</li>
+
+        </ol>
+    </nav>
+
+    <section class="section dashboard">
+        <div class="container">
+            <form method="POST" action="{{ url_for('profile_routes.company') }}">
+                {{ form.hidden_tag() }}
+        
+                <div class="form-group">
+                    {{ form.company_name.label }}
+                    {{ form.company_name(class="form-control") }}
+                </div>
+        
+                <div class="form-group">
+                    {{ form.company_registration_number.label }}
+                    {{ form.company_registration_number(class="form-control") }}
+                </div>
+        
+                <div class="form-group">
+                    {{ form.tax_number.label }}
+                    {{ form.tax_number(class="form-control") }}
+                </div>
+        
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        
+            <a href="{{ url_for('profile_routes.profile_settings') }}">Back to Profile Settings</a>
+        </div>
+    </section>
+
+  </main><!-- End #main -->
+  {% endblock %}

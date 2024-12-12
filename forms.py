@@ -7,7 +7,7 @@ from typing import Optional
 from wtforms.validators import Optional, Email, EqualTo, DataRequired, NumberRange, Length
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms_sqlalchemy.fields import QuerySelectField
-from models import Country, Currency, db
+from models import Country, Currency, db, Tenant, User
 from datetime import datetime, date, timedelta
 
 from app_constants import ACCOUNTS, MAIN_CATEGORIES, SUB_CATEGORIES
@@ -131,6 +131,19 @@ class ProfileForm(FlaskForm):
             if not re.match(pattern, field.data):
                 raise ValidationError('Invalid phone number. It must be in international format (e.g., +27123456789).')
 
+class CompanyForm(FlaskForm):
+    company_name = StringField('Company Name', validators=[DataRequired()])
+    company_registration_number = StringField('Registration Number', validators=[DataRequired()])
+    tax_number = StringField('Tax Number', validators=[Optional()])
+    submit = SubmitField('Submit')
+
+class SettingsForm(FlaskForm):
+    system = SelectField('System', choices=[
+        ('metric', 'Metric'),  
+        ('imperial', 'Imperial')
+    ], validators=[DataRequired(message="Please select one of the two")])
+    submit = SubmitField('Save')
+
 class EmploymentProfile(FlaskForm):
     employment = StringField('Current Employment', validators=[Optional()])
     employer = StringField('Current Employer', validators=[Optional()])
@@ -196,6 +209,10 @@ class PropertyDetailsForm(FlaskForm):
     sqm = DecimalField('Square Feet',
         validators=[Optional(), NumberRange(min=0)],
         default=0.0)
+    
+    max_occupants = IntegerField('Maximum Occupants',
+        validators=[Optional(), NumberRange(min=1)],
+        default=1)
     
     submit = SubmitField('Save Details')
     
@@ -448,3 +465,37 @@ class BudgetForm(FlaskForm):
     submit = SubmitField('Submit')
 
     pass
+
+class GenerateLeaseForm(FlaskForm):
+    property_id = IntegerField('Property ID', validators=[DataRequired()])
+    generating_party = SelectField('Generating Party', choices=[('individual', 'Individual'), ('company', 'Company')])
+
+    company_name = StringField('Company Name', validators=[Optional()])
+    company_registration_number = StringField('Company Registration Number', validators=[Optional()])
+
+    # Removed fields that should not be rendered in the HTML
+    tenant_name = StringField('Tenant Name', validators=[DataRequired()])
+    tenant_lastname = StringField('Tenant Last Name', validators=[DataRequired()])
+    tenant_email = StringField('Tenant Email', validators=[DataRequired()])
+    tenant_phone = StringField('Tenant Phone', validators=[DataRequired()])
+
+    date_start = DateField('Start Date', default=date.today, validators=[DataRequired()])
+    date_end = DateField('End Date', default=lambda: date.today() + timedelta(days=365), validators=[DataRequired()])
+    monthly_rental = DecimalField('Monthly Rental', validators=[DataRequired()])
+    deposit = DecimalField('Deposit', validators=[DataRequired()])
+    admin_fee = DecimalField('Admin Fees', validators=[DataRequired()])
+
+
+    gas = BooleanField('Gas')
+    water_sewer = BooleanField('Water and Sewer')
+    electricity = BooleanField('Electricity')
+    waste_management = BooleanField('Waste Management')
+    internet = BooleanField('Internet')
+
+    daily_compounding = DecimalField('Daily Compounding', default=0)
+    submit = SubmitField('Generate Lease')
+
+    def __init__(self, listing=None, *args, **kwargs):
+        super(GenerateLeaseForm, self).__init__(*args, **kwargs)
+        if listing is not None:
+            self.property_id.data = listing.property_id  # Set property_id if listing is provided
