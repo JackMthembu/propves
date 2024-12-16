@@ -283,63 +283,6 @@ class PhotoForm(FlaskForm):
     ])
     submit = SubmitField('Upload Photos')
 
-
-class MonthlyExpensesForm(FlaskForm):
-    month = DateField('Date', 
-                     validators=[DataRequired()],
-                     format='%Y-%m-%d',  # HTML5 date format
-                     default=datetime.today,  # Set default to today
-                     render_kw={
-                         "type": "date",
-                         "class": "form-control"
-                     })
-    bill_type = SelectField('Bill Type', 
-                          choices=[('Monthly', 'Monthly'), 
-                                 ('Quarterly', 'Quarterly'),
-                                 ('Annually', 'Annually')],
-                          validators=[DataRequired()])
-    
-    # Add all expense fields with proper validation
-    hoa_fees = DecimalField('Association Fees', places=2, default=0.00)
-    maintenance = DecimalField('Maintenance', places=2, default=0.00)
-    staff_cost = DecimalField('Staff Cost', places=2, default=0.00)
-    management_fee = DecimalField('Management Fee', places=2, default=0.00)
-    reserve_fund = DecimalField('Reserve Fund', places=2, default=0.00)
-    special_assessments = DecimalField('Special Assessments', places=2, default=0.00)
-    amenities = DecimalField('Amenities', places=2, default=0.00)
-    other_expenses = DecimalField('Other Expenses', places=2, default=0.00)
-    property_taxes = DecimalField('Property Taxes', places=2, default=.00)
-    insurance = DecimalField('Insurance', places=2, default=0.00)
-    
-    electricity = DecimalField('Electricity', places=2, default=0.00)    
-    gas = DecimalField('Gas', places=2, default=0.00)
-    water_sewer = DecimalField('Water/Sewer', places=2, default=0.00)
-    miscellaneous_cost = DecimalField('Miscellaneous Cost', places=2, default=0.00)
-    other_city_charges = DecimalField('Other City Charges', places=2, default=0.00)
-
-    # ... add other fields similarly
-    
-    # Document Upload
-    document = FileField('Supporting Document', validators=[
-        Optional(),
-        FileAllowed(['jpg', 'jpeg', 'png', 'pdf'], 'Allowed file types: JPG, JPEG, PNG, PDF')
-    ])
-    
-    submit = SubmitField('Save Expenses')
-
-
-
-class FixedExpensesForm(FlaskForm):
-    fixed_expense = StringField('Expense Name', validators=[Optional()])
-    amount = DecimalField('Amount', validators=[Optional()])
-    description = TextAreaField('Description', validators=[Optional()])
-    document = FileField('Supporting Document', validators=[
-        Optional(),
-        FileAllowed(['jpg', 'jpeg', 'png', 'pdf'], 'Allowed file types: JPG, JPEG, PNG, PDF')
-    ])
-    submit = SubmitField('Add/Update Expense')
-
-
 class ProfilePicForm(FlaskForm):
     profile_picture = FileField('Upload Profile Picture', validators=[
         FileRequired(),
@@ -378,60 +321,6 @@ class ListingForm(FlaskForm):
         pattern = r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2} - \d{2}:\d{2}(, \d{4}-\d{2}-\d{2} \d{2}:\d{2} - \d{2}:\d{2})*$'
         if not re.match(pattern, field.data):
             raise ValidationError('Invalid date format. Use YYYY-MM-DD HH:MM - HH:MM, YYYY-MM-DD HH:MM - HH:MM.')
-
-class ExpensesOverviewForm(FlaskForm):
-    start_date = DateField('Start Date', 
-                          validators=[DataRequired()], 
-                          format='%Y-%m-%d',
-                          default=lambda: datetime.now().replace(day=1) - timedelta(days=365))
-    end_date = DateField('End Date', 
-                        validators=[DataRequired()], 
-                        format='%Y-%m-%d',
-                        default=lambda: datetime.now())
-    property_id = SelectField('Property', 
-                            coerce=int, 
-                            validators=[Optional()],
-                            default=0)
-
-    def validate_end_date(self, field):
-        if field.data < self.start_date.data:
-            raise ValidationError('End date must be after start date')
-
-class ExpensesFilterForm(FlaskForm):
-    month = DateField('Month', format='%Y-%m', validators=[DataRequired()])
-    start_date = DateField('Start Date', format='%Y-%m-%d', validators=[Optional()])
-    end_date = DateField('End Date', format='%Y-%m-%d', validators=[Optional()])
-    bill_type = SelectField('Bill Type', 
-                          choices=[('Monthly', 'Monthly'), 
-                                 ('Quarterly', 'Quarterly'),
-                                 ('Annually', 'Annually')],
-                          validators=[DataRequired()])
-
-class ExpenseFilterForm(FlaskForm):
-    """Form for filtering transaction expenses"""
-    start_date = DateField('Start Date', validators=[DataRequired()])
-    end_date = DateField('End Date', validators=[DataRequired()])
-    property_id = SelectField('Property', coerce=int, validators=[Optional()])
-    category = SelectField('Category', choices=[], validators=[Optional()])
-    
-    def __init__(self, *args, **kwargs):
-        super(ExpenseFilterForm, self).__init__(*args, **kwargs)
-        # Populate category choices from ACCOUNT_CLASSIFICATIONS
-        self.category.choices = [('', 'All Categories')] + [
-            (cat, cat) for cat in ACCOUNTS['Expenses']
-        ]
-
-def get_account_choices():
-    """Helper function to get account choices organized by category"""
-    choices = []
-    for category, accounts in ACCOUNTS.items():
-        group = (category, [(account, account) for account in accounts])
-        choices.append(group)
-    return choices
-
-class AccountForm(FlaskForm):
-    account = SelectField('Account', choices=get_account_choices())
-    # ... rest of your form code ...
 
 class TransactionForm(FlaskForm):
     transaction_date = DateField('Date', validators=[DataRequired()])
@@ -473,18 +362,11 @@ class GenerateLeaseForm(FlaskForm):
     company_name = StringField('Company Name', validators=[Optional()])
     company_registration_number = StringField('Company Registration Number', validators=[Optional()])
 
-    # Removed fields that should not be rendered in the HTML
-    tenant_name = StringField('Tenant Name', validators=[DataRequired()])
-    tenant_lastname = StringField('Tenant Last Name', validators=[DataRequired()])
-    tenant_email = StringField('Tenant Email', validators=[DataRequired()])
-    tenant_phone = StringField('Tenant Phone', validators=[DataRequired()])
-
-    date_start = DateField('Start Date', default=date.today, validators=[DataRequired()])
+    date_start = DateField('Start Date', validators=[DataRequired()])
     date_end = DateField('End Date', default=lambda: date.today() + timedelta(days=365), validators=[DataRequired()])
     monthly_rental = DecimalField('Monthly Rental', validators=[DataRequired()])
     deposit = DecimalField('Deposit', validators=[DataRequired()])
     admin_fee = DecimalField('Admin Fees', validators=[DataRequired()])
-
 
     gas = BooleanField('Gas')
     water_sewer = BooleanField('Water and Sewer')
@@ -493,9 +375,41 @@ class GenerateLeaseForm(FlaskForm):
     internet = BooleanField('Internet')
 
     daily_compounding = DecimalField('Daily Compounding', default=0)
-    submit = SubmitField('Generate Lease')
+    additional_terms = TextAreaField('Additional Terms', validators=[Optional()])
 
+    #Parties
+    tenant_id = IntegerField('Tenant ID', validators=[DataRequired()])
+    owner_id = IntegerField('Owner ID', validators=[DataRequired()])
+    sponsor_id = IntegerField('Sponsor ID', validators=[DataRequired()])
+
+    submit = SubmitField('Generate Lease')
     def __init__(self, listing=None, *args, **kwargs):
         super(GenerateLeaseForm, self).__init__(*args, **kwargs)
         if listing is not None:
             self.property_id.data = listing.property_id  # Set property_id if listing is provided
+            self.date_start.data = listing.available_start_date  # Set default start date
+
+class BankingDetailsForm(FlaskForm):
+    account_number = StringField('Account Number', validators=[DataRequired()])
+    account_holder_name = StringField('Account Holder Name', validators=[DataRequired()])
+    account_type = SelectField('Account Type', 
+        choices=[
+            ('cheque', 'Cheque'),
+            ('savings', 'Savings'),
+            ('transactional', 'Transactional'),
+            ('current', 'Current')
+        ], 
+        validators=[DataRequired()]
+    )
+    branch = StringField('Branch', validators=[Optional()])
+    branch_code = StringField('Branch Code', validators=[Optional()])
+    account_iban = StringField('IBAN', validators=[Optional()])
+    bank_id = SelectField('Bank', coerce=int, validators=[DataRequired()])
+    nickname = StringField('Nickname', validators=[Optional()])
+    is_primary = BooleanField('Primary Banking Account', default=False)
+    submit = SubmitField('Submit')
+
+    def __init__(self, *args, banks=None, **kwargs):
+        super(BankingDetailsForm, self).__init__(*args, **kwargs)
+        if banks:
+            self.bank_id.choices = banks  # Populate bank choices if provided

@@ -44,7 +44,7 @@
     <div class="container">
         <h1>Residential Lease Agreement</h1>
 
-        <form method="POST">
+        <form method="POST" action="{{ url_for('rental_routes.create_agreement', listing_id=listing.id) }}">
             <h2>Property Details</h2>
             <div class="field">
                 <label for="property_id">Property ID:</label>
@@ -149,7 +149,7 @@
             This lease shall begin on {{ agreement.date_start.strftime('%B %d, %Y') }} and shall end on {{ agreement.date_end.strftime('%B %d, %Y') }}.</p> 
 
             <p><strong>3. Rent:</strong><br>
-            The Tenant agrees to pay a monthly rent of ${{ agreement.monthly_rental }}, payable in advance on the  day of each month to the Landlord at the address stated above or to:<br>
+            The Tenant agrees to pay a monthly rent of ${{ agreement.monthly_rental }}, payable in advance on the day of each month to the Landlord at the address stated above or to:<br>
             Payment Method: </p>
 
             <p><strong>4. Security Deposit:</strong><br>
@@ -205,18 +205,5 @@
             Date: _________________________</p>
         </div>
     </div>
-
-    <script>
-        const generatingPartySelect = document.getElementById('generating_party');
-        const companyDetailsDiv = document.getElementById('company_details');
-
-        generatingPartySelect.addEventListener('change', () => {
-            if (generatingPartySelect.value === 'company') {
-                companyDetailsDiv.style.display = 'block';
-            } else {
-                companyDetailsDiv.style.display = 'none';
-            }
-        });
-    </script>
 </body>
 </html>

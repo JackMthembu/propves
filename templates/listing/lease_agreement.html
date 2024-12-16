@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lease.css') }}">
+
+<div class="lease_agreement">
+    <h3>Lease Agreement</h3>
+    <div class="container" id="leaseAgreementContent">
+        <h2>Lease Agreement</h2>
+        <p>This Residential Lease Agreement ("Agreement") is entered into on this 
+            {% if form.date_start.data %}
+                {{ form.date_start.data.strftime('%d') }} day of 
+                {{ form.date_start.data.strftime('%B') }}, 
+                {{ form.date_start.data.strftime('%Y') }}
+            {% else %}
+                [DATE] 
+            {% endif %}
+            , by and between:</p>
+
+        <p><strong>Landlord:</strong><br>
+        Name: {% if form.generating_party.data == 'company' %}{{ form.company_name.data }}{% else %} {{ enquiry.owner.user.name }} {{ enquiry.owner.user.lastname }} {% endif %}<br>
+        Address: <br>
+        City/State/ZIP: </p>
+
+        <p>and</p>
+
+        <p><strong>Tenant:</strong><br>
+        Name(s): {{ enquiry.tenant.user.name }} {{ enquiry.tenant.user.lastname }} with identification {{ enquiry.tenant.user.id_number }}.<br>
+        <em>Address:</em> {{ enquiry.tenant.user.door_number }} {{ enquiry.tenant.user.building }}<br>
+        {{ enquiry.tenant.user.street_address }}
+        <em>City: </em>{{ enquiry.tenant.user.city }}<br>
+        <em>State: </em>{{ enquiry.tenant.user.state.state }}<br>
+        <em>Country: </em>{{ enquiry.tenant.user.country.country }}</p>
+
+        <p><strong>1. Property:</strong><br>
+        The Landlord hereby leases to the Tenant the residential property <em>({{ enquiry.listing.property.title }})</em> located at:<br>
+        <em>1.1. Address:</em> {{ enquiry.listing.property.door_number }} {{ enquiry.listing.property.building }}<br>
+        {{ enquiry.listing.property.street_address }}<br>
+        <em>City: </em>{{ enquiry.listing.property.city }}<br>
+        <em>State: </em>{{ enquiry.listing.property.state.state }}<br>
+        <em>Country: </em>{{ enquiry.listing.property.country.country }}<br>
+        ("Premises").</p>
+
+
+        <p><strong>2. Term:</strong><br>
+        This lease shall begin on 
+            {% if form.date_start.data %}
+                {{ form.date_start.data.strftime('%B %d, %Y') }}
+            {% else %}
+                [START DATE]
+            {% endif %}
+            and shall end on 
+            {% if form.date_end.data %}
+                {{ form.date_end.data.strftime('%B %d, %Y') }}
+            {% else %}
+                [END DATE]
+            {% endif %}
+            .</p> 
+
+        <p id="leaseTerm"></p>
+
+        <p><strong>3. Rent:</strong><br>
+        The Tenant agrees to pay a monthly rent of {{ enquiry.owner.user.currency.symbol }}{{ form.monthly_rental.data }}, payable in advance on the  day of each month to the Landlord at the address stated above or to:<br>
+        Payment Method: </p>
+
+        <p><strong>4. Security Deposit:</strong><br>
+        The Tenant shall pay a security deposit of {{ enquiry.owner.user.currency.symbol }}{{ form.deposit.data }} upon signing this Agreement. The security deposit shall be held to cover damages beyond normal wear and tear and unpaid rent. The deposit will be returned within  days of lease termination, less any deductions.</p>
+
+        <p><strong>5. Late Payment:</strong><br>
+        The Tenant agrees to pay a late payment fee of {{ enquiry.owner.user.currency.symbol }}{{ form.daily_compounding.data }} for each day that the rent is late. The late payment fee is due on the day of the late payment.</p>
+        <p><strong>6. Utilities:</strong><br>
+        The tenant will be billed on the following utilities and services during their duration of the lease term:</p>
+        <ul>
+            {% if form.electricity.data %}
+                <li>Electricity</li>
+            {% endif %}
+            {% if form.water_sewer.data %}
+                <li>Water and Sewer</li>
+            {% endif %}
+            {% if form.gas.data %}
+                <li>Gas</li>
+            {% endif %}
+            {% if form.waste_management.data %}
+                <li>Waste Management</li>
+            {% endif %}
+            {% if form.internet.data %}
+                <li>Internet</li>
+            {% endif %}
+        </ul>
+
+        <p><strong>7. Occupants:</strong><br>
+        The Premises shall only be occupied by the Tenant and the following individuals:<br>
+        Names: </p>
+
+        <p><strong>8. Use of Premises:</strong><br>
+        The Tenant shall use the Premises solely for residential purposes and shall not engage in illegal activities. Subleasing or assigning this lease is prohibited without prior written consent from the Landlord.</p>
+
+        <p><strong>9. Maintenance and Repairs:</strong><br>
+        The Tenant shall keep the Premises clean and in good condition. The Tenant shall promptly notify the Landlord of any damage or necessary repairs. The Landlord is responsible for repairs not caused by the Tenant’s negligence.</p>
+
+        <p><strong>10. Alterations:</strong><br>
+        The Tenant shall not make any alterations to the Premises without the Landlord's prior written consent.</p>
+
+        <p><strong>11. Pets:</strong><br>
+        </p>
+
+        <p><strong>12. Entry:</strong><br>
+        The Landlord may enter the Premises for inspection, repairs, or showings with  hours' notice to the Tenant, except in emergencies.</p>
+
+        <p><strong>13. Termination:</strong><br>
+        At the end of the lease term, the Tenant shall vacate the Premises, removing all personal property and returning all keys to the Landlord.</p>
+
+        <p><strong>14. Governing Law:</strong><br>
+        {% if enquiry.listing.property.country.country == 'United States' %}
+            This Agreement shall be governed by the laws of the State of {{ enquiry.listing.property.state.state }}.
+        {% elif enquiry.listing.property.country.country == 'South Africa' %}
+            This Agreement shall be governed by the laws of the Republic of South Africa.
+        {% else %}
+            This Agreement shall be governed by the laws of the applicable jurisdiction.
+        {% endif %}
+        </p>
+
+        <p><strong>15. Additional Terms:</strong><br>
+            {% if form.additional_terms.data %}
+                {{ form.additional_terms.data }}
+            {% else %}
+                None
+            {% endif %}
+        </p>
+
+        <p><strong>16. Entire Agreement:</strong><br>
+        This Agreement constitutes the entire agreement between the parties and supersedes all prior understandings. Modifications must be made in writing and signed by both parties.</p>
+
+        <p><strong>Landlord Signature:</strong><br>
+        _________________________<br>
+        Date: _________________________</p>
+
+        <p><strong>Tenant Signature(s):</strong><br>
+        _________________________<br>
+        Date: _________________________</p>
+    </div>
+</div>
+{% endblock %}

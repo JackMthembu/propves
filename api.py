@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app
-from models import State, Country, Budget, Owner, Transaction
+from models import State, Country, Budget, Owner, Transaction, Banks
 from flask_login import login_required, current_user
 from datetime import datetime
 from sqlalchemy import extract, func
@@ -192,3 +192,17 @@ def get_expenses_data():
     series = [{'sub_category': expense.sub_category, 'total': float(expense.total)} for expense in expenses]
 
     return jsonify(series)  # Return the series directly
+
+@api_routes.route('/get_banks/<country_id>')
+@login_required
+def get_banks(country_id):
+    """Get banks for a given country"""
+    try:
+        banks = Banks.query.filter_by(country_id=country_id).all()
+        return jsonify([{
+            'id': bank.id,
+            'bank_name': bank.bank_name
+        } for bank in banks])
+    except Exception as e:
+        current_app.logger.error(f"Error fetching banks: {str(e)}")
+        return jsonify({'error': 'Error fetching banks'}), 500

@@ -82,6 +82,8 @@ class User(UserMixin, db.Model):
     sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='sender')
     received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', backref='recipient')
     company = db.relationship('Company', back_populates='users')
+    banking_details = db.relationship('BankingDetails', back_populates='user', uselist=False)
+
 
     # New relationship for wishlist
     wishlists = db.relationship('Wishlist', backref='user', lazy=True)
@@ -292,7 +294,7 @@ class RentalAgreement(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=True)
-    status = db.Column(db.String(20), nullable=False, default='pending')
+    status = db.Column(db.String(20), nullable=False, default='draft')
     
     # Dates
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -318,6 +320,9 @@ class RentalAgreement(db.Model):
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=False)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'), nullable=False)
     
+    additional_terms = db.Column(db.Text, nullable=True)
+    offer_validity = db.Column(db.Date, nullable=False)
+
     # Relationships
     property = db.relationship('Property', back_populates='rental_agreements')
     listing = db.relationship('Listing', back_populates='rental_agreements')
@@ -670,33 +675,6 @@ class City(db.Model):
     def __repr__(self):
         return f"<City(id={self.id}, city={self.city})>"
 
-class MonthlyExpenses(db.Model):
-    __tablename__ = 'monthly_expenses'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
-    month = db.Column(db.DateTime, nullable=False)
-    bill_type = db.Column(db.String(50))
-    
-    # Expense fields
-    hoa_fees = db.Column(db.Numeric(10, 2), default=0)
-    maintenance = db.Column(db.Numeric(10, 2), default=0)
-    staff_cost = db.Column(db.Numeric(10, 2), default=0)
-    management_fee = db.Column(db.Numeric(10, 2), default=0)
-    reserve_fund = db.Column(db.Numeric(10, 2), default=0)
-    special_assessments = db.Column(db.Numeric(10, 2), default=0)
-    amenities = db.Column(db.Numeric(10, 2), default=0)
-    other_expenses = db.Column(db.Numeric(10, 2), default=0)
-    insurance = db.Column(db.Numeric(10, 2), default=0)
-    property_taxes = db.Column(db.Numeric(10, 2), default=0)
-    electricity = db.Column(db.Numeric(10, 2), default=0)
-    gas = db.Column(db.Numeric(10, 2), default=0)
-    water_sewer = db.Column(db.Numeric(10, 2), default=0)
-    miscellaneous_cost = db.Column(db.Numeric(10, 2), default=0)
-    other_city_charges = db.Column(db.Numeric(10, 2), default=0)
-    
-    # Relationships
-    property = db.relationship('Property', backref='monthly_expenses')
 
 class Enquiry(db.Model):
     __tablename__ = 'enquiry'
@@ -727,3 +705,50 @@ class Message(db.Model):
 
     def __repr__(self):
         return f'<Message {self.id} from {self.sender_id} to {self.recipient_id}>'
+
+class BankingDetails(db.Model):
+    __tablename__ = 'banking_details'
+
+    id = db.Column(db.Integer, primary_key=True)
+    account_number = db.Column(db.String(50), nullable=False)
+    account_holder_name = db.Column(db.String(100), nullable=False)
+    account_type = db.Column(db.String(50), nullable=False)
+    branch = db.Column(db.String(100), nullable=True)
+    branch_code = db.Column(db.String(10), nullable=True)
+    account_iban = db.Column(db.String(34), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    bank_id = db.Column(db.Integer, db.ForeignKey('banks.id'), nullable=False)
+
+    # New fields
+    nickname = db.Column(db.String(100), nullable=True)
+    is_primary = db.Column(db.Boolean, default=False)
+
+    # Define the relationship with User
+    user = db.relationship('User', back_populates='banking_details')
+    bank = db.relationship('Banks', back_populates='banking_details')
+
+    def __repr__(self):
+        return f'<BankingDetails {self.id} for User {self.user_id}>'
+
+    def set_primary(self):
+        # Logic to set this account as primary and unset others
+        BankingDetails.query.filter_by(is_primary=True).update({"is_primary": False})
+        self.is_primary = True
+        db.session.commit()
+
+class Banks(db.Model):
+    __tablename__ = 'banks'
+
+    id = db.Column(db.Integer, primary_key=True)
+    bank_name = db.Column(db.String(100), nullable=False)
+    bank_code = db.Column(db.String(10), nullable=True)
+    bank_swift_code = db.Column(db.String(11), nullable=True)
+    country_id = db.Column(db.String(3), db.ForeignKey('country.id'), nullable=False)
+    state_id = db.Column(db.String(3), db.ForeignKey('state.id'), nullable=True)
+    
+    banking_details = db.relationship('BankingDetails', back_populates='bank')
+    country = db.relationship('Country', backref='banks')
+    state = db.relationship('State', backref='banks')
+
+    def __repr__(self):
+        return f'<Banks {self.id} {self.bank_name}>'

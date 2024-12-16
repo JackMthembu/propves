@@ -140,5 +140,53 @@
             $('#createAgreementModal').modal('show'); // Ensure the modal ID matches the one in your included file
         });
     });
+
+    // Define the showLeasePreview function here
+    function showLeasePreview(event) {
+        console.log("Preview Lease button clicked");
+        event.preventDefault(); // Prevent form submission
+
+        // Capture form data directly from the DOM
+        const dateStartElement = document.getElementById('date_start');
+        const dateEndElement = document.getElementById('date_end');
+        const monthlyRentalElement = document.getElementById('monthly_rental');
+        const depositElement = document.getElementById('deposit');
+        const dailyCompoundingElement = document.getElementById('daily_compounding');
+        const additionalTermsElement = document.getElementById('additional_terms');
+
+        // Check if elements are found
+        if (!dateStartElement || !dateEndElement || !monthlyRentalElement || !depositElement || !dailyCompoundingElement || !additionalTermsElement) {
+            console.error('One or more elements are missing in the DOM.');
+            return; // Exit the function if any element is not found
+        }
+
+        // Capture values
+        const dateStart = dateStartElement.value;
+        const dateEnd = dateEndElement.value;
+        const monthlyRental = monthlyRentalElement.value;
+        const deposit = depositElement.value;
+        const dailyCompounding = dailyCompoundingElement.value;
+        const additionalTerms = additionalTermsElement.value;
+
+        // Show the modal first
+        $('#leasePreviewModal').modal('show');
+
+        $('#leasePreviewModal').on('show.bs.modal', function () {
+            const leaseContent = `
+                <div class="lease_agreement">
+                    <h3>Lease Agreement</h3>
+                    <div class="container">
+                        <h2>Lease Agreement</h2>
+                        <p>This Residential Lease Agreement ("Agreement") is entered into on this 
+                            ${dateStart ? new Date(dateStart).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '[DATE]'}, by and between:</p>
+                        <!-- Additional content here -->
+                    </div>
+                </div>
+            `;
+
+            // Set the content of the modal
+            document.getElementById('leaseAgreementContent').innerHTML = leaseContent;
+        });
+    }
 </script>
 {% endblock %}

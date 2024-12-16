@@ -1,0 +1,216 @@
+<div class="container" style="max-width: 1000px; margin: auto; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px #ebe9e900; background-color: #fff;">
+    <h2>Residential Lease Agreement</h2>
+    <div class="generate_lease">
+        <h3>Generate Lease Agreement</h3>
+        <form method="POST" id="leaseForm">
+            <h3>Lease Terms</h3>
+            <p>Please enter the start and end dates of the lease</p>
+            <div class="field" style="display: flex; align-items: center;">
+                <label for="date_start" style="margin-right: 10px;">Start Date:</label>
+                <input type="date" id="date_start" name="date_start" value="{{ enquiry.listing.available_from }}" required style="margin-right: 20px;">
+                
+                <label for="date_end" style="margin-right: 10px;">End Date:</label>
+                <input type="date" id="date_end" name="date_end" value="{{ .date_end }}" required>
+            </div>
+
+            <h3>Financial Details</h3>
+            <div class="field">
+                <label for="monthly_rental">Monthly Rental:</label>
+                <input type="number" id="monthly_rental" name="monthly_rental" value="{{ enquiry.listing.monthly_rental }}" required>
+            </div>
+            <div class="field">
+                <label for="deposit">Deposit:</label>
+                <input type="number" id="deposit" name="deposit" value="{{ enquiry.listing.deposit }}" required>
+            </div>
+
+            <h3>Daily Compounding (optional)</h3>
+            <div class="field">
+                <label for="daily_compounding">Daily Compounding [Optional]:</label>
+                <input type="number" id="daily_compounding" name="daily_compounding" value="{{ form.daily_compounding.data }}">
+            </div>
+            <h3>Additional Terms</h3>
+            <div class="field">
+                <textarea id="additional_terms" name="additional_terms" style="width: 100%; height: 100px;"></textarea>
+            </div>
+
+            <input type="button" value="Preview Lease" onclick="showLeasePreview(event)">
+        </form>
+    </div>
+</div>
+
+<!-- Modal for Lease Agreement Preview -->
+<div class="modal fade" id="leasePreviewModal" tabindex="-1" aria-labelledby="leasePreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="leasePreviewModalLabel">Lease Agreement Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="leaseAgreementContent">
+                <script>
+                    $('#leasePreviewModal').on('show.bs.modal', function (event) {
+                        const leaseContent = `
+                            <div class="lease_agreement">
+                                <h3>Lease Agreement</h3>
+                                <div class="container" id="leaseAgreementContent">
+                                    <h2>Lease Agreement</h2>
+                                    <p>This Residential Lease Agreement ("Agreement") is entered into on this 
+                                        ${dateStart ? new Date(dateStart).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '[DATE]'}
+                                        , by and between:</p>
+
+                                    <p><strong>Landlord:</strong><br>
+                                    Name: ${document.getElementById('generating_party').value === 'company' ? document.getElementById('company_name').value : `${enquiry.owner.user.name} ${enquiry.owner.user.lastname}`}<br>
+                                    Address: <br> 
+                                    City/State/ZIP: </p> 
+
+                                    <p>and</p>
+
+                                    <p><strong>Tenant:</strong><br>
+                                    Name(s): ${enquiry.tenant.user.name} ${enquiry.tenant.user.lastname} with identification ${enquiry.tenant.user.id_number}.<br>
+                                    <em>Address:</em> ${enquiry.tenant.user.door_number} ${enquiry.tenant.user.building}<br>
+                                    ${enquiry.tenant.user.street_address}
+                                    <em>City: </em>${enquiry.tenant.user.city}<br>
+                                    <em>State: </em>${enquiry.tenant.user.state.state}<br>
+                                    <em>Country: </em>${enquiry.tenant.user.country.country}</p>
+
+                                    <p><strong>1. Property:</strong><br>
+                                    The Landlord hereby leases to the Tenant the residential property <em>(${enquiry.listing.property.title})</em> located at:<br>
+                                    <em>1.1. Address:</em> ${enquiry.listing.property.door_number} ${enquiry.listing.property.building}<br>
+                                    ${enquiry.listing.property.street_address}<br>
+                                    <em>City: </em>${enquiry.listing.property.city}<br>
+                                    <em>State: </em>${enquiry.listing.property.state.state}<br>
+                                    <em>Country: </em>${enquiry.listing.property.country.country}<br>
+                                    ("Premises").</p>
+
+                                    <p><strong>2. Term:</strong><br>
+                                    This lease shall begin on 
+                                        ${dateStart ? new Date(dateStart).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '[START DATE]'}
+                                        and shall end on 
+                                        ${dateEnd ? new Date(dateEnd).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '[END DATE]'}
+                                        .</p> 
+
+                                    <p id="leaseTerm"></p> 
+
+                                    <p><strong>3. Rent:</strong><br>
+                                    The Tenant agrees to pay a monthly rent of ${enquiry.owner.user.currency.symbol}${monthlyRental}, payable in advance on the day of each month to the Landlord at the address stated above or to:<br>
+                                    Payment Method: </p>
+
+                                    <p><strong>4. Security Deposit:</strong><br>
+                                    The Tenant shall pay a security deposit of ${enquiry.owner.user.currency.symbol}${deposit} upon signing this Agreement. The security deposit shall be held to cover damages beyond normal wear and tear and unpaid rent. The deposit will be returned within days of lease termination, less any deductions.</p>
+
+                                    <p><strong>5. Late Payment:</strong><br>
+                                    The Tenant agrees to pay a late payment fee of ${enquiry.owner.user.currency.symbol}${dailyCompounding} for each day that the rent is late. The late payment fee is due on the day of the late payment.</p>
+
+                                    <p><strong>6. Utilities:</strong><br>
+                                    The tenant will be billed on the following utilities and services during their duration of the lease term:</p>
+                                    <ul>
+                                        ${form.electricity.data ? '<li>Electricity</li>' : ''}
+                                        ${form.water_sewer.data ? '<li>Water and Sewer</li>' : ''}
+                                        ${form.gas.data ? '<li>Gas</li>' : ''}
+                                        ${form.waste_management.data ? '<li>Waste Management</li>' : ''}
+                                        ${form.internet.data ? '<li>Internet</li>' : ''}
+                                    </ul>
+
+                                    <p><strong>7. Occupants:</strong><br>
+                                    The Premises shall only be occupied by the Tenant and the following individuals:<br>
+                                    Names: </p> 
+
+                                    <p><strong>8. Use of Premises:</strong><br>
+                                    The Tenant shall use the Premises solely for residential purposes and shall not engage in illegal activities. Subleasing or assigning this lease is prohibited without prior written consent from the Landlord.</p>
+
+                                    <p><strong>9. Maintenance and Repairs:</strong><br>
+                                    The Tenant shall keep the Premises clean and in good condition. The Tenant shall promptly notify the Landlord of any damage or necessary repairs. The Landlord is responsible for repairs not caused by the Tenant’s negligence.</p>
+
+                                    <p><strong>10. Alterations:</strong><br>
+                                    The Tenant shall not make any alterations to the Premises without the Landlord's prior written consent.</p>
+
+                                    <p><strong>11. Pets:</strong><br> 
+                                    </p> 
+
+                                    <p><strong>12. Entry:</strong><br>
+                                    The Landlord may enter the Premises for inspection, repairs, or showings with hours' notice to the Tenant, except in emergencies.</p>
+
+                                    <p><strong>13. Termination:</strong><br>
+                                    At the end of the lease term, the Tenant shall vacate the Premises, removing all personal property and returning all keys to the Landlord.</p>
+
+                                    <p><strong>14. Governing Law:</strong><br>
+                                    ${enquiry.listing.property.country.country === 'United States' ? `This Agreement shall be governed by the laws of the State of ${enquiry.listing.property.state.state}.` : 
+                                      enquiry.listing.property.country.country === 'South Africa' ? `This Agreement shall be governed by the laws of the Republic of South Africa.` : 
+                                      `This Agreement shall be governed by the laws of the applicable jurisdiction.`}
+                                    </p>
+
+                                    <p><strong>15. Additional Terms:</strong><br>
+                                        ${additionalTerms ? additionalTerms : 'None'} 
+                                    </p>
+
+                                    <p><strong>16. Entire Agreement:</strong><br>
+                                    This Agreement constitutes the entire agreement between the parties and supersedes all prior understandings. Modifications must be made in writing and signed by both parties.</p>
+
+                                    <p><strong>Landlord Signature:</strong><br>
+                                    _________________________<br>
+                                    Date: _________________________</p>
+
+                                    <p><strong>Tenant Signature(s):</strong><br>
+                                    _________________________<br>
+                                    Date: _________________________</p>
+                                </div> 
+                            </div>
+                        `;
+
+                        document.getElementById('leaseAgreementContent').innerHTML = leaseContent;
+                    });
+                </script>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="sendLeaseButton">Send Lease to Tenant</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showLeasePreview(event) {
+    event.preventDefault(); // Prevent form submission
+
+    // Capture form data directly from the DOM
+    const dateStartElement = document.getElementById('date_start');
+    const dateEndElement = document.getElementById('date_end');
+    const monthlyRentalElement = document.getElementById('monthly_rental');
+    const depositElement = document.getElementById('deposit');
+    const dailyCompoundingElement = document.getElementById('daily_compounding');
+    const additionalTermsElement = document.getElementById('additional_terms');
+
+    // Capture values
+    const dateStart = dateStartElement.value;
+    const dateEnd = dateEndElement.value;
+    const monthlyRental = monthlyRentalElement.value;
+    const deposit = depositElement.value;
+    const dailyCompounding = dailyCompoundingElement.value;
+    const additionalTerms = additionalTermsElement.value;
+
+    // Show the modal first
+    $('#leasePreviewModal').modal('show');
+
+    // Use the 'show.bs.modal' event to set the content
+    $('#leasePreviewModal').on('show.bs.modal', function () {
+        const leaseContent = `
+            <div class="lease_agreement">
+                <h3>Lease Agreement</h3>
+                <div class="container">
+                    <h2>Lease Agreement</h2>
+                    <p>This Residential Lease Agreement ("Agreement") is entered into on this 
+                        ${dateStart ? new Date(dateStart).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : '[DATE]'}
+                        , by and between:</p>
+                    <p><strong>Monthly Rental:</strong> ${monthlyRental}</p>
+                    <p><strong>Deposit:</strong> ${deposit}</p>
+                    <p><strong>Daily Compounding:</strong> ${dailyCompounding}</p>
+                    <p><strong>Additional Terms:</strong> ${additionalTerms || 'None'}</p>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('leaseAgreementContent').innerHTML = leaseContent;
+    });
+}
+</script>

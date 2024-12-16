@@ -1,0 +1,25 @@
+.lease_agreement {
+    width: 210mm; /* A4 width */
+    height: 297mm; /* A4 height */
+    margin: 20px auto; /* Center the document */
+    padding: 20px; /* Inner padding */
+    background-color: #ffffff; /* White background */
+    border: 1px solid #ccc; /* Light gray border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    border-radius: 5px; /* Slightly rounded corners */
+    font-family: Arial, sans-serif; /* Font style */
+    position: relative; /* For positioning elements if needed */
+}
+
+.lease_agreement h3 {
+    text-align: center; /* Center the title */
+    margin-bottom: 20px; /* Space below the title */
+    font-size: 24px; /* Title font size */
+    color: #333; /* Dark gray color for text */
+}
+
+.lease_agreement p {
+    line-height: 1.5; /* Improve readability */
+    margin-bottom: 15px; /* Space between paragraphs */
+    color: #555; /* Slightly lighter gray for text */
+}

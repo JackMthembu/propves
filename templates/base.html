@@ -26,6 +26,7 @@
   <link href="{{ url_for('static', filename='vendor/remixicon/remixicon.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='vendor/simple-datatables/style.css') }}" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ai.css') }}">
+  
   <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"> -->
 
 
@@ -266,6 +267,16 @@
               <a class="dropdown-item d-flex align-items-center" href="{{ url_for('profile_routes.settings') }}">
                 <i class="bi bi-gear"></i>
                 <span>General Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{{ url_for('profile_routes.banking_settings') }}">
+                <i class="bi bi-bank"></i>
+                <span>Banking Settings</span>
               </a>
             </li>
             <li>

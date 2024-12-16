@@ -67,10 +67,11 @@ def create_agreement(listing_id):
 
                 date_start=form.date_start.data,
                 date_end=form.date_end.data,
-                property_id=property.id,
                 owner_id=property.owner_id,
-                manager_id=property.manager_id if property.manager_id else None,
-                validity_end=datetime.utcnow() + timedelta(days=2),
+                tenant_id=tenant.id,
+                sponsor_id=form.sponsor_id.data,
+                listing_id=listing.id,
+                offer_validity=datetime.utcnow() + timedelta(days=1),
                 gas=form.gas.data,
                 water=form.water.data,
                 electricity=form.electricity.data,
@@ -78,7 +79,6 @@ def create_agreement(listing_id):
                 internet=form.internet.data,
                 daily_compounding=form.daily_compounding.data,
                 status='pending',
-                tenant_id=tenant.id
             )
             db.session.add(agreement)
             db.session.commit()
@@ -94,7 +94,7 @@ def create_agreement(listing_id):
                                        total_payable=total_payable)
                 response = make_response(HTML(string=html).write_pdf())
                 response.headers.set('Content-Type', 'application/pdf')
-                response.headers.set('Content-Disposition', 'attachment', filename='lease_agreement.pdf')
+                response.headers.set('Content-Disposition', 'attachment', filename='lease_agreement_'+str(agreement.id)+'.pdf')
                 
                 flash('Rental agreement created successfully!', 'success')
                 return response
@@ -102,7 +102,7 @@ def create_agreement(listing_id):
             except Exception as pdf_error:
                 current_app.logger.error(f"PDF generation error: {str(pdf_error)}")
                 flash('Error generating the lease agreement PDF.', 'error')
-                return redirect(url_for('rental_routes.rental_agreement', agreement_id=agreement.id))
+                return redirect(url_for('rental_routes.scheduled_enquiries', agreement_id=agreement.id))
 
         # If form validation fails
         current_app.logger.warning(f"Form validation failed: {form.errors}")
