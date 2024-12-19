@@ -4,8 +4,7 @@ from flask_mail import Mail, Message
 from weasyprint import HTML
 from extensions import db
 from forms import GenerateLeaseForm
-from listings import get_enquiry_by_id
-from models import Company, Enquiry, RentalAgreement, Property, Listing, Tenant, User
+from models import Enquiry, RentalAgreement, Property, Listing, Tenant, User
 from flask_login import current_user, login_required
 
 mail = Mail()    
@@ -19,104 +18,124 @@ rental_routes = Blueprint('rental_routes', __name__)
 @rental_routes.route('/create_agreement/<int:listing_id>', methods=['POST'])
 @login_required
 def create_agreement(listing_id):
-    try:
-        # Debug logging
-        current_app.logger.debug(f"Creating agreement for listing_id: {listing_id}")
-        
-        listing = Listing.query.get_or_404(listing_id)
-        property = listing.property
-        
-        # Debug: Check if enquiry exists
-        if not listing.enquiry_id:
-            current_app.logger.error(f"No enquiry found for listing {listing_id}")
-            flash('No associated enquiry found for this listing.', 'error')
-            return redirect(url_for('listing_routes.scheduled_enquiries'))
-        
-        enquiry = Enquiry.query.get_or_404(listing.enquiry_id)
-        
-        # Debug: Verify tenant
-        tenant = enquiry.tenant
-        if not tenant:
-            current_app.logger.error(f"No tenant found for enquiry {enquiry.id}")
-            flash('No tenant associated with this enquiry.', 'error')
-            return redirect(url_for('listing_routes.scheduled_enquiries'))
+    current_app.logger.debug(f"create_agreement route hit with listing_id: {listing_id}")
+    
+    form = GenerateLeaseForm()
+    if form.validate_on_submit():
+        try:
+            current_app.logger.debug(f"Received data: {request.form}")
+            current_app.logger.debug(f"Creating agreement for listing_id: {listing_id}")
+            
+            listing = Listing.query.get_or_404(listing_id)
+            property = listing.property
+            
+            # Check if enquiry exists
+            enquiry = Enquiry.query.filter_by(listing_id=listing_id).first()
+            if not enquiry:
+                current_app.logger.error(f"No enquiry found for listing {listing_id}.")
+                flash('No associated enquiry found for this listing.', 'error')
+                return redirect(url_for('listing_routes.scheduled_enquiries'))
+            
+            # Verify tenant
+            tenant = enquiry.tenant
+            if not tenant:
+                current_app.logger.error(f"No tenant found for enquiry {enquiry.id}")
+                flash('No tenant associated with this enquiry.', 'error')
+                return redirect(url_for('listing_routes.scheduled_enquiries'))
 
-        # Calculate total_payable
-        total_payable = (
-            enquiry.listing.monthly_rental or 0 + 
-            enquiry.listing.deposit or 0 + 
-            enquiry.listing.admin_fee or 0
-        )
-        current_app.logger.debug(f"Total payable: {total_payable}")
-
-        # Instantiate the form with the listing and tenant_id
-        form = GenerateLeaseForm(listing=listing, tenant_id=tenant.id)
-
-        # Authorization check
-        if property.owner.user_id != current_user.id and current_user.manager_id is None:
-            current_app.logger.warning(f"Unauthorized access attempt by user {current_user.id}")
-            abort(403)
-
-        # Form validation
-        if form.validate_on_submit():
-            # Create a new rental agreement
-            agreement = RentalAgreement(
-                deposit=form.deposit.data,
-                monthly_rental=form.monthly_rental.data,
-                admin_fee=form.admin_fee.data,
-
-                date_start=form.date_start.data,
-                date_end=form.date_end.data,
-                owner_id=property.owner_id,
-                tenant_id=tenant.id,
-                sponsor_id=form.sponsor_id.data,
-                listing_id=listing.id,
-                offer_validity=datetime.utcnow() + timedelta(days=1),
-                gas=form.gas.data,
-                water=form.water.data,
-                electricity=form.electricity.data,
-                waste_management=form.waste_management.data,
-                internet=form.internet.data,
-                daily_compounding=form.daily_compounding.data,
-                status='pending',
+            # Calculate total_payable
+            total_payable = (
+                enquiry.listing.monthly_rental or 0 + 
+                enquiry.listing.deposit or 0 + 
+                enquiry.listing.admin_fee or 0
             )
-            db.session.add(agreement)
-            db.session.commit()
+            current_app.logger.debug(f"Total payable: {total_payable}")
 
-            # Send lease ready email
-            send_lease_ready_email(tenant.id, agreement)
+            # Instantiate the form with listing and tenant_id
+            form = GenerateLeaseForm(listing=listing, tenant_id=tenant.id)
 
-            # Generate lease PDF
-            try:
-                html = render_template('/rental/rental_agreement.html', 
-                                       agreement=agreement, 
-                                       property=property,
-                                       total_payable=total_payable)
-                response = make_response(HTML(string=html).write_pdf())
-                response.headers.set('Content-Type', 'application/pdf')
-                response.headers.set('Content-Disposition', 'attachment', filename='lease_agreement_'+str(agreement.id)+'.pdf')
+            # Authorization check
+            if property.owner.user_id != current_user.id and current_user.manager_id is None:
+                current_app.logger.warning(f"Unauthorized access attempt by user {current_user.id}")
+                abort(403)
+
+            # Form validation
+            if form.validate_on_submit():
+                agreement = RentalAgreement(
+                    property_id=form.property_id.data,
+                    listing_id=listing.id,
+                    tenant_id=tenant.id,
+                    owner_id=property.owner_id,
+                    sponsor_id=tenant.sponsor_id,
+                    deposit=form.deposit.data,
+                    monthly_rental=form.monthly_rental.data,
+                    admin_fee=form.admin_fee.data,
+                    date_start=form.date_start.data,
+                    date_end=form.date_end.data,
+                    validity_end=datetime.utcnow() + timedelta(days=2),
+                    waste_management=form.waste_management.data,
+                    water_sewer=form.water_sewer.data,
+                    electricity=form.electricity.data,
+                    gas=form.gas.data,
+                    internet=form.internet.data,
+                    daily_compounding=form.daily_compounding.data,
+                    additional_terms=form.additional_terms.data,
+                    status='pending'
+                )
                 
-                flash('Rental agreement created successfully!', 'success')
-                return response
+                current_app.logger.debug(f"Agreement data before commit: {agreement.__dict__}")
+                
+                try:
+                    db.session.add(agreement)
+                    current_app.logger.debug("Attempting to commit the new agreement.")
+                    db.session.commit()
+                    current_app.logger.debug("Commit successful.")
 
-            except Exception as pdf_error:
-                current_app.logger.error(f"PDF generation error: {str(pdf_error)}")
-                flash('Error generating the lease agreement PDF.', 'error')
-                return redirect(url_for('rental_routes.scheduled_enquiries', agreement_id=agreement.id))
+                    # Send lease ready email
+                    send_lease_ready_email(tenant.id, agreement)
 
-        # If form validation fails
+                    # Generate lease PDF
+                    try:
+                        html = render_template('/rental/rental_agreement.html', 
+                                               agreement=agreement, 
+                                               property=property,
+                                               total_payable=total_payable)
+                        response = make_response(HTML(string=html).write_pdf())
+                        response.headers.set('Content-Type', 'application/pdf')
+                        response.headers.set('Content-Disposition', 'attachment', filename='lease_agreement_'+str(agreement.id)+'.pdf')
+                        
+                        flash('Rental agreement created successfully!', 'success')
+                        return response
+
+                    except Exception as pdf_error:
+                        current_app.logger.error(f"PDF generation error: {str(pdf_error)}")
+                        flash('Error generating the lease agreement PDF.', 'error')
+                        return redirect(url_for('rental_routes.scheduled_enquiries', agreement_id=agreement.id))
+
+                except Exception as commit_error:
+                    db.session.rollback()  # Rollback on error
+                    current_app.logger.error(f"Error during transaction: {str(commit_error)}")
+                    flash('An error occurred while processing your request.', 'error')
+                    return redirect(url_for('listing_routes.scheduled_enquiries'))
+
+            # If form validation fails
+            current_app.logger.warning(f"Form validation failed: {form.errors}")
+            flash('Please fill in all required fields.', 'danger')
+            return render_template('rental/rental_agreement.html', 
+                                   listing=listing, 
+                                   property=property, 
+                                   form=form, 
+                                   total_payable=total_payable)
+
+        except Exception as e:
+            current_app.logger.error(f"Error in create_agreement: {str(e)}")
+            flash('An error occurred while processing your request.', 'error')
+            return redirect(url_for('listing_routes.scheduled_enquiries'))
+    else:
         current_app.logger.warning(f"Form validation failed: {form.errors}")
         flash('Please fill in all required fields.', 'danger')
-        return render_template('listing/scheduled_enquiries.html', 
-                               listing=listing, 
-                               property=property, 
-                               form=form, 
-                               total_payable=total_payable)
 
-    except Exception as e:
-        current_app.logger.error(f"Unexpected error in create_agreement: {str(e)}")
-        flash('An unexpected error occurred.', 'error')
-        return redirect(url_for('listing_routes.scheduled_enquiries'))
+    return redirect(url_for('listing_routes.scheduled_enquiries'))
 
 
 def send_lease_ready_email(tenant_id, agreement):
@@ -138,48 +157,16 @@ def send_lease_ready_email(tenant_id, agreement):
 
     Your lease agreement for property ID {agreement.property_id} is ready for your acceptance.
 
-    Please review and accept the agreement within 48 hours at:
+    Please review and accept the agreement within 24 hours at:
     {agreement_url}
 
-    If you do not accept the agreement within 48 hours, it will be automatically rejected.
+    If you do not accept the agreement within 24 hours, it will be automatically rejected.
 
     Sincerely,
     The Rental Team
     """
 
     mail.send(msg)
-
-def generate_lease(enquiry, listing):
-    # Logic to generate lease and send email
-    property = Property.query.get(listing.property_id)
-    tenant = Tenant.query.get(enquiry.user_id)  # Assuming user_id is the tenant_id
-    form = GenerateLeaseForm()
-
-    # Create rental agreement
-    agreement = RentalAgreement(
-        property_id=property.id,
-        listing_id=listing.id,
-        tenant_id=tenant.id,
-        owner_id=property.owner_id,
-        deposit=request.form.get('deposit'),
-        monthly_rental=request.form.get('monthly_rental'),
-        date_start=request.form.get('date_start'),
-        date_end=request.form.get('date_end'),
-        validity_end=datetime.utcnow() + timedelta(days=2),
-        vat_inclusion=request.form.get('vat_inclusion') == 'on',
-        water=request.form.get('water') == 'on',
-        electricity=request.form.get('electricity') == 'on',
-        daily_compounding=float(request.form.get('daily_compounding', 0)),
-        status='pending'
-    )
-    db.session.add(agreement)
-    db.session.commit()
-
-    send_lease_ready_email(tenant.id, agreement)
-
-    # Update listing outcome
-    listing.outcomes = 'Rental Agreement Sent'
-    db.session.commit()
 
 @rental_routes.route('/rental_agreement/<int:agreement_id>', methods=['GET', 'POST'])
 @login_required
@@ -239,8 +226,13 @@ def rental_agreement(agreement_id):
     listing = Listing.query.filter_by(
         property_id=agreement.property_id
     ).order_by(Listing.date_created.desc()).first()
-    
-    return render_template('rental_agreement.html',
-                         agreement=agreement,
-                         property=property,
-                         listing=listing)
+
+    # Log the fetched listing for debugging
+    if listing is None:
+        current_app.logger.warning(f"No listing found for property_id: {agreement.property_id}")
+
+    # Pass the agreement, property, and listing to the template
+    return render_template('rental/rental_agreement.html',
+                           agreement=agreement,
+                           property=property,
+                           listing=listing)  # Ensure listing is passed here

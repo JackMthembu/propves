@@ -102,7 +102,7 @@ def edit_listing(listing_id):
 
     return render_template('listing/edit_listing.html', listing=listing, property=property, form=form)
 
-@listing_routes.route('/listing/scheduled_enquiries', methods=['GET'])
+@listing_routes.route('/listing/scheduled_enquiries', methods=['GET', 'POST'])
 @login_required
 def scheduled_enquiries():
     # Build the query

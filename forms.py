@@ -357,10 +357,6 @@ class BudgetForm(FlaskForm):
 
 class GenerateLeaseForm(FlaskForm):
     property_id = IntegerField('Property ID', validators=[DataRequired()])
-    generating_party = SelectField('Generating Party', choices=[('individual', 'Individual'), ('company', 'Company')])
-
-    company_name = StringField('Company Name', validators=[Optional()])
-    company_registration_number = StringField('Company Registration Number', validators=[Optional()])
 
     date_start = DateField('Start Date', validators=[DataRequired()])
     date_end = DateField('End Date', default=lambda: date.today() + timedelta(days=365), validators=[DataRequired()])
@@ -377,12 +373,15 @@ class GenerateLeaseForm(FlaskForm):
     daily_compounding = DecimalField('Daily Compounding', default=0)
     additional_terms = TextAreaField('Additional Terms', validators=[Optional()])
 
-    #Parties
+    # Parties
     tenant_id = IntegerField('Tenant ID', validators=[DataRequired()])
     owner_id = IntegerField('Owner ID', validators=[DataRequired()])
-    sponsor_id = IntegerField('Sponsor ID', validators=[DataRequired()])
+    sponsor_id = IntegerField('Sponsor ID', validators=[Optional()])
+    company_id = IntegerField('Sponsor ID', validators=[Optional()])
+
 
     submit = SubmitField('Generate Lease')
+
     def __init__(self, listing=None, *args, **kwargs):
         super(GenerateLeaseForm, self).__init__(*args, **kwargs)
         if listing is not None:

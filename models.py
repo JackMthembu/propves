@@ -12,6 +12,7 @@ import json
 from cachetools import TTLCache, cached
 from sqlalchemy.types import JSON, TypeDecorator
 from decimal import Decimal
+from sqlalchemy.orm import relationship
 
 db.metadata.clear()
 
@@ -250,6 +251,8 @@ class Company(db.Model):
     tax_number =  db.Column(db.String(100), nullable=False)
     users = db.relationship('User', back_populates='company')
 
+    rental_agreements = relationship('RentalAgreement', back_populates='company')
+
 
 class Manager(db.Model):
     __tablename__ = 'manager'
@@ -292,36 +295,38 @@ class RentalAgreement(db.Model):
     __tablename__ = 'rental_agreement'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
-    property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
+    property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=True)
     listing_id = db.Column(db.Integer, db.ForeignKey('listing.id'), nullable=True)
     status = db.Column(db.String(20), nullable=False, default='draft')
     
     # Dates
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    date_start = db.Column(db.Date, nullable=False)
-    date_end = db.Column(db.Date, nullable=False)
-    validity_end = db.Column(db.DATE, nullable=True)
-    
+    date_created = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
+    date_start = db.Column(db.Date, nullable=True)
+    date_end = db.Column(db.Date, nullable=True)
+    offer_validity = db.Column(db.Date, nullable=True)
+
     # Financial details
     deposit = db.Column(db.Numeric(10, 2), nullable=True)
     monthly_rental = db.Column(db.Numeric(10, 2), nullable=True)
     daily_compounding = db.Column(db.Numeric(10, 2), default=0.0)
     
     # Inclusions
-    water_sewer = db.Column(db.Boolean, default=False)
-    electricity = db.Column(db.Boolean, default=False)
-    gas = db.Column(db.Boolean, default=False)
-    waste_management = db.Column(db.Boolean, default=False)
-    internet = db.Column(db.Boolean, default=False)
+    water_sewer = db.Column(db.Boolean, default=True)
+    electricity = db.Column(db.Boolean, default=True)
+    gas = db.Column(db.Boolean, default=True)
+    waste_management = db.Column(db.Boolean, default=True)
+    internet = db.Column(db.Boolean, default=True)
 
 
     #Users
-    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), nullable=False)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=False)
-    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'), nullable=False)
+    owner_id = db.Column(db.Integer, db.ForeignKey('owner.id'), nullable=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'), nullable=True)
     
     additional_terms = db.Column(db.Text, nullable=True)
-    offer_validity = db.Column(db.Date, nullable=False)
+
+    # Company
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=True)
 
     # Relationships
     property = db.relationship('Property', back_populates='rental_agreements')
@@ -330,6 +335,7 @@ class RentalAgreement(db.Model):
     owner = db.relationship('Owner', back_populates='rental_agreements')
     tenant = db.relationship('Tenant', back_populates='rental_agreements')
     sponsor = db.relationship('Sponsor', back_populates='rental_agreements')
+    company = db.relationship('Company', back_populates='rental_agreements')
 
     def __repr__(self):
         return f"<RentalAgreement {self.id} for Property {self.property_id}>"

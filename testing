@@ -50,7 +50,7 @@ def create_agreement(listing_id):
         monthly_rental = listing.monthly_rental
         date_start = form.date_start.data
         date_end = form.date_end.data
-        vat_inclusion = form.vat_inclusion.data
+        waste_management = form.waste_management.data
         water = form.water.data
         electricity = form.electricity.data
         daily_compounding = form.daily_compounding.data
@@ -65,7 +65,7 @@ def create_agreement(listing_id):
             owner_id=property.owner_id,
             manager_id=property.manager_id if property.manager_id else None,
             validity_end=datetime.utcnow() + timedelta(days=2),
-            vat_inclusion=vat_inclusion,
+            waste_management=waste_management,
             water=water,
             electricity=electricity,
             daily_compounding=daily_compounding,
@@ -144,7 +144,7 @@ def generate_lease(enquiry, listing):
         date_start=request.form.get('date_start'),
         date_end=request.form.get('date_end'),
         validity_end=datetime.utcnow() + timedelta(days=2),
-        vat_inclusion=request.form.get('vat_inclusion') == 'on',
+        waste_management=request.form.get('waste_management') == 'on',
         water=request.form.get('water') == 'on',
         electricity=request.form.get('electricity') == 'on',
         daily_compounding=float(request.form.get('daily_compounding', 0)),

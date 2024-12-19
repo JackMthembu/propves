@@ -4,7 +4,7 @@
 {% block content %}
 <main id="main" class="main">
     <div class="pagetitle">
-        <h1>Update Rental Listing</h1>
+        <h1>Manage Enquiries</h1>
         <nav>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
@@ -67,12 +67,12 @@
                             <tbody>
                                 {% for enquiry in enquiries %}
                                 <tr>
-                                    <td class="text-center">{{ enquiry.listing.property.title }}</td>
-                                    <td class="text-center">{{ enquiry.tenant.user.name }} {{ enquiry.tenant.user.lastname }}</td>
-                                    <td class="text-center">{{ enquiry.scheduled_date.strftime('%Y-%m-%d') }}</td>
-                                    <td class="text-center">{{ enquiry.scheduled_date.strftime('%H:%M') }}</td>
-                                    <td class="text-center">{{ enquiry.outcomes }}</td>
-                                    <td class="text-center">
+                                    <td class="text-start">{{ enquiry.listing.property.title }}</td>
+                                    <td class="text-start">{{ enquiry.tenant.user.name }} {{ enquiry.tenant.user.lastname }}</td>
+                                    <td class="text-start">{{ enquiry.scheduled_date.strftime('%B %d') }}{% if enquiry.scheduled_date.day in [1, 21, 31] %}st{% elif enquiry.scheduled_date.day in [2, 22] %}nd{% elif enquiry.scheduled_date.day in [3, 23] %}rd{% else %}th{% endif %}, {{ enquiry.scheduled_date.strftime('%Y') }}</td>
+                                    <td class="text-start">{{ enquiry.scheduled_date.strftime('%H:%M') }}</td>
+                                    <td class="text-start">{{ enquiry.outcomes }}</td>
+                                    <td class="text-start">
                                         <div class="dropdown">
                                             <button class="btn btn-secondary dropdown-toggle" type="button" id="actionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                                 Actions
@@ -127,15 +127,7 @@
                 <!-- Load the agreement content here -->
                 {% include "listing/_create_agreement.html" %}
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <form method="POST" action="{% if listing and listing.id %}{{ url_for('rental_routes.create_agreement', listing_id=listing.id) }}{% else %}# {% endif %}">
-                    {{ form.hidden_tag() }}
-                    <input type="hidden" name="enquiry_id" value="{{ enquiry.id }}">
-                    <input type="hidden" name="listing_id" value="{{ listing.id }}">
-                    <button type="submit" class="btn btn-primary">Confirm</button>
-                </form>
-            </div>
+            
         </div>
     </div>
 </div>
