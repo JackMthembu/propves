@@ -1,6 +1,13 @@
 document.addEventListener("DOMContentLoaded", () => {
   let chart; // Store chart instance
   
+  // Get the user's currency symbol
+  const currencyElement = document.querySelector('#userCurrencySymbol');
+  const userCurrencySymbol = currencyElement ? currencyElement.textContent : '$'; // Fallback to default if null
+
+  // Use the userCurrencySymbol directly
+  console.log('User Currency Symbol:', userCurrencySymbol); // For debugging
+
   // Function to load chart data
   const loadChartData = (period = 'year') => {
     fetch(`/api/monthly-financials?period=${period}`)
@@ -75,14 +82,14 @@ document.addEventListener("DOMContentLoaded", () => {
             yaxis: {
               labels: {
                 formatter: function(value) {
-                  return '$' + value.toLocaleString();
+                  return userCurrencySymbol + value.toLocaleString(); // Use user's currency symbol
                 }
               }
             },
             tooltip: {
               y: {
                 formatter: function(value) {
-                  return '$' + value.toLocaleString();
+                  return userCurrencySymbol + value.toLocaleString(); // Use user's currency symbol
                 }
               }
             },

@@ -860,7 +860,7 @@ h6 {
   background: #ffffff;
 }
 
-/* .dashboard .income-card .card-icon {
+.dashboard .income-card .text-icon { 
   color: #60D0AC;
   background: #ffffff;
 }
@@ -1710,4 +1710,8 @@ body, .card, .header, .sidebar, .nav-link, .form-control {
   background-color: var(--card-dark);
   border-color: var(--border-dark);
   box-shadow: 0px 0px 20px var(--shadow-color);
+}
+
+.summary-card {
+  font-size: 20px; font-weight: bold; color: #fff;
 }

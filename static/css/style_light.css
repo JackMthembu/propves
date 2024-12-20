@@ -1656,3 +1656,7 @@ body, .card, .header, .sidebar, .nav-link, .form-control {
     color: white;
     cursor: pointer;
 }
+
+.summary-card {
+  font-size: 25px; font-weight: bold; color: #fff;
+}

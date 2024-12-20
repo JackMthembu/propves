@@ -44,11 +44,11 @@
     <div class="container">
         <h1>Residential Lease Agreement</h1>
 
-        <form method="POST" action="{{ url_for('rental_routes.create_agreement', listing_id=listing.id) }}">
+        <form method="POST" action="{{ url_for('rental_routes.generate_rental_agreement', enquiry_id=enquiry.id) }}">
             <h2>Property Details</h2>
             <div class="field">
                 <label for="property_id">Property ID:</label>
-                <input type="number" id="property_id" name="property_id" value="{{ agreement.property_id }}" readonly>
+                <input type="number" id="property_id" name="property_id" value="{{ agreement.property_id if agreement else '' }}" readonly>
             </div>
 
             <h2>Lessor Details</h2>
@@ -71,7 +71,7 @@
             <h2>Tenant Details</h2>
             <div class="field">
                 <label for="tenant_name">Tenant Name:</label>
-                <input type="text" id="tenant_name" name="tenant_name" value="{{ agreement.tenant.name }}" required> 
+                <input type="text" id="tenant_name" name="tenant_name" value="{{ agreement.tenant.name if agreement else '' }}" required> 
             </div>
             <div class="field">
                 <label for="tenant_lastname">Tenant Last Name:</label>

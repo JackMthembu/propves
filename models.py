@@ -84,6 +84,8 @@ class User(UserMixin, db.Model):
     received_messages = db.relationship('Message', foreign_keys='Message.recipient_id', backref='recipient')
     company = db.relationship('Company', back_populates='users')
     banking_details = db.relationship('BankingDetails', back_populates='user', uselist=False)
+    maintainance_reports = db.relationship('MaintainanceReport', back_populates='user')
+    maintainance_updates = db.relationship('MaintainanceUpdates', back_populates='user')
 
 
     # New relationship for wishlist
@@ -214,7 +216,8 @@ class Photo(db.Model):
     __tablename__ = 'photo'
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
+    property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=True)
+    maintainance_id = db.Column(db.Integer, db.ForeignKey('maintainance.id'), nullable=True)
     file_path = db.Column(db.String(255), nullable=False)
     filename = db.Column(db.String(255), nullable=False)
     is_thumbnail = db.Column(db.Boolean, default=False)
@@ -223,6 +226,7 @@ class Photo(db.Model):
     
     # Relationship
     property = db.relationship('Property', back_populates='photos')
+    maintainance_reports = db.relationship('MaintainanceReport', back_populates='photo')
 
     def __repr__(self):
         return f"<Photo {self.id} for Property {self.property_id}>"
@@ -270,26 +274,26 @@ class Tenant(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'), nullable=True)
 
     user = db.relationship('User', backref='tenant', lazy=True)
     rental_agreements = db.relationship('RentalAgreement', back_populates='tenant')
     enquiry_tenant = db.relationship('Enquiry', back_populates='tenant')
     
-    # Add this line to define the relationship with Sponsor
-    sponsors = db.relationship('Sponsor', back_populates='tenant', lazy=True)
+    # Define the relationship to Sponsor
+    sponsor = db.relationship('Sponsor', back_populates='tenants', foreign_keys=[sponsor_id])
 
 class Sponsor(db.Model):
     __tablename__ = 'sponsor'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=False)
 
     user = db.relationship('User', backref='sponsor', lazy=True)
     rental_agreements = db.relationship('RentalAgreement', back_populates='sponsor')
-    
-    # Add this line to define the relationship with Tenant
-    tenant = db.relationship('Tenant', back_populates='sponsors')
+
+    # Define the relationship to Tenant
+    tenants = db.relationship('Tenant', back_populates='sponsor', foreign_keys=[Tenant.sponsor_id])
 
 class RentalAgreement(db.Model):
     __tablename__ = 'rental_agreement'
@@ -758,3 +762,38 @@ class Banks(db.Model):
 
     def __repr__(self):
         return f'<Banks {self.id} {self.bank_name}>'
+
+class MaintainanceReport(db.Model):
+    __tablename__ = 'maintainance_report'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    property_id = db.Column(db.Integer, db.ForeignKey('property.id'), nullable=False)
+    maintainance_type = db.Column(db.String(50), nullable=False)
+    reported_date = db.Column(db.DateTime, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # Report
+    status = db.Column(db.Boolean, nullable=False, default=False)  # reported = False, resolved = True
+    description = db.Column(db.Text, nullable=False)
+
+    # Photo
+    photo_id = db.Column(db.Integer, db.ForeignKey('photo.id'), nullable=False)
+
+    # Relationships
+    photo = db.relationship('Photo', back_populates='maintainance_reports')
+    user = db.relationship('User', back_populates='maintainance_reports')
+    updates = db.relationship('MaintainanceUpdates', back_populates='maintainance_report')
+
+class MaintainanceUpdates(db.Model):
+    __tablename__ = 'maintainance_updates'
+
+    id = db.Column(db.Integer, primary_key=True)
+    maintainance_report_id = db.Column(db.Integer, db.ForeignKey('maintainance_report.id'), nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
+    update_description = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    action = db.Column(db.String(50), nullable=False)
+
+    # Relationships
+    maintainance_report = db.relationship('MaintainanceReport', back_populates='updates')
+    user = db.relationship('User', back_populates='maintainance_updates')

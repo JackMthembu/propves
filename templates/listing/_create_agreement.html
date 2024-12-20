@@ -4,101 +4,87 @@
     <h2>Residential Lease Agreement</h2>
     <div class="generate_lease">
         <h5>Generate Lease Agreement</h5>
-        <form method="POST" id="GenerateLeaseForm" action="{{ url_for('rental_routes.create_agreement', enquiry_id=enquiry.id, listing_id=enquiry.listing.id) }}">
-            {{ form.csrf_token }}
+        <form method="POST" id="GenerateLeaseForm" action="{{ url_for('rental_routes.generate_rental_agreement', enquiry_id=enquiry.id) }}">
+            {{ form.hidden_tag() }}  <!-- CSRF token -->
             <h5><strong>Lease Terms</strong></h5>
             <p>Please enter the start and end dates of the lease</p>
             <div class="field" style="display: flex; align-items: center;">
                 <label for="date_start" style="margin-right: 10px;">Start Date:</label>
-                <input type="date" id="date_start" name="date_start" value="{{ enquiry.listing.available_start_date }}" required style="margin-right: 20px;">
+                <input type="date" id="date_start" name="date_start" value="{{ form.date_start.data }}" required style="margin-right: 20px;">
                 
                 <label for="date_end" style="margin-right: 10px;">End Date:</label>
-                <input type="date" id="date_end" name="date_end" required>
-            </div>
-
-            <input type="hidden" id="tenant_id" name="tenant_id" value="{{ enquiry.tenant_id if enquiry else '' }}">
-            <input type="hidden" id="owner_id" name="owner_id" value="{{ enquiry.owner.id if enquiry and enquiry.owner else '' }}">
-            <input type="hidden" id="sponsor_id" name="sponsor_id" value="{{ enquiry.tenant.sponsor_id if enquiry and enquiry.tenant else '' }}">
-            <input type="hidden" id="company_id" name="company_id" value="{{ enquiry.owner.user.company_id if enquiry and enquiry.owner and enquiry.owner.user else '' }}">
-            <input type="hidden" id="property_id" name="property_id" value="{{ enquiry.listing.property_id if enquiry and enquiry.listing else '' }}">
-
-
-            <h5><strong>Utilities</strong></h5>
-            <p>Please select the utilities that are included in the lease</p>
-
-            <div class="field">
-                <label for="gas">Gas:</label>
-                <input type="checkbox" id="gas" name="gas" value="1" {{ 'checked' if form.gas.data else '' }}>
-            </div>
-            <div class="field">
-                <label for="water_sewer">Water and Sewer:</label>
-                <input type="checkbox" id="water_sewer" name="water_sewer" value="1" {{ 'checked' if form.water_sewer.data else '' }}>
-            </div>
-            <div class="field">
-                <label for="electricity">Electricity:</label>
-                <input type="checkbox" id="electricity" name="electricity" value="1" {{ 'checked' if form.electricity.data else '' }}>
-            </div>
-            <div class="field">
-                <label for="waste_management">Waste Management:</label>
-                <input type="checkbox" id="waste_management" name="waste_management" value="1" {{ 'checked' if form.waste_management.data else '' }}>
-            </div>
-            <div class="field">
-                <label for="internet">Internet:</label>
-                <input type="checkbox" id="internet" name="internet" value="1" {{ 'checked' if form.internet.data else '' }}>
+                <input type="date" id="date_end" name="date_end" value="{{ form.date_end.data }}" required>
             </div>
 
             <h5><strong>Financial Details</strong></h5>
             <div class="field">
-                <label for="monthly_rental" class="floating-label">Monthly Rental:</label>
-                <div class="input-group has-validation">
-                    <span class="input-group-text">{{ enquiry.owner.user.currency.symbol }}</span>
-                    <input type="number" id="monthly_rental" name="monthly_rental" value="{{ enquiry.listing.monthly_rental }}" required class="form-control" aria-describedby="monthlyRentalHelp">
-                    <div class="invalid-tooltip" id="monthlyRentalHelp">
-                        Please enter a valid monthly rental amount.
-                    </div>
-                </div>
+                <label for="monthly_rental">Monthly Rental:</label>
+                {{ form.monthly_rental(class="form-control", id="monthly_rental") }}
             </div>
             <div class="field">
-                <label for="deposit" class="floating-label">Deposit:</label>
-                <div class="input-group has-validation">
-                    <span class="input-group-text">{{ enquiry.owner.user.currency.symbol }}</span>
-                    <input type="number" id="deposit" name="deposit" value="{{ enquiry.listing.deposit }}" required class="form-control" aria-describedby="depositHelp">
-                    <div class="invalid-tooltip" id="depositHelp">
-                        Please enter a valid deposit amount.
-                    </div>
-                </div>
+                <label for="deposit">Deposit:</label>
+                {{ form.deposit(class="form-control", id="deposit") }}
             </div>
             <div class="field">
-                <label for="admin_fee" class="floating-label">Admin Fee:</label>
-                <div class="input-group has-validation">
-                    <span class="input-group-text">{{ enquiry.owner.user.currency.symbol }}</span>
-                    <input type="number" id="admin_fee" name="admin_fee" value="{{ enquiry.listing.admin_fee }}" required class="form-control" aria-describedby="adminFeeHelp">
-                    <div class="invalid-tooltip" id="adminFeeHelp">
-                        Please enter a valid admin fee amount.
-                    </div>
+                <label for="admin_fee">Admin Fees:</label>
+                {{ form.admin_fee(class="form-control", id="admin_fee") }}
+            </div>
+
+            <h5><strong>Utilities</strong></h5>
+            <div class="field" style="display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    {{ form.gas(class="form-check-input") }} 
+                    <label for="gas" class="form-check-label" style="margin-left: 5px;">Gas</label>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    {{ form.water_sewer(class="form-check-input") }} 
+                    <label for="water_sewer" class="form-check-label" style="margin-left: 5px;">Water and Sewer</label>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    {{ form.electricity(class="form-check-input") }} 
+                    <label for="electricity" class="form-check-label" style="margin-left: 5px;">Electricity</label>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    {{ form.waste_management(class="form-check-input") }} 
+                    <label for="waste_management" class="form-check-label" style="margin-left: 5px;">Waste Management</label>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    {{ form.internet(class="form-check-input") }} 
+                    <label for="internet" class="form-check-label" style="margin-left: 5px;">Internet</label>
                 </div>
             </div>
 
-            <h5><strong>Daily Compounding (optional)</strong></h5>
+            <h5><strong>Additional Information</strong></h5>
             <div class="field">
-                <label for="daily_compounding" class="form-label">Daily Compounding [Optional]:</label>
-                <div class="input-group has-validation">
-                    <span class="input-group-text">{{ enquiry.owner.user.currency.symbol }}</span>
-                    <input type="number" id="daily_compounding" name="daily_compounding" value="{{ form.daily_compounding.data }}" class="form-control" aria-describedby="dailyCompoundingHelp" required>
-                    <div class="invalid-tooltip" id="dailyCompoundingHelp">
-                        Please enter a valid daily compounding amount.
-                    </div>
-                </div>
+                <label for="daily_compounding">Daily Compounding:</label>
+                {{ form.daily_compounding(class="form-control", id="daily_compounding") }}
             </div>
-            <h5>Additional Terms</h5>
             <div class="field">
-                <textarea id="additional_terms" name="additional_terms" style="width: 100%; height: 100px;"></textarea>
+                <label for="additional_terms">Additional Terms:</label>
+                {{ form.additional_terms(class="form-control", id="additional_terms") }}
+            </div>
+
+            <h5><strong>Parties Involved</strong></h5>
+            <div class="field">
+                <label for="tenant_id">Tenant ID:</label>
+                {{ form.tenant_id(class="form-control", id="tenant_id", value=enquiry.tenant.id) }}
+            </div>
+            <div class="field">
+                <label for="owner_id">Owner ID:</label>
+                {{ form.owner_id(class="form-control", id="owner_id", value=enquiry.owner.id) }}
+            </div>
+            <div class="field">
+                <label for="sponsor_id">Sponsor ID:</label>
+                {{ form.sponsor_id(class="form-control", id="sponsor_id", value=enquiry.tenant.sponsor.id) }}
+            </div>
+            <div class="field">
+                <label for="company_id">Company ID:</label>
+                {{ form.company_id(class="form-control", id="company_id", value=enquiry.owner.user.company.id) }}
             </div>
 
             <div class="field">
-                <input type="submit" class="btn btn-success" value="Preview Lease">
+                <button type="submit" class="btn btn-primary">Generate Lease</button>
             </div>
-
         </form>
     </div>
 </div>

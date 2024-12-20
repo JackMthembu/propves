@@ -25,7 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log('Received expenses data:', data);
             if (!Array.isArray(data) || data.length === 0) {
-                console.warn('No expenses data received');
+                console.warn('No expenses data available to display.');
+                return;
             }
 
             const option = {
