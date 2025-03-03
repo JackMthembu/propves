@@ -1,0 +1,95 @@
+{% extends "auth.html" %}
+
+{% block title %}
+    Signup
+{% endblock %}
+
+{% block content %}
+<main class="auth-main">
+    <div class="container">
+        <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-5 col-md-7">
+                        <!-- Logo Section -->
+                        <div class="text-center mb-4">
+                            <a href="#" class="logo-link">
+                              <img src="{{ url_for('static', filename='img/logos/propves3.png') }}" alt="Propves Logo" class="logo-img" width="200">
+                            </a>
+                        </div>
+
+                        <!-- Signup Card -->
+                        <div class="auth-card">
+                            <div class="card-body p-4">
+                                <div class="text-center mb-4">
+                                    <h3 class="auth-title">Create an Account</h3>
+                                    <p class="auth-subtitle">Enter your personal details to create account</p>
+                                </div>
+
+                                <form action="{{ ('signup') }}" method="POST" class="form needs-validation" id="signup_form">
+                                    {{ form.hidden_tag() }}
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.name(class="form-control", placeholder="Name") }}
+                                                <label>Name</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                {{ form.lastname(class="form-control", placeholder="Last Name") }}
+                                                <label>Last Name</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                                {{ form.email(class="form-control", placeholder="Email") }}
+                                                <label>Email address</label>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                              {{ form.username(class="form-control", placeholder="Username") }}
+                                              <label>Username</label>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                          {{ form.password(class="form-control", placeholder="Password") }}
+                                                <label>Password</label>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                              {{ form.confirm_password(class="form-control", placeholder="Confirm Password") }}
+                                              <label>Confirm Password</label>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                          <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" id="acceptTerms" required>
+                                                <label class="form-check-label" for="acceptTerms">
+                                                    I agree to the <a href="https://propves.com/terms" class="link-primary" target="_blank" rel="noopener noreferrer">terms and conditions</a>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-floating mb-3">
+                                          <button type="submit" class="btn btn-primary auth-submit-btn">Create Account</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-center mt-4">
+                                        <p class="mb-0">Already have an account? 
+                                            <a href="{{ url_for('auth_routes.login') }}" class="link-primary">Sign in</a>
+                                        </p>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock %}
