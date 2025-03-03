@@ -1,0 +1,66 @@
+/* Card styling */
+.card {
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    transition: box-shadow 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+.card-body {
+    flex: 1;
+}
+
+/* Map styling */
+#map {
+    height: 600px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    transition: box-shadow 0.3s ease;
+    margin-bottom: 20px;
+}
+
+#map:hover {
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+/* Form styling */
+.form-control {
+    margin-bottom: 10px;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+/* Layout */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -15px;
+}
+
+.col-md-6 {
+    padding: 0 15px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .col-md-6 {
+        margin-bottom: 20px;
+    }
+    
+    #map {
+        height: 400px;
+    }
+    
+    .card {
+        margin-bottom: 15px;
+    }
+}

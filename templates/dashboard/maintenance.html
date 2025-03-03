@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Manage Maintenance{% endblock %}
+
+{% block content %}
+  <main id="main" class="main">
+
+    <div class="pagetitle">
+      <h1>Manage Maintenance</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard')}}">Dashboard</a></li>
+          <li class="breadcrumb-item active">Manage Maintenance</li>
+        </ol>
+      </nav>
+
+    <section class="section dashboard">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Manage Maintenance</h5>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Thumbnail</th>
+                    <th>Date</th>
+                    <th>Property</th>
+                    <th>Maintenance Type</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for report in reports %}
+                  <tr>
+                    <td>
+                      {% if report.photo %}
+                        <img src="{{ report.photo.url }}" alt="Thumbnail" style="width: 50px; height: auto;">
+                      {% else %}
+                        <img src="path/to/default-thumbnail.jpg" alt="No Image" style="width: 50px; height: auto;">
+                      {% endif %}
+                    </td>
+                    <td>{{ report.reported_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ report.property.title }}</td>
+                    <td>{{ report.maintainance_type }}</td>
+                    <td>{{ report.description[:50] }}{% if report.description|length > 50 %}...{% endif %}</td>
+                    <td>{{ 'Resolved' if report.status else 'Reported' }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+{% endblock %}

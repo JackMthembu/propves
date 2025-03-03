@@ -1,0 +1,62 @@
+.toggle-switch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+.toggle--checkbox {
+    display: none;
+}
+
+.toggle--label {
+    display: inline-block;
+    width: 80px;
+    height: 40px;
+    background-color: #ccc;
+    border-radius: 30px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.toggle--label-background {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 30px;
+    height: 30px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: left 0.3s ease;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toggle--checkbox:checked + .toggle--label .toggle--label-background {
+    left: 45px;
+}
+
+.toggle--checkbox:checked + .toggle--label {
+    background-color: #60D0AC;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8em;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-warning {
+    background-color: #60D0AC;
+    color: white;
+}
+
+.btn-danger {
+    background-color: red;
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}

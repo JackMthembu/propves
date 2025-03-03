@@ -10,7 +10,14 @@ from routes import main
 from auth import auth_routes
 from flask_login import LoginManager, UserMixin
 from datetime import timedelta
-
+from flask_wtf.csrf import CSRFProtect
+from messaging import message_routes
+from profiles import profile_routes
+from property import property_routes
+from listings import listing_routes
+from rentals import rental_routes 
+from transaction import transaction_routes 
+from accounting import accounting_routes
 
 app = Flask(__name__)  
 app.secret_key = os.getenv('SECRET_KEY') 
@@ -28,6 +35,8 @@ login_manager = LoginManager()
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))  # Replace User with your user model
+
+csrf = CSRFProtect()
 
 def create_app():
     app = Flask(__name__, template_folder='templates')
@@ -49,8 +58,17 @@ def create_app():
     mail.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)   
+    csrf.init_app(app)
     app.register_blueprint(main)
     app.register_blueprint(auth_routes, url_prefix='/auth')
+    app.register_blueprint(message_routes)
+    app.register_blueprint(profile_routes)
+    app.register_blueprint(property_routes)
+    app.register_blueprint(listing_routes)
+    app.register_blueprint(rental_routes)
+    app.register_blueprint(transaction_routes)
+    app.register_blueprint(accounting_routes)
+
     return app  
 
 if __name__ == '__main__':

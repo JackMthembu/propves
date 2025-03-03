@@ -1,7 +1,6 @@
 #config.py
 import os
 from dotenv import load_dotenv
-from celery.schedules import crontab
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -42,7 +41,7 @@ class Config:
         }
     else:
         print("Warning: Using SQLite as fallback database")
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///default.db'  # Temporary hardcoded value for testing
+        SQLALCHEMY_DATABASE_URI = 'mssql+pyodbc://propvesdb:vowhY1-vinnug-wepkyb@lethabo.database.windows.net/green-mammba?driver=ODBC+Driver+17+for+SQL+Server&TrustServerCertificate=yes&Encrypt=yes'
     
     # General configuration
     DEBUG = True

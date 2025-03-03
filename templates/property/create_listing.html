@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/property.css') }}">
+{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Create Rental Listing</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('property_routes.property_list') }}">My Properties</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('property_routes.manage_property', property_id=property.id) }}">{{ property.title }}</a></li>
+                <li class="breadcrumb-item active">Create Listing</li>
+            </ol>
+        </nav>
+    </div>
+
+    <section class="section">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            {% if existing_listing %}
+                                Update Listing
+                            {% else %}
+                                Create New Listing
+                            {% endif %}
+                        </h5>
+
+                        <form method="POST" class="needs-validation" novalidate>
+                            {{ form.csrf_token }}
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="monthly_rental" class="form-label">Monthly Rental*</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">{{ property.get_currency_symbol() }}</span>
+                                        {{ form.monthly_rental(class="form-control" + (" is-invalid" if form.monthly_rental.errors else ""), placeholder="Enter monthly rental amount") }}
+                                        {% if form.monthly_rental.errors %}
+                                            <div class="invalid-feedback">{{ form.monthly_rental.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="deposit" class="form-label">Security Deposit</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">{{ property.get_currency_symbol() }}</span>
+                                        {{ form.deposit(class="form-control" + (" is-invalid" if form.deposit.errors else ""), placeholder="Enter security deposit amount") }}
+                                        {% if form.deposit.errors %}
+                                            <div class="invalid-feedback">{{ form.deposit.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="admin_fee" class="form-label">Admin Fee</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">{{ property.get_currency_symbol() }}</span>
+                                    {{ form.admin_fee(class="form-control" + (" is-invalid" if form.admin_fee.errors else ""), placeholder="Enter admin fee amount") }}
+                                    {% if form.admin_fee.errors %}
+                                        <div class="invalid-feedback">{{ form.admin_fee.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="available_start_date" class="form-label">Available From*</label>
+                                    {{ form.available_start_date(class="form-control" + (" is-invalid" if form.available_start_date.errors else ""), type="date") }}
+                                    {% if form.available_start_date.errors %}
+                                        <div class="invalid-feedback">{{ form.available_start_date.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="available_end_date" class="form-label">Available Until</label>
+                                    {{ form.available_end_date(class="form-control" + (" is-invalid" if form.available_end_date.errors else ""), type="date") }}
+                                    {% if form.available_end_date.errors %}
+                                        <div class="invalid-feedback">{{ form.available_end_date.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="listing_type" class="form-label">Listing Type*</label>
+                                    {{ form.listing_type(class="form-control" + (" is-invalid" if form.listing_type.errors else ""), placeholder="Select listing type") }}
+                                    {% if form.listing_type.errors %}
+                                        <div class="invalid-feedback">{{ form.listing_type.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if existing_listing %}
+                                        Update Listing
+                                    {% else %}
+                                        Create Listing
+                                    {% endif %}
+                                </button>
+                                <a href="{{ url_for('property_routes.manage_property', property_id=property.id) }}" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property Summary Card -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Property Summary</h5>
+                        <div class="property-summary">
+                            <p><strong>Title:</strong> {{ property.title }}</p>
+                            <p><strong>Type:</strong> {{ property.type }}</p>
+                            <p><strong>Address:</strong> {{ property.street_address }}, {{ property.city }}</p>
+                            <p><strong>Bedrooms:</strong> {{ property.bedroom }}</p>
+                            <p><strong>Bathrooms:</strong> {{ property.bathroom }}</p>
+                            <p>
+                                <strong>
+                                  {% if current_user.system == 'imperial' %}
+                                    Square Feet:
+                                  {% else %}
+                                    Square Meters:
+                                  {% endif %}
+                                </strong> 
+                                {{ property.sqm }} 
+                              </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add date validation
+document.addEventListener('DOMContentLoaded', function() {
+    const startDate = document.getElementById('available_start_date');
+    const endDate = document.getElementById('available_end_date');
+
+    startDate.addEventListener('change', function() {
+        endDate.min = this.value;
+    });
+
+    endDate.addEventListener('change', function() {
+        startDate.max = this.value;
+    });
+});
+</script>
+{% endblock %} 

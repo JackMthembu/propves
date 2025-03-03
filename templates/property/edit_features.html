@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Features{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('property_routes.property_list') }}">My Properties</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('property_routes.manage_property', property_id=property.id) }}">{{ property.title }}</a></li>
+            <li class="breadcrumb-item active">Edit Features</li>
+        </ol>
+    </nav>
+
+    <section class="section">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">{{ property.title }} Features</h5>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+                <form method="POST">
+                    {{ form.csrf_token }}
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check mb-3">
+                                {{ form.swimming_pool(class="form-check-input") }}
+                                {{ form.swimming_pool.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-check mb-3">
+                                {{ form.garden(class="form-check-input") }}
+                                {{ form.garden.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-check mb-3">
+                                {{ form.air_conditioning(class="form-check-input") }}
+                                {{ form.air_conditioning.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-check mb-3">
+                                {{ form.heating(class="form-check-input") }}
+                                {{ form.heating.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mb-3">
+                                {{ form.gym(class="form-check-input") }}
+                                {{ form.gym.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-check mb-3">
+                                {{ form.laundry(class="form-check-input") }}
+                                {{ form.laundry.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-check mb-3">
+                                {{ form.fireplace(class="form-check-input") }}
+                                {{ form.fireplace.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-check mb-3">
+                                {{ form.balcony(class="form-check-input") }}
+                                {{ form.balcony.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mb-3">
+                                {{ form.pet_friendly(class="form-check-input") }}
+                                {{ form.pet_friendly.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-check mb-3">
+                                {{ form.bbq_area(class="form-check-input") }}
+                                {{ form.bbq_area.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-check mb-3">
+                                {{ form.jacuzzi(class="form-check-input") }}
+                                {{ form.jacuzzi.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-check mb-3">
+                                {{ form.tennis_court(class="form-check-input") }}
+                                {{ form.tennis_court.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {{ form.submit(class="btn btn-primary w-100") }}
+                </form>
+              </div>
+            </div>
+        </div>
+        </div>
+    </section>
+</main>
+</div>
+{% endblock %}

@@ -157,4 +157,4 @@ WTForms==3.1.2
 WTForms-SQLAlchemy==0.4.1
 x-wr-timezone==1.0.1
 xhtml2pdf==0.2.16
-zopfli==0.2.3
+zopfli==0.2.3pdfkit

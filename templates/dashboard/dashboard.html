@@ -1,0 +1,648 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+
+<main id="main" class="main">
+
+    <div class="pagetitle d-flex justify-content-between align-items-center">
+      <h1>Dashboard</h1>
+      <div class="filter">
+        <a class="icon" href="#" data-bs-toggle="dropdown">
+          <i class="bi bi-funnel"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="#" onclick="applyFilter('today')">Today</a></li>
+          <li><a class="dropdown-item" href="#" onclick="applyFilter('this_month')">This Month</a></li>
+          <li><a class="dropdown-item" href="#" onclick="applyFilter('past_month')">Past Month</a></li>
+          <li><a class="dropdown-item" href="#" onclick="applyFilter('past_year')">Past Year</a></li>
+          <li><a class="dropdown-item" href="#" onclick="applyFilter('current_year')">Current Year</a></li>
+          <li><a class="dropdown-item" href="#" onclick="applyFilter('custom')">Customize</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Custom Date Range Modal -->
+    <div class="modal fade" id="customDateModal" tabindex="-1" aria-labelledby="customDateModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="customDateModalLabel">Select Custom Date Range</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <label for="startDate">Start Date:</label>
+            <input type="date" id="startDate" class="form-control">
+            <label for="endDate">End Date:</label>
+            <input type="date" id="endDate" class="form-control">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="applyCustomDate()">Apply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="section dashboard">
+      <div class="row">
+
+        <div class="col-lg-12">
+          <div class="row">
+
+            <div class="col-xxl-3 col-md-4">
+              <div class="card info-card income-card">
+
+                <div class="card-body">
+                  <h5 class="info-card-title">Income <span id="filterLabel"><sub>{{ 'Current Period' }}</sub></span></h5>
+
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="bi bi-piggy-bank"></i>
+                    </div>
+                    <div class="ps-3">
+                      <p class="summary-card">{{ user.currency.symbol }}<span id="totalIncome">{{ total_income }}</span></p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="col-xxl-3 col-md-4">
+              <div class="card info-card tenants-card">
+
+                <div class="card-body">
+                  <h5 class="info-card-title">Expenses <span id="filterLabel"><sub>{{ 'Current Period' }}</sub></span></h5>
+
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="bi bi-wallet"></i>
+                    </div>
+                    <div class="ps-3">
+                      <p class="summary-card">{{ user.currency.symbol }}<span id="totalExpenses">{{ total_operating_expenses }}</span></p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="col-xxl-3 col-md-4">
+              <div class="card info-card maintenance-card">
+
+                <div class="card-body">
+                  <h5 class="info-card-title">Maintenance <span id="filterLabel"><sub>{{ 'Current Period' }}</sub></span></h5>
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="bi bi-wrench"></i>
+                    </div>
+                    <div class="ps-3">
+                      <p class="summary-card">{{ active_maintainance }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xxl-3 col-xl-4">
+
+              <div class="card info-card Terminations-card">
+
+                <div class="card-body">
+                  <h5 class="info-card-title">Terminations <span id="filterLabel"><sub>{{ 'Current Period' }}</sub></span></h5>
+
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="bi bi-box-arrow-down-right"></i>
+                    </div>
+                    <div class="ps-3">
+                      <p class="summary-card">{{ terminated_rental_agreements }}</p>  
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-12">
+          <div class="row">
+
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Financial Performance Report <span id="filterLabel"><sub>{{ 'Current Period' }}</sub></span></h5>
+
+                  <div id="financialreportchart"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-12">
+          <div class="row">
+              <div class="col-lg-8">
+                <div class="row">
+
+                  <div class="col-lg-6">
+                    <div class="card">
+                            
+                      <div class="card-body pb-0">
+                        <h5 class="card-title">Income Report <span id="filterLabel"><sub>{{ 'Current Period' }}</sub></span></h5>
+
+                        <canvas id="incomeChart" style="max-height: 400px;"></canvas>
+                        <script>
+                          document.addEventListener("DOMContentLoaded", () => {
+                              // Fetch income summary from the API with default filter set to 'this_year'
+                              fetchIncome('this_year');
+                          });
+
+                          function fetchIncome(filterType) {
+                              fetch(`/api/income-summary?filter=${filterType}`)
+                                  .then(response => {
+                                      if (!response.ok) {
+                                          throw new Error('Network response was not ok');
+                                      }
+                                      return response.json();
+                                  })
+                                  .then(data => {
+                                      const labels = Object.keys(data);
+                                      const values = Object.values(data);
+                                      const total = values.reduce((acc, value) => acc + value, 0);
+                                      const percentages = values.map(value => ((value / total) * 100).toFixed(2));
+
+                                      const ctx = document.querySelector('#incomeChart');
+                                      if (ctx.chart) {
+                                          ctx.chart.data.labels = labels.map(label => `${label} (${percentages[labels.indexOf(label)]}%)`);
+                                          ctx.chart.data.datasets[0].data = values;
+                                          ctx.chart.update();
+                                      } else {
+                                          ctx.chart = new Chart(ctx, {
+                                              type: 'doughnut',
+                                              data: {
+                                                  labels: labels.map(label => `${label} (${percentages[labels.indexOf(label)]}%)`),
+                                                  datasets: [{
+                                                      label: 'Income by Sub-Category',
+                                                      data: values,
+                                                      backgroundColor: [
+                                                          '#228F65',
+                                                          '#60D0AC',
+                                                          '#A0E0D1',
+                                                          '#448570',
+                                                          '#4BBFA0',
+                                                          '#3DAF8C',
+                                                          '#2F9F78'
+                                                      ],
+                                                      hoverOffset: 4
+                                                  }]
+                                              }
+                                          });
+                                      }
+                                  })
+                                  .catch(error => {
+                                      console.error('Error fetching income summary:', error);
+                                  });
+                          }
+                        </script>
+
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-lg-6">
+                    <div class="card">
+          
+                      <div class="card-body pb-0">
+                        <h5 class="card-title">Expenses Report <span id="filterLabel"><sub>{{ 'Current Period' }}</sub></span></h5>
+
+          
+                        <canvas id="expensesChart" style="max-height: 400px;"></canvas>
+                        <script>
+                          document.addEventListener("DOMContentLoaded", () => {
+                              // Fetch expenses summary from the API with default filter set to 'this_year'
+                              fetchExpenses('this_year');
+                          });
+
+                          function fetchExpenses(filterType) {
+                              fetch(`/api/expenses-summary?filter=${filterType}`)
+                                  .then(response => {
+                                      if (!response.ok) {
+                                          throw new Error('Network response was not ok');
+                                      }
+                                      return response.json();
+                                  })
+                                  .then(data => {
+                                      const labels = Object.keys(data);
+                                      const values = Object.values(data);
+                                      const total = values.reduce((acc, value) => acc + value, 0);
+                                      const percentages = values.map(value => ((value / total) * 100).toFixed(2));
+
+                                      const ctx = document.querySelector('#expensesChart');
+                                      if (ctx.chart) {
+                                          ctx.chart.data.labels = labels.map(label => `${label} (${percentages[labels.indexOf(label)]}%)`);
+                                          ctx.chart.data.datasets[0].data = values;
+                                          ctx.chart.update();
+                                      } else {
+                                          ctx.chart = new Chart(ctx, {
+                                              type: 'doughnut',
+                                              data: {
+                                                  labels: labels.map(label => `${label} (${percentages[labels.indexOf(label)]}%)`),
+                                                  datasets: [{
+                                                      label: 'Expenses by Sub-Category',
+                                                      data: values,
+                                                      backgroundColor: [
+                                                          '#228F65',
+                                                          '#60D0AC',
+                                                          '#A0E0D1',
+                                                          '#448570',
+                                                          '#4BBFA0',
+                                                          '#3DAF8C',
+                                                          '#2F9F78'
+                                                      ],
+                                                      hoverOffset: 4
+                                                  }]
+                                              }
+                                          });
+                                      }
+                                  })
+                                  .catch(error => {
+                                      console.error('Error fetching expenses summary:', error);
+                                  });
+                          }
+                        </script>
+          
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-lg-12">
+                    <div class="card">
+
+                      <div class="card-body pb-0">
+                        <h5 class="card-title">Budget <span id="filterLabel"><sub>{{ 'Current Period' }}</sub></span></h5>
+
+                        <canvas id="budgetChart" style="max-height: 400px;"></canvas>
+                        <script>
+                          document.addEventListener("DOMContentLoaded", () => {
+                            fetchBudgetSummary(); // Fetch budget summary on page load
+                          });
+
+                          function fetchBudgetSummary() {
+                            fetch('/api/budget-summary')
+                              .then(response => {
+                                if (!response.ok) {
+                                  throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                              })
+                              .then(data => {
+                                // Prepare data for the chart
+                                const labels = Object.keys(data).map(type => type.charAt(0).toUpperCase() + type.slice(1)); // Capitalize first letter
+                                const values = Object.values(data);
+
+                                // Calculate total budget
+                                const totalBudget = values.reduce((acc, value) => acc + value, 0);
+
+                                // Convert values to percentages
+                                const percentages = values.map(value => (value / totalBudget * 100).toFixed(2)); // Convert to percentage
+
+                                // Create the radar chart
+                                new Chart(document.querySelector('#budgetChart'), {
+                                  type: 'radar',
+                                  data: {
+                                    labels: labels.map((label, index) => `${label} (${percentages[index]}%)`), // Add % sign
+                                    datasets: [{
+                                      label: 'Allocated Budget (%)',
+                                      data: percentages,
+                                      fill: true,
+                                      backgroundColor: 'rgba(96, 208, 172, 0.2)', // Lighter shade
+                                      borderColor: '#60D0AC', // Border color
+                                      pointBackgroundColor: '#60D0AC',
+                                      pointBorderColor: '#fff',
+                                      pointHoverBackgroundColor: '#fff',
+                                      pointHoverBorderColor: '#60D0AC'
+                                    }, {
+                                      label: 'Actual Spending (%)',
+                                      data: percentages.map(value => (value * 0.8).toFixed(2)), // Example: Actual Spending as 80% of Allocated Budget
+                                      fill: true,
+                                      backgroundColor: 'rgba(15, 52, 25, 0.2)', // Darker shade
+                                      borderColor: '#0f3419', // Border color
+                                      pointBackgroundColor: '#0f3419',
+                                      pointBorderColor: '#fff',
+                                      pointHoverBackgroundColor: '#fff',
+                                      pointHoverBorderColor: '#0f3419'
+                                    }]
+                                  },
+                                  options: {
+                                    elements: {
+                                      line: {
+                                        borderWidth: 3
+                                      }
+                                    }
+                                  }
+                                });
+                              })
+                              .catch(error => {
+                                console.error('Error fetching budget summary:', error);
+                              });
+                          }
+                        </script>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-body pb-0">
+                            <h5 class="card-title">Occupancy Rate</h5>
+    
+                            <div id="occupancyChart" style="max-height: 400px;"></div>
+                            <script>
+                                document.addEventListener("DOMContentLoaded", () => {
+                                    // Fetch occupancy level from the API
+                                    fetchOccupancyLevel();
+                                });
+                
+                                function fetchOccupancyLevel() {
+                                    fetch('/api/occupancy-level')
+                                        .then(response => {
+                                            if (!response.ok) {
+                                                throw new Error('Network response was not ok');
+                                            }
+                                            return response.json();
+                                        })
+                                        .then(data => {
+                                            console.log('Occupancy Data:', data); // Log the data for debugging
+                                            const occupied = data.occupied;
+                                            const listed = data.listed;
+                                            const occupancyRatio = data.occupancy_ratio;
+                
+                                            // Calculate occupancy percentage
+                                            const occupancyPercentage = ((occupied / listed) * 100).toFixed(1);
+                
+                                            // Create the radial bar chart
+                                            new ApexCharts(document.querySelector("#occupancyChart"), {
+                                                series: [occupancyPercentage], // Use the occupancy percentage as the series data
+                                                chart: {
+                                                    height: 350,
+                                                    type: 'radialBar',
+                                                    toolbar: {
+                                                        show: true
+                                                    }
+                                                },
+                                                plotOptions: {
+                                                    radialBar: {
+                                                        dataLabels: {
+                                                            name: {
+                                                                fontSize: '22px',
+                                                            },
+                                                            value: {
+                                                                fontSize: '16px',
+                                                            },
+                                                            total: {
+                                                                show: true,
+                                                                label: 'Occupancy',
+                                                                formatter: function(w) {
+                                                                    return `${occupancyPercentage}%`; // Display the occupancy percentage
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                colors: ['#4BBFA0'], // Set the color for the radial bar
+                                                labels: ['Occupancy Rate'], // Label for the radial bar
+                                            }).render();
+                                        })
+                                        .catch(error => {
+                                            console.error('Error fetching occupancy level:', error);
+                                        });
+                                }
+                            </script>
+                        </div>
+                    </div>
+                    <div class="card">
+                      <div class="card-body pb-0">
+                        <h5 class="card-title">Operating Expense Ratio <span id="filterLabel"><sub>{{ 'Current Period' }}</sub></span></h5>
+
+                        <div id="radialBarChart"></div>
+                        <script>
+                            fetch('/api/operating_expenses_ratio')  // Fetch data from the Flask API
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error('Network response was not ok');
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    console.log('Expense Ratio Data:', data); // Log the data for debugging
+                                    const expenseRatio = data.operating_expenses_ratio;
+
+                                    // Ensure expenseRatio is a valid number
+                                    if (isNaN(expenseRatio) || expenseRatio < 0 || expenseRatio > 100) {
+                                        console.error('Invalid expense ratio:', expenseRatio);
+                                        return;
+                                    }
+
+                                    // Create the radial bar chart
+                                    new ApexCharts(document.querySelector("#radialBarChart"), {
+                                        series: [expenseRatio], // Use the expense ratio as the series data
+                                        chart: {
+                                            height: 350,
+                                            type: 'radialBar',
+                                            toolbar: {
+                                                show: true
+                                            }
+                                        },
+                                        plotOptions: {
+                                            radialBar: {
+                                                dataLabels: {
+                                                    name: {
+                                                        fontSize: '22px',
+                                                    },
+                                                    value: {
+                                                        fontSize: '16px',
+                                                    },
+                                                    total: {
+                                                        show: true,
+                                                        label: 'OER',
+                                                        formatter: function(w) {
+                                                            return `${expenseRatio}%`; // Display the expense ratio
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        colors: ['#60d0ac'], // Set the color for the radial bar
+                                        labels: ['Operating Expense Ratio'], // Label for the radial bar
+                                    }).render();
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching data:', error);
+                                    // Handle error, e.g., display an error message
+                                });
+                        </script>
+
+                         <div class="oer-text {{ oer_category }}">{{ oer_category }}</div>
+                      </div>
+                    </div>
+                    <!-- <div class="card">
+                        {% if agreement %}
+                        <div class="card-body">
+                            <h5 class="card-title">Lease Enquiry Status</h5>
+                            <div class="lease-status">
+                                <p class="card-text">Property: {{ agreement.property.title }}</p>
+                                <p id="agreementStatus" class="card-text">Status: {{ agreement.status|capitalize }}</p>
+                                <p class="card-text">Offer Validity: <span id="offerValidity">{{ agreement.offer_validity.strftime('%Y-%m-%dT%H:%M:%S') }}</span></p>
+                                <div class="button">
+                                    <a href="{{ url_for('rental_routes.view_rental_agreement', rental_agreement_id=agreement.id) }}" class="btn btn-primary">View Lease</a>
+                                </div>
+                                <p id="countdown" class="card-text"></p>
+                            </div>
+                        </div>
+                        {% else %}
+                            <p>No lease agreement available.</p>
+                        {% endif %}
+                    </div> -->
+                    <div class="card">
+                          <div class="card-body">
+                              <h5 class="card-title">Lease Life</h5>
+                              {% for agreement in progress_data %}
+                                  <div class="d-flex align-items-center mb-3">
+                                      <span class="me-2">{{ agreement.property_title }}</span>
+                                      <div class="progress flex-grow-1">
+                                          <div class="progress-bar" role="progressbar" style="width: {{ agreement.progress_percentage|round(0) }}%;" aria-valuenow="{{ agreement.progress_percentage|round(1) }}" aria-valuemin="0" aria-valuemax="100">
+                                              <span class="visually-hidden">{{ agreement.progress_percentage|round(0) }}%</span>
+                                          </div>
+                                      </div>
+                                      <span class="ms-2">{{ agreement.progress_percentage|round(2) }}%</span>
+                                  </div>
+                              {% endfor %}
+                          </div>
+                      </div>
+                </div>
+            </div>
+          </div>
+        </div>
+
+    </section>
+    <!-- Popup Modal -->
+    <div id="setupAccountModal" class="modal" style="display: none;">
+      <div class="modal-content">
+          <span class="close" onclick="closeModal()">&times;</span>
+          <h2>Setup Your Account</h2>
+          <div id="progressBarContainer">
+              <div id="progressBar" style="width: 0%;"></div>
+          </div>
+          <ul id="checklist">
+              <li>
+                  <input type="checkbox" id="profile" onchange="updateProgress()" 
+                         {% if current_user.phone_number and current_user.birthday and current_user.gender and current_user.country_id %} checked {% endif %}>
+                  <label for="profile" onclick="window.location.href='{{ url_for('profile_routes.profile_settings') }}'">My Profile</label>
+              </li>
+              <li>
+                  <input type="checkbox" id="company" onchange="updateProgress()" 
+                         {% if current_user.company_id %} checked {% endif %}>
+                  <label for="company" onclick="window.location.href='{{ url_for('profile_routes.company') }}'">Company Settings</label>
+              </li>
+              <li>
+                  <input type="checkbox" id="general" onchange="updateProgress()" 
+                         {% if current_user.system %} checked {% endif %}>
+                  <label for="general" onclick="window.location.href='{{ url_for('profile_routes.settings') }}'">General Settings</label>
+              </li>
+              <li>
+                  <input type="checkbox" id="banking" onchange="updateProgress();" 
+                         {% if banking_details_count > 0 %} checked {% endif %}>
+                  <label for="banking" onclick="window.location.href='{{ url_for('profile_routes.banking_settings') }}';">Banking Settings</label>
+              </li>
+          </ul>
+          <button onclick="submitSettings();">Continue</button>
+      </div>
+    </div>
+
+</main><!-- End #main -->
+  <!-- Load ECharts library first -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <!-- Then load your chart scripts -->
+  <script src="{{ url_for('static', filename='js/financial_chart.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/budget_chart.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+  <!-- Other content goes here -->
+  {% endblock %}
+  <!-- Other content -->
+
+  <span id="currencySymbol" style="display:none;">{{ owner.user.currency.symbol }}</span>
+
+  <script>
+    const owner = {
+        user: {
+            currency: {
+                symbol: '$' // Replace with the actual currency symbol
+            }
+        }
+    };
+  </script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/filter.js') }}"></script>
+
+
+  <script>
+    function filterData(filterType) {
+        // Fetch and update dashboard data based on the selected filter
+        console.log('Filter selected:', filterType);
+        // Implement your logic to fetch and update the dashboard data here
+    }
+
+    function showCustomDate() {
+        // Show the custom date modal
+        const modal = new bootstrap.Modal(document.getElementById('customDateModal'));
+        modal.show();
+    }
+
+    function applyCustomDate() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        // Validate dates and fetch data
+        if (startDate && endDate) {
+            console.log('Custom date range:', startDate, endDate);
+            // Implement your logic to fetch and update the dashboard data here
+        } else {
+            alert('Please select both start and end dates.');
+        }
+    }
+  </script>
+
+
+  <script>
+    function openModal() {
+        document.getElementById('setupAccountModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('setupAccountModal').style.display = 'none';
+    }
+
+    function updateProgress() {
+        // Logic to update the progress bar based on checked items
+        const checkboxes = document.querySelectorAll('#checklist input[type="checkbox"]');
+        const total = checkboxes.length;
+        const checked = Array.from(checkboxes).filter(checkbox => checkbox.checked).length;
+        const percentage = (checked / total) * 100;
+        document.getElementById('progressBar').style.width = percentage + '%';
+    }
+
+    function submitSettings() {
+        // Logic to submit the settings
+        // You can use AJAX to submit the form or redirect to the setup_account route
+        window.location.href = '{{ url_for("profile_routes.setup_account") }}';
+    }
+  </script>

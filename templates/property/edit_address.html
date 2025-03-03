@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Address{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>{% if property %}Edit{% else %}Add{% endif %} Property Details</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('property_routes.property_list') }}">My Properties</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('property_routes.manage_property', property_id=property.id) }}">{{ property.title }}</a></li>
+                <li class="breadcrumb-item active">Edit Address</li>
+            </ol>
+        </nav>
+    </div>
+
+    <section class="section">
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ property.title }} Address</h5>
+                            <form id="addressForm" method="POST">
+                                {{ form.csrf_token }}
+                                
+                                <div class="mb-3">
+                                    {{ form.street_address.label(class="form-label") }}
+                                    {{ form.street_address(class="form-control") }}
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form.building.label(class="form-label") }}
+                                    {{ form.building(class="form-control") }}
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form.door_number.label(class="form-label") }}
+                                    {{ form.door_number(class="form-control") }}
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form.suburb.label(class="form-label") }}
+                                    {{ form.suburb(class="form-control", id="suburb") }}
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form.city.label(class="form-label") }}
+                                    {{ form.city(class="form-control", id="city") }}
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form.state_id.label(class="form-label") }}
+                                    {{ form.state_id(class="form-control", id="state_id") }}
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form.country_id.label(class="form-label") }}
+                                    {{ form.country_id(class="form-control", id="country_id") }}
+                                </div>
+
+                                <div class="mb-3">
+                                    {{ form.zip_code.label(class="form-label") }}
+                                    {{ form.zip_code(class="form-control", id="zip_code") }}
+                                </div>
+
+                                {{ form.latitude }}
+                                {{ form.longitude }}
+                                
+                                <button type="submit" class="btn btn-primary">Save Address</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Location</h5>
+                            <div id="map-loading">Loading map...</div>
+                            <div id="map" style="height: 400px; width: 100%; display: none;"></div>
+                            <div id="map-error" style="display: none;" class="alert alert-danger"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<!-- First load Google Maps API with all required libraries -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&libraries=places&callback=initAutocomplete" async defer></script>
+
+<!-- Then load your custom JavaScript -->
+<script src="{{ url_for('static', filename='js/google.js') }}"></script>
+<script src="{{ url_for('static', filename='js/address.js') }}"></script>
+
+
+<script>
+    currentPropertyId = {{ property.id }}; // Assuming property is passed to the template
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+.pac-container {
+    z-index: 1051 !important;
+}
+</style>
+
+{% endblock %}

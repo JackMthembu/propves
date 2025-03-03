@@ -387,14 +387,16 @@ def change_password():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
+        print(f"Login attempt for: {form.login_field.data}")  # Debugging line
         login_field = form.login_field.data
         password = form.password.data
 
         user = User.query.filter(
             (User.email == login_field) | (User.username == login_field)
         ).first()
-
+        
         if user:
+            print(f"User found: {user.username}")  # Debugging line
             if user.account_locked:
                 flash('Your account is locked due to multiple failed login attempts. Please contact support.', 'danger')
                 return redirect(url_for('auth_routes.login'))
@@ -404,6 +406,7 @@ def login():
                 return redirect(url_for('auth_routes.login'))
 
             if user.check_password(password):
+                print("Password is correct")  # Debugging line
                 login_user(user, remember=form.remember.data)
                 session.permanent = True
 
@@ -414,6 +417,7 @@ def login():
                 flash('Logged in successfully!', 'success')
                 return redirect(url_for('main.dashboard'))  
             else:
+                print("Incorrect password")  # Debugging line
                 user.failed_login_attempts += 1
                 if user.failed_login_attempts >= 5:
                     user.account_locked = True
@@ -422,6 +426,7 @@ def login():
                     flash('Invalid username or password', 'danger')
                 db.session.commit()
         else:
+            print("No user found")  # Debugging line
             flash('Invalid username or password', 'danger')
     return render_template('auth/login.html', form=form)
 
