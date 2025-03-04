@@ -31,10 +31,19 @@ logging.basicConfig(level=logging.INFO)
 
 # Initialize the login manager
 login_manager = LoginManager()
- # Add other fields as necessary
+
+class User(UserMixin):
+    def __init__(self, id):
+        self.id = id  # Store the user ID
+
+users = {
+        'user_id': User('user_id'),  # Create a user with ID 'user_id'
+    }
+
+
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))  # Replace User with your user model
+    return users.get(user_id)  # Retrieve user from the user store
 
 csrf = CSRFProtect()
 
@@ -56,7 +65,11 @@ def create_app():
     print("Loaded configuration:", app.config)  
     db.init_app(app)
     mail.init_app(app)
+    # login_manager.init_app(app)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
+    login_manager.login_view = 'auth_routes.login'
+
     migrate.init_app(app, db)   
     csrf.init_app(app)
     app.register_blueprint(main)
