@@ -35,7 +35,7 @@ jobs:
         run: zip release.zip ./* -r
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3.2.1
+        uses: actions/upload-artifact@v3.2.2
         with:
           name: python-app
           path: |
