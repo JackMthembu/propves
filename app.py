@@ -88,7 +88,7 @@ def get_cached_user(user_id):
     return User.query.get(user_id)  # Example of fetching a user from the database
 
 def create_app():
-    app = Flask(__name__, template_folder='templates')
+    app = Flask(__name__, template_folder='templates', static_folder='static')
 
     load_dotenv()
 
