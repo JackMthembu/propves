@@ -7,8 +7,6 @@ from flask_mail import Message
 from extensions import mail
 from models import db
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_wtf import FlaskForm
-from wtforms import BooleanField
 from cachetools import TTLCache
 from markupsafe import Markup
 
@@ -380,23 +378,21 @@ def change_password():
         flash('Your password has been updated!', 'success')
         return redirect(url_for('auth_routes.profile'))
 
-    return render_template('auth/change_password.html', form=form)
+    return render_template('dashboard/change_password.html', form=form)
 
 
 @auth_routes.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        print(f"Login attempt for: {form.login_field.data}")  # Debugging line
         login_field = form.login_field.data
         password = form.password.data
 
         user = User.query.filter(
             (User.email == login_field) | (User.username == login_field)
         ).first()
-        
+
         if user:
-            print(f"User found: {user.username}")  # Debugging line
             if user.account_locked:
                 flash('Your account is locked due to multiple failed login attempts. Please contact support.', 'danger')
                 return redirect(url_for('auth_routes.login'))
@@ -406,7 +402,7 @@ def login():
                 return redirect(url_for('auth_routes.login'))
 
             if user.check_password(password):
-                print("Password is correct")  # Debugging line
+                print("Password is correct")
                 login_user(user, remember=form.remember.data)
                 session.permanent = True
 
@@ -417,7 +413,7 @@ def login():
                 flash('Logged in successfully!', 'success')
                 return redirect(url_for('main.dashboard'))  
             else:
-                print("Incorrect password")  # Debugging line
+                print("Password is incorrect")
                 user.failed_login_attempts += 1
                 if user.failed_login_attempts >= 5:
                     user.account_locked = True
@@ -426,7 +422,6 @@ def login():
                     flash('Invalid username or password', 'danger')
                 db.session.commit()
         else:
-            print("No user found")  # Debugging line
             flash('Invalid username or password', 'danger')
     return render_template('auth/login.html', form=form)
 
