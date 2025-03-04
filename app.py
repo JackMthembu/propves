@@ -173,7 +173,7 @@ def create_app():
     #         'schedule': crontab(hour='*', minute=0),  # Every hour at minute 0
     #     },
     # }
-
+    
     # Add user loader
     @login_manager.user_loader
     def load_user(user_id):
@@ -301,9 +301,12 @@ def create_app():
         pdfkit.from_string(html_content, 'welcome.pdf')
         return jsonify({"message": "PDF generated successfully", "filename": 'welcome.pdf'}), 200
 
+    @app.route('/robots933456.txt')
+    def robots():
+        return "User-agent: *\nDisallow: /"
+
     return app 
     
-
 def update_expired_agreements():
     """Update agreements that have expired."""
     with app.app_context():
@@ -312,7 +315,7 @@ def update_expired_agreements():
             expired_agreements = RentalAgreement.query.filter_by(status='expired').all()
             for agreement in expired_agreements:
                 # Perform your update logic here
-                agreement.status = 'archived'  # Example update
+                agreement.status = 'archived'  
                 # Save changes to the database
                 db.session.commit()
                 logging.info(f"Updated agreement ID {agreement.id} to archived.")
