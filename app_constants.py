@@ -2,26 +2,25 @@ MAIN_CATEGORIES = {
     "Assets": ["Current Asset", "Non-Current Asset"],
     "Liabilities": ["Current Liability", "Non-Current Liability"],
     "Equity": ["Equity"],
-    "Revenue": ["Income", "Other Income"],  # Added "Other Income"
-    "Cost of Sales": ["Cost of Sales"
+    "Revenue": ["Income", "Other Income"],
+    "Cost of Sales": [
+        "Cost of Sales",
         "Maintenance and Repairs Expenses",
         "Property Management Expenses",
         "Insurance Expenses",
-        "Pest Control Expenses",
+        "Pest Control Expenses", 
         "Utilities",
         "Property Taxes",
         "Property Tax Assessments",
-        "Property Expense", 
-
-],  # Added "Cost of Sales"
+        "Property Expense"
+    ],
     "Expenses": [
         "Administrative Expenses",
-        "Operating Expenses", # Create
-        "Oerating Expenses",
+        "Operating Expenses",
         "Financial Expenses",
-        "Marketing Expenses",  # Added "Insurance"
-        "Legal and Professional Fees",  # Added "Legal and Professional Fees"
-    ],
+        "Marketing Expenses",
+        "Legal and Professional Fees"
+    ]
 }
 
 
