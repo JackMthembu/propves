@@ -13,6 +13,7 @@ main = Blueprint('main', __name__)
 @main.route('/')
 @login_required
 def index():
+    current_app.logger.info("Index route accessed")
     # Get the filter type from the query parameters, default to 'past_year'
     filter_type = request.args.get('filter', 'past_year')
     # Logic to calculate date ranges based on the filter type

@@ -1,22 +1,33 @@
-# Use the official Python image from the Docker Hub
-FROM python:3.11
+# Use official Python runtime as base image
+FROM python:3.11-slim
 
-# Set the working directory in the container
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+# Set work directory
 WORKDIR /app
 
-# Copy the requirements file into the container
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    default-libmysqlclient-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file
 COPY requirements.txt .
 
-# Install the required packages
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code into the container
+# Copy project files
 COPY . .
 
-# Set the environment variable for Flask
-ENV FLASK_APP=app.py
-ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_RUN_PORT=8000
+# Expose port
+EXPOSE 8000
 
-# Optional startup command
-CMD ["flask", "run"]
+# Set the default command
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app", "--workers", "4"]
