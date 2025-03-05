@@ -35,7 +35,7 @@ from messaging import message_routes
 from openai import classify_transaction_with_azure
 import pdfkit
 
-app = Flask(__name__)  
+app = Flask(__name__, static_folder='static')  
 app.secret_key = os.getenv('SECRET_KEY') 
 
 logging.basicConfig(level=logging.DEBUG)
