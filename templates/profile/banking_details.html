@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Banking Details{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/banking.css') }}">
+{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle"></div>
+      <h1>Banking Details</h1>
+    <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard')}}">Dashboard</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('profile_routes.profile_settings')}}">Profile Settings</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('profile_routes.banking_settings')}}">Banking Settings</a></li>
+          <li class="breadcrumb-item active">Banking Details</li>
+        </ol>
+    </nav>
+
+    <section class="section dashboard">
+        <div class="container">
+            <form method="POST" action="{{ url_for('profile_routes.banking_details', banking_details_id=existing_banking_details.id if existing_banking_details else 0) }}">
+                {{ form.hidden_tag() }}
+                
+                <div class="form-group row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            {{ form.nickname(class="form-control", id="nickname", value=existing_banking_details.nickname if existing_banking_details else '') }}
+                            <label for="nickname">{{ form.nickname.label }}</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            {{ form.is_primary(class="form-check-input", id="is_primary", checked=existing_banking_details.is_primary) }}
+                            <label class="form-check-label" for="is_primary">{{ form.is_primary.label }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            {{ form.bank_id(class="form-control", id="bank_id", value=form.bank_id.data or '', placeholder=form.bank_id.label.text) }}
+                            <label for="bank_id">{{ form.bank_id.label }}</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            {{ form.account_type(class="form-control", id="account_type", value=form.account_type.data or '', placeholder=form.account_type.label.text) }}
+                            <label for="account_type">{{ form.account_type.label }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    {{ form.account_number(class="form-control", id="account_number", value=form.account_number.data or '', placeholder=form.account_number.label.text) }}
+                    <label for="account_number">{{ form.account_number.label }}</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    {{ form.account_holder_name(class="form-control", id="account_holder_name", value=form.account_holder_name.data or '', placeholder=form.account_holder_name.label.text   ) }}
+                    <label for="account_holder_name">{{ form.account_holder_name.label }}</label>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            {{ form.branch(class="form-control", id="branch", value=form.branch.data or '', placeholder=form.branch.label.text) }}
+                            <label for="branch">{{ form.branch.label }}</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            {{ form.branch_code(class="form-control", id="branch_code", value=form.branch_code.data or '', placeholder=form.branch_code.label.text) }}
+                            <label for="branch_code">{{ form.branch_code.label }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    {{ form.account_iban(class="form-control", id="account_iban", value=form.account_iban.data or '', placeholder=form.account_iban.label.text) }}
+                    <label for="account_iban">{{ form.account_iban.label }}</label>
+                </div>
+
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+
+            <a href="{{ url_for('profile_routes.profile_settings') }}">Back to Profile Settings</a>
+        </div>
+    </section>
+
+  </main><!-- End #main -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if success %}
+            Swal.fire({
+                title: 'Success!',
+                text: 'Banking details added successfully!',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            }).then(() => {
+                // Set fields to read-only after successful submission
+                const readOnlyFields = [
+                    'bank_id',
+                    'account_type',
+                    'account_number',
+                    'account_holder_name',
+                    'branch',
+                    'branch_code',
+                    'account_iban'
+                ];
+                readOnlyFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field) {
+                        field.setAttribute('readonly', true);
+                    }
+                });
+            });
+        {% endif %}
+    });
+</script>
+{% endblock %}

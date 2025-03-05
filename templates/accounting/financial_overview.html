@@ -1,0 +1,26 @@
+    <!-- GAAP Summary -->
+    {% for gaap_category, subcategories in summary.items() %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>{{ gaap_category }}</h4>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account, amount in subcategories.items() %}
+                    <tr>
+                        <td>{{ account }}</td>
+                        <td>{{ amount | currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}

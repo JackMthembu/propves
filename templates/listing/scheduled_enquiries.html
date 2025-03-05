@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Scheduled Enquiries{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Manage Enquiries</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('property_routes.property_list') }}">My Properties</a></li>
+                <li class="breadcrumb-item active">Scheduled Enquiries</li>
+            </ol>
+        </nav>
+    </div>
+
+    <section class="section">
+        <div class="row">
+            <div class="table-responsive">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Scheduled Enquiries</h5>
+
+                        <!-- Filters -->
+                        <form method="get" action="{{ url_for('listing_routes.scheduled_enquiries') }}">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="scheduled_date" class="form-label">Scheduled Date:</label>
+                                <input type="date" name="scheduled_date" id="scheduled_date" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="listing_id" class="form-label">Listing:</label>
+                                <select name="listing_id" id="listing_id" class="form-select">
+                                    <option value="">All Listings</option>
+                                    {% for property in properties %}
+                                    <option value="{{ property.id }}">{{ property.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="outcomes" class="form-label">Outcomes:</label>
+                                <select name="outcomes" id="outcomes" class="form-select">
+                                    <option value="">All</option>
+                                    <option value="scheduled">Scheduled</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="accepted">Accepted</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary">Filter</button>
+                            </div>
+                        </div>
+                        </form>
+
+                        <!-- Table -->
+                        <table class="table table-striped table-hover datatable">
+                            <thead>
+                                <tr>
+                                    <th>Listing</th>
+                                    <th>Tenant</th>
+                                    <th>Scheduled Date</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for enquiry in enquiries %}
+                                <tr>
+                                    <td class="text-start">{{ enquiry.listing.property.title }}</td>
+                                    <td class="text-start">{{ enquiry.tenant.user.name }} {{ enquiry.tenant.user.lastname }}</td>
+                                    <td class="text-start">{{ enquiry.scheduled_date.strftime('%B %d') }}{% if enquiry.scheduled_date.day in [1, 21, 31] %}st{% elif enquiry.scheduled_date.day in [2, 22] %}nd{% elif enquiry.scheduled_date.day in [3, 23] %}rd{% else %}th{% endif %}, {{ enquiry.scheduled_date.strftime('%Y') }}</td>
+                                    <td class="text-start">{{ enquiry.scheduled_date.strftime('%H:%M') }}</td>
+                                    <td class="text-start">{{ enquiry.outcomes|capitalize }}</td>
+                                    <td class="text-start">
+                                        {% if enquiry.outcomes == 'rejected' or enquiry.outcomes == 'rescheduled' %}
+                                            <span class="text-muted">No Actions Required</span>
+                                        {% else %}
+                                            <div class="dropdown">
+                                                <button class="btn btn-secondary dropdown-toggle" type="button" id="actionDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Actions
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="actionDropdown">
+                                                    <li>
+                                                        <button type="submit" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#generateLeaseModal" data-enquiry-id="{{ enquiry.id }}">
+                                                            <i class="fas fa-file-contract"></i> Generate Lease
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <form method="POST" action="{{ url_for('listing_routes.toggle_enquiry_outcome') }}">
+                                                            {{ form.hidden_tag() }}
+                                                            <input type="hidden" name="enquiry_id" value="{{ enquiry.id }}">
+                                                            <button type="submit" name="action" value="reject" class="dropdown-item">
+                                                                <i class="fas fa-times-circle"></i> Reject
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <form method="POST" action="{{ url_for('listing_routes.toggle_enquiry_reschedule') }}">
+                                                            {{ form.hidden_tag() }}
+                                                            <input type="hidden" name="enquiry_id" value="{{ enquiry.id }}">
+                                                            <button type="submit" name="action" value="reschedule" class="dropdown-item">
+                                                                <i class="fas fa-calendar-alt"></i> Reschedule
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Modal for generating lease -->
+<div class="modal fade" id="generateLeaseModal" tabindex="-1" aria-labelledby="generateLeaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generateLeaseModalLabel">Close</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Load the agreement content here -->
+                {% include "listing/_create_agreement.html" %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

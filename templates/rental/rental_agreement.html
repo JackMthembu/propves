@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rental Agreement</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/rental_agreement.css') }}">
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Rental Agreement</h1>
+    </header>
+
+    <main>
+            {% include 'rental/_rental_agreement.html' %}
+    </main>
+</div>
+
+
+    <footer>
+        <p>Signature of Landlord: _________________________</p>
+        <p>Signature of Tenant: _________________________</p>
+    </footer>
+
+    <!-- Send to Tenant Button -->
+    <div style="text-align: center; margin-top: 20px;">
+        <form method="POST" action="{{ url_for('rental_routes.save_lease', tenant_id=agreement.tenant_id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary">Send Offer to {{ agreement.tenant.user.name }} {{ agreement.tenant.user.lastname }}</button>
+        </form>
+    </div>
+</body>
+</html>

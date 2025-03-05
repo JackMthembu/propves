@@ -1,0 +1,60 @@
+<!-- templates/rental/rental_agreement_pdf.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rental Agreement</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/lease.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            text-align: center;
+        }
+        p {
+            margin: 10px 0;
+        }
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: right;
+            font-size: 12px;
+            padding: 10px;
+        }
+        @page {
+            margin: 100px 20px; /* Adjust margins as needed */
+        }
+        header {
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: -80px; /* Adjust based on your header height */
+            height: 80px;
+            text-align: center;
+            line-height: 35px;
+        }
+        footer:after {
+            content: "Page " counter(page) " of " counter(pages);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Rental Agreement</h1>
+    </header>
+
+    <main>
+        {% include 'rental/_rental_agreement.html' %}
+    </main>
+
+    <footer>
+        <!-- Page number will be added by CSS -->
+    </footer>
+</body>
+</html>

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Financial Reports</h1> 
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Financial Reports</li> 
+            </ol>
+        </nav>
+    </div>
+
+    <section class="section dashboard"> 
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card info-card sales-card">
+                    <div class="card-body">
+                        <h5 class="text-white card-title">Balance Sheet <span>| This Period</span></h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-card-list"></i> 
+                            </div>
+                            <div class="text-white ps-3">
+                                <h6>{{ currency_symbol }}{{ '{:,.2f}'.format(total_assets) }}</h6> 
+                                <span class="text-white small pt-2 ps-1">Total Assets</span> 
+                            </div>
+                        </div>
+                        <a href="{{ url_for('accounting_routes.balance_sheet') }}" class="stretched-link"></a> 
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card info-card revenue-card">
+                    <div class="card-body">
+                        <h5 class="text-white card-title">Income Statement <span>| This Period</span></h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-graph-up-arrow"></i> 
+                            </div>
+                            <div class="text-white ps-3">
+                                <h6>{{ currency_symbol }}{{ '{:,.2f}'.format(net_income) }}</h6> 
+                                <span class="text-white small pt-2 ps-1">Net Income</span> 
+                            </div>
+                        </div>
+                        <a href="{{ url_for('accounting_routes.income_statement') }}" class="stretched-link"></a> 
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card info-card customers-card">
+                    <div class="card-body">
+                        <h5 class="text-white card-title">Cash Flow Statement <span>| This Period</span></h5>
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-cash-coin"></i>
+                            </div>
+                            <div class="ps-3">
+                                <h6>{{ currency_symbol }}{{ '{:,.2f}'.format(cash_flow) }}</h6> 
+                                <span class="text-white small pt-2 ps-1">Net Cash Flow</span>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('accounting_routes.cash_flow_statement') }}" class="stretched-link"></a> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('accounting_routes.financials') }}"> 
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="start_date">Start Date:</label>
+                            <input type="date" name="start_date" id="start_date" class="form-control" value="{{ request.args.get('start_date', datetime.utcnow().strftime('%Y-%m-%d')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="end_date">End Date:</label>
+                            <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request.args.get('end_date', datetime.utcnow().strftime('%Y-%m-%d')) }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">Filter</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title text-center">Financial Report</h2>
+                </div>
+        </div>
+    </section>
+</main>
+{% endblock %}

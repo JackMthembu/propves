@@ -1,0 +1,187 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lease.css') }}">
+
+<div class="container" style="max-width: 1000px; margin: auto; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px #ebe9e900; background-color: #fff;">
+    <div class="generate_lease">
+        <h5>Generate Lease Agreement</h5>
+        {% if enquiry %}
+        <form method="POST" id="GenerateLeaseForm" action="{{ url_for('rental_routes.generate_rental_agreement', enquiry_id=enquiry.id) }}">
+            {{ form.hidden_tag() }}  <!-- CSRF token -->
+            <input type="hidden" name="outcome" value="agreement_generated">  <!-- Hidden field for outcome -->
+            <h5><strong>Lease Terms</strong></h5>
+            <p>Please enter the start and end dates of the lease</p>
+            <div class="field" style="display: flex; align-items: center;">
+                <label for="date_start" style="margin-right: 10px;">Start Date:</label>
+                <input type="date" id="date_start" name="date_start" value="{{ form.date_start.data }}" required style="margin-right: 20px;">
+                
+                <label for="date_end" style="margin-right: 10px;">End Date:</label>
+                <input type="date" id="date_end" name="date_end" value="{{ form.date_end.data }}" required>
+            </div>
+            
+
+            <h5><strong>Financial Details</strong></h5>
+            <div class="field">
+                <label for="monthly_rental" class="form-label">Monthly Rental:</label>
+                <div class="input-group">
+                    <span class="input-group-text" id="inputGroupPrependMonthly">{{ enquiry.owner.user.currency.symbol }}</span>
+                    {{ form.monthly_rental(class="form-control", id="monthly_rental", value=enquiry.listing.monthly_rental) }}
+                </div>
+            </div>
+            <div class="field">
+                <label for="deposit" class="form-label">Deposit:</label>
+                <div class="input-group">
+                    <span class="input-group-text" id="inputGroupPrependDeposit">{{ enquiry.owner.user.currency.symbol }}</span>
+                    {{ form.deposit(class="form-control", id="deposit", value=enquiry.listing.deposit) }}
+                </div>
+            </div>
+            <div class="field">
+                <label for="admin_fee" class="form-label">Admin Fees:</label>
+                <div class="input-group">
+                    <span class="input-group-text" id="inputGroupPrependAdminFee">{{ enquiry.owner.user.currency.symbol }}</span>
+                    {{ form.admin_fee(class="form-control", id="admin_fee", value=enquiry.listing.admin_fee) }}
+                </div>
+            </div>
+            <div class="field">
+                <label for="nightly_guest_rate" class="form-label">Nightly Guest Rate:</label>
+                <div class="input-group">
+                    <span class="input-group-text" id="inputGroupPrependNightly">{{ enquiry.owner.user.currency.symbol }}</span>
+                    {{ form.nightly_guest_rate(class="form-control", id="nightly_guest_rate") }}
+                </div>
+            </div>
+        
+            <h5><strong>Utilities</strong></h5>
+            <div class="field" style="display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    {{ form.gas(class="form-check-input") }} 
+                    <label for="gas" class="form-check-label" style="margin-left: 5px;">Gas</label>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    {{ form.water_sewer(class="form-check-input") }} 
+                    <label for="water_sewer" class="form-check-label" style="margin-left: 5px;">Water and Sewer</label>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    {{ form.electricity(class="form-check-input") }} 
+                    <label for="electricity" class="form-check-label" style="margin-left: 5px;">Electricity</label>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    {{ form.waste_management(class="form-check-input") }} 
+                    <label for="waste_management" class="form-check-label" style="margin-left: 5px;">Waste Management</label>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    {{ form.internet(class="form-check-input") }} 
+                    <label for="internet" class="form-check-label" style="margin-left: 5px;">Internet</label>
+                </div>
+            </div>
+
+            <h5><strong>Additional Information</strong></h5>
+            <div class="field">
+                <label for="nightly_guest_rate" class="form-label">Daily Charge for late payment:</label>
+                <div class="input-group">
+                    <span class="input-group-text" id="daily_compounding">{{ enquiry.owner.user.currency.symbol }}</span>
+                    {{ form.daily_compounding(class="form-control", id="daily_compounding") }}
+                </div>
+            </div>
+            <div class="field">
+                <label for="pets_allowed" class="form-check-label">
+                    {{ form.pets_allowed(class="form-check-input", id="pets_allowed") }} Pets Allowed
+                </label>
+            </div>
+            <div class="field">
+                <label for="sub_letting_allowed" class="form-check-label">
+                    {{ form.sub_letting_allowed(class="form-check-input", id="sub_letting_allowed") }} Sub-letting Allowed
+                </label>
+            </div>
+            <div class="field">
+                <label for="additional_terms">Additional Terms:</label>
+                {{ form.additional_terms(class="form-control", id="additional_terms") }}
+            </div>
+
+            <h5><strong>Parties Involved</strong></h5>
+            <div class="field">
+                <label for="tenant_id">Tenant ID:</label>
+                {{ form.tenant_id(class="form-control", id="tenant_id", value=enquiry.tenant.id) }}
+            </div>
+            <div class="field">
+                <label for="property_id">Property ID:</label>
+                {{ form.property_id(class="form-control", id="property_id", value=enquiry.listing.property.id) }}
+            </div>
+            <div class="field">
+                <label for="owner_id">Owner ID:</label>
+                {{ form.owner_id(class="form-control", id="owner_id", value=enquiry.owner.id) }}
+            </div>
+            <div class="field">
+                <label for="enquiry_id">Enquiry ID:</label>
+                {{ form.enquiry_id(class="form-control", id="enquiry_id", value=enquiry.id) }}
+            </div>
+            <div class="field">
+                <label for="sponsor_id">Sponsor ID:</label>
+                {{ form.sponsor_id(class="form-control", id="sponsor_id", value=enquiry.tenant.sponsor.id) }}
+            </div>
+            <div class="field">
+                <label for="company_id">Company ID:</label>
+                {{ form.company_id(class="form-control", id="company_id", value=enquiry.owner.user.company.id) }}
+            </div>
+            <div class="field">
+                <label for="max_occupants">Max Occupants:</label>
+                {{ form.max_occupants(class="form-control", id="max_occupants", value=enquiry.listing.property.max_occupants) }}
+            </div>
+            
+            <div class="field">
+                <label for="create_as_company" class="form-check-label">
+                {% if current_user.company_id is not none %}
+                    {{ form.create_as_company(class="form-check-input", id="create_as_company", onchange="toggleCompanyDetails()") }} Create Lease as a Company
+                {% else %}
+                    <p class="text-muted">This option is not available for individuals.</p>
+                {% endif %}
+            </div>
+            
+            <div id="companyDetails" style="display: none;">
+                <h5>Company Details</h5>
+                <div class="field">
+                    <label for="company_name" class="form-label">Company Name:</label>
+                    <input type="text" class="form-control" id="company_name" name="company_name" value="{{ enquiry.owner.user.company.company_name }}" required>
+                </div>
+                
+                <div class="field">
+                    <label for="company_registration_number" class="form-label">Company Registration Number:</label>
+                    <input type="text" class="form-control" id="company_registration_number" name="company_registration_number" value="{{ enquiry.owner.user.company.company_registration_number }}" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <button type="submit" class="btn btn-primary">Generate Lease</button>
+            </div>
+        </form>
+        {% else %}
+            <p>No enquiry available to generate a lease agreement.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startDateInput = document.getElementById('date_start');
+        const endDateInput = document.getElementById('date_end');
+
+        // Set the end date to the last day of the month, 365 days after the start date
+        startDateInput.addEventListener('change', function() {
+            const startDate = new Date(this.value);
+            if (!isNaN(startDate)) {
+                // Calculate the date 365 days later
+                const endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + 365); // Add 365 days
+                endDate.setDate(0); // Set to the last day of the previous month
+                endDateInput.value = endDate.toISOString().split('T')[0]; // Format to YYYY-MM-DD
+            }
+        });
+    });
+
+    function toggleCompanyDetails() {
+        const checkbox = document.getElementById('create_as_company');
+        const companyDetails = document.getElementById('companyDetails');
+        if (checkbox.checked) {
+            companyDetails.style.display = 'block'; // Show company details
+        } else {
+            companyDetails.style.display = 'none'; // Hide company details
+        }
+    }
+</script>

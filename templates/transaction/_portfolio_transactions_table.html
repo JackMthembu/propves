@@ -1,0 +1,71 @@
+{% if transactions %}
+    {% for transaction in transactions %}
+    <tr data-id="{{ transaction.id }}" class="editable-row {% if transaction.is_reconciled %}reconciled-row{% endif %}">
+        <td class="editable" data-field="date">
+            <input type="date" class="form-control form-control-sm" 
+                   value="{{ transaction.transaction_date.strftime('%Y-%m-%d') if transaction.transaction_date else '' }}"
+                   onchange="updateTransaction(this)">
+        </td>
+        <td class="editable" data-field="property">
+            <select class="form-control form-control-sm property-selector" data-transaction-id="{{ transaction.id }}">
+                <option value="portfolio">Portfolio (Fixed Amount)</option>
+                <option value="all">All Properties (Split Equally)</option>
+                {% for property in properties %}
+                <option value="{{ property.id }}" {% if property.id == transaction.property_id %}selected{% endif %}>
+                    {{ property.title }}
+                </option>
+                {% endfor %}
+            </select>
+        </td>
+        <td class="editable" data-field="account">
+            <select class="form-control form-control-sm" onchange="updateTransaction(this)">
+                {% for category, accounts in account_classifications.items() %}
+                <optgroup label="{{ category }}">
+                    {% for account in accounts %}
+                    <option value="{{ account }}" 
+                            {% if account == transaction.account %}selected{% endif %}>
+                        {{ account }}
+                    </option>
+                    {% endfor %}
+                </optgroup>
+                {% endfor %}
+            </select>
+        </td>
+        <td class="editable" data-field="description">
+            <input type="text" class="form-control form-control-sm" 
+                   value="{{ transaction.description }}"
+                   onchange="updateTransaction(this)">
+        </td>
+        <td class="editable" data-field="debit">
+            <input type="number" step="0.01" class="form-control form-control-sm" 
+                   value="{{ '%.2f'|format(transaction.debit_amount or 0) }}"
+                   onchange="updateTransaction(this)">
+        </td>
+        <td class="editable" data-field="credit">
+            <input type="number" step="0.01" class="form-control form-control-sm" 
+                   value="{{ '%.2f'|format(transaction.credit_amount or 0) }}"
+                   onchange="updateTransaction(this)">
+        </td>
+        <td class="text-center">
+            <input type="checkbox" class="form-check-input" 
+                   {% if transaction.is_reconciled %}checked{% endif %}
+                   data-field="is_reconciled"
+                   onchange="updateTransaction(this)">
+        </td>
+        <td>
+            <div class="btn-group">
+                <button class="btn btn-sm btn-success save-transaction" type="button">
+                    <i class="bi bi-check-circle"></i>
+                </button>
+                <button class="btn btn-sm btn-danger delete-transaction" type="button">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="8" class="text-center">No transactions found</td>
+    </tr>
+{% endif %} 

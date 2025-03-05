@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Balance Sheet</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                 <li class="breadcrumb-item"><a href="{{ url_for('accounting_routes.financials') }}">Financials</a></li>
+                <li class="breadcrumb-item active">Balance Sheet</li>
+            </ol>
+        </nav>
+    </div>
+
+    <section class="section">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('accounting_routes.balance_sheet') }}"> 
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="start_date">Start Date:</label>
+                            <input type="date" name="start_date" id="start_date" class="form-control" value="{{ request.args.get('start_date', datetime.utcnow().strftime('%Y-%m-%d')) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="end_date">End Date:</label>
+                            <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request.args.get('end_date', datetime.utcnow().strftime('%Y-%m-%d')) }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">Filter</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title text-center">Balance Sheet Report</h2>
+                <h5 class="card-subtitle mb-4 text-muted text-center">
+                    For the period: {{ request.args.get('start_date', datetime.utcnow().strftime('%Y-%m-%d')) }} to {{ request.args.get('end_date', datetime.utcnow().strftime('%Y-%m-%d')) }}
+                </h5>
+
+                <h5 class="card-title">Assets</h5>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Current Assets</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                       Cash and Cash Equivalents
+                        <span>{{ balance_sheet.cash_cash_equivalents }}</span> 
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Accounts Receivable
+                        <span>{{ balance_sheet.accounts_receivable }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Total Current Assets</strong>
+                        <span>{{ balance_sheet.current_assets }}</span>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Non-Current Assets</strong> 
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Property, Plant & Equipment
+                        <span>{{ balance_sheet.property_plant_equipment }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Total Non-Current Assets</strong>
+                        <span>{{ balance_sheet.non_current_assets }}</span>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Total Assets</strong>
+                        <span>{{ balance_sheet.assets }}</span>
+                    </li>
+                </ul>
+
+                <h5 class="card-title">Liabilities</h5>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Current Liabilities</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Accounts Payable
+                        <span>{{ balance_sheet.accounts_payable }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Total Current Liabilities</strong>
+                        <span>{{ balance_sheet.current_liabilities }}</span>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Non-Current Liabilities</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Mortgage Payable
+                        <span>{{ balance_sheet.mortgage_payable }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Total Non-Current Liabilities</strong>
+                        <span>{{ balance_sheet.non_current_liabilities }}</span>
+                    </li>
+
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Total Liabilities</strong>
+                        <span>{{ balance_sheet.liabilities }}</span>
+                    </li>
+                </ul>
+
+                <h5 class="card-title">Equity</h5>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Share Capital
+                        <span>{{ balance_sheet.share_capital }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Retained Earnings
+                        <span>{{ balance_sheet.retained_earnings }}</span>
+                    </li> 
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Total Equity</strong>
+                        <span>{{ balance_sheet.equity }}</span>
+                    </li>
+                </ul>
+
+                <div class="d-flex justify-content-between mt-3">
+                    <h6 class="card-subtitle mb-2 text-dark"><strong>Total Liabilities and Equity</strong></h6>
+                    <h6 class="card-subtitle mb-2 text-dark"><strong>{{ balance_sheet.liabilities_equity }}</strong></h6> 
+                </div>
+            </div>
+        </div>
+
+        <section class="section">
+            <div class="card">
+                <div class="card-body text-center">
+                    <p class="text-muted">Generated on: {{ datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                </div>
+            </div>
+        </section>
+    </section>
+
+    <div class="text-center mb-4">
+        <a href="{{ url_for('accounting_routes.download_balance_sheet_pdf') }}" class="btn btn-primary">Download PDF</a> 
+        <a href="{{ url_for('accounting_routes.download_balance_sheet_csv') }}" class="btn btn-secondary">Download CSV</a> 
+    </div>
+</main>
+{% endblock %}

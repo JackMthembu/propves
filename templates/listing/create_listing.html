@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+{% block title %}Create Lising{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/property.css') }}">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle">
+        <h1>Create Rental Listing</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('property_routes.property_list') }}">My Properties</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('property_routes.manage_property', property_id=property.id) }}">{{ property.title }}</a></li>
+                <li class="breadcrumb-item active">Create Listing</li>
+            </ol>
+        </nav>
+    </div>
+
+    <section class="section">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            {% if existing_listing %}
+                                Update Listing
+                            {% else %}
+                                Create New Listing
+                            {% endif %}
+                        </h5>
+
+                        <form method="POST" action="{{ url_for('property_routes.create_listing', property_id=property.id) }}" class="needs-validation" novalidate>
+                            {{ form.csrf_token }}
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="monthly_rental" class="form-label">Monthly Rental*</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">{{ property.owner.user.currency.symbol }}</span>
+                                        {{ form.monthly_rental(class="form-control" + (" is-invalid" if form.monthly_rental.errors else ""), placeholder="Enter monthly rental amount") }}
+                                        {% if form.monthly_rental.errors %}
+                                            <div class="invalid-feedback">{{ form.monthly_rental.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="deposit" class="form-label">Security Deposit</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">{{ property.owner.user.currency.symbol }}</span>
+                                        {{ form.deposit(class="form-control" + (" is-invalid" if form.deposit.errors else ""), placeholder="Enter security deposit amount") }}
+                                        {% if form.deposit.errors %}
+                                            <div class="invalid-feedback">{{ form.deposit.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="admin_fee" class="form-label">Admin Fee</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">{{ property.owner.user.currency.symbol }}</span>
+                                    {{ form.admin_fee(class="form-control" + (" is-invalid" if form.admin_fee.errors else ""), placeholder="Enter admin fee amount") }}
+                                    {% if form.admin_fee.errors %}
+                                        <div class="invalid-feedback">{{ form.admin_fee.errors[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="available_start_date" class="form-label">Available From*</label>
+                                    {{ form.available_start_date(class="form-control" + (" is-invalid" if form.available_start_date.errors else ""), type="date") }}
+                                    {% if form.available_start_date.errors %}
+                                        <div class="invalid-feedback">{{ form.available_start_date.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="available_end_date" class="form-label">Available Until</label>
+                                    {{ form.available_end_date(class="form-control" + (" is-invalid" if form.available_end_date.errors else ""), type="date") }}
+                                    {% if form.available_end_date.errors %}
+                                        <div class="invalid-feedback">{{ form.available_end_date.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="listing_type" class="form-label">Listing Type*</label>
+                                    {{ form.listing_type(class="form-control" + (" is-invalid" if form.listing_type.errors else ""), placeholder="Select listing type") }}
+                                    {% if form.listing_type.errors %}
+                                        <div class="invalid-feedback">{{ form.listing_type.errors[0] }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">Viewing Availability</label>
+                                    <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#viewingAvailabilityModal">
+                                        <i class="bi bi-calendar-plus me-2"></i> Set Viewing Availability
+                                    </button>
+                                    <!-- Hidden inputs for form submission -->
+                                    <input type="hidden" id="viewing_availibility_dates" name="viewing_availibility_dates">
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">
+                                    {% if existing_listing %}
+                                        Update Listing
+                                    {% else %}
+                                        Create Listing
+                                    {% endif %}
+                                </button>
+                                <a href="{{ url_for('property_routes.manage_property', property_id=property.id) }}" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property Summary Card -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Property Summary</h5>
+                        <div class="property-summary">
+                            {% if property.photos %}
+                                {% for photo in property.photos %}
+                                    {% if photo.is_thumbnail %}
+                                        <div class="mb-3">
+                                            <img src="{{ url_for('static', filename=photo.file_path) }}" 
+                                                 alt="Property thumbnail"
+                                                 class="img-thumbnail"
+                                                 style="max-width: 200px; height: auto;"
+                                                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/property_photos/default.png') }}';">
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <div class="mb-3">
+                                    <img src="{{ url_for('static', filename='uploads/property_photos/default.png') }}" 
+                                         alt="Default property image"
+                                         class="img-thumbnail"
+                                         style="max-width: 200px; height: auto;">
+                                </div>
+                            {% endif %}
+                            <p><strong>Title:</strong> {{ property.title }}</p>
+                            <p><strong>Type:</strong> {{ property.type }}</p>
+                            <p><strong>Address:</strong> {{ property.street_address }}, {{ property.city }}</p>
+                            <p><strong>Bedrooms:</strong> {{ property.bedroom }}</p>
+                            <p><strong>Bathrooms:</strong> {{ property.bathroom }}</p>
+                            <p><strong>Square Feet:</strong> {{ property.sqm }}</p>
+                        </div>
+                        <div class="viewing-times-summary">
+                            <h4 class="mt-3">Viewing Times</h4>
+                            <div id="viewing-times-display">
+                                <p class="text-muted">No viewing times set</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Viewing Availability Modal -->
+    <div class="modal fade" id="viewingAvailabilityModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Set Viewing Availability</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control" id="viewing_date">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="viewing_time" step="1800">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Duration</label>
+                                <select class="form-select" id="viewing_duration">
+                                    <option value="30">30 minutes</option>
+                                    <option value="60">1 hour</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="save_availability">
+                                <i class="bi bi-plus-circle me-2"></i>Add Time Slot
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">Added Time Slots</h6>
+                                    <div id="availability_list" class="list-group list-group-flush">
+                                        <!-- Time slots will be added here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" role="dialog" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Success</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="modalMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    let availabilityDates = new Map();
+    const viewingDateInput = document.getElementById('viewing_date');
+    const viewingTimeInput = document.getElementById('viewing_time');
+    const availabilityList = document.getElementById('availability_list');
+
+    // Add availability entry
+    document.getElementById('save_availability').addEventListener('click', function() {
+        const date = viewingDateInput.value;
+        const startTime = viewingTimeInput.value;
+        const duration = parseInt(document.getElementById('viewing_duration').value);
+        
+        if (!date || !startTime) {
+            alert('Please select both date and start time');
+            return;
+        }
+
+        // Calculate end time
+        const [hours, minutes] = startTime.split(':');
+        const startDateTime = new Date(date);
+        startDateTime.setHours(parseInt(hours), parseInt(minutes));
+        const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
+        const endTime = endDateTime.toTimeString().slice(0, 5);
+
+        const dateTimeKey = `${date}T${startTime}`;
+        availabilityDates.set(dateTimeKey, {
+            startTime: startTime,
+            endTime: endTime
+        });
+
+        updateAvailabilityList();
+        updateHiddenInputs();
+    });
+
+    function updateAvailabilityList() {
+        availabilityList.innerHTML = '';
+        const sortedDates = Array.from(availabilityDates.entries())
+            .sort((a, b) => new Date(a[0]) - new Date(b[0]));
+
+        sortedDates.forEach(([dateTime, details]) => {
+            const date = new Date(dateTime);
+            const entry = document.createElement('div');
+            entry.className = 'list-group-item';
+            entry.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold">${date.toLocaleDateString()}</div>
+                        <small class="text-muted">${details.startTime} - ${details.endTime}</small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeAvailability('${dateTime}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+            availabilityList.appendChild(entry);
+        });
+
+        updateViewingTimesDisplay();
+    }
+
+    function updateHiddenInputs() {
+        // Create a comma-separated list of "YYYY-MM-DD HH:MM - HH:MM"
+        if (availabilityDates.size > 0) {
+            const sortedDates = Array.from(availabilityDates.entries())
+                .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+                .map(([dateTime, details]) => {
+                    const [date] = dateTime.split('T');
+                    return `${date} ${details.startTime} - ${details.endTime}`;
+                });
+
+            document.getElementById('viewing_availibility_dates').value = sortedDates.join(', ');
+        } else {
+            document.getElementById('viewing_availibility_dates').value = '';
+        }
+    }
+
+    const viewingTimesDisplay = document.getElementById('viewing-times-display');
+
+    function updateViewingTimesDisplay() {
+        if (availabilityDates.size === 0) {
+            viewingTimesDisplay.innerHTML = '<p class="text-muted">No viewing times set</p>';
+            return;
+        }
+
+        const sortedDates = Array.from(availabilityDates.entries())
+            .sort((a, b) => new Date(a[0]) - new Date(b[0]));
+
+        viewingTimesDisplay.innerHTML = sortedDates.map(([dateTime, details]) => {
+            const date = new Date(dateTime);
+            return `
+                <div class="viewing-time-entry mb-2">
+                    <div class="fw-bold">${date.toLocaleDateString()}</div>
+                    <small class="text-muted">${details.startTime} - ${details.endTime}</small>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.removeAvailability = function(dateTime) {
+        availabilityDates.delete(dateTime);
+        updateAvailabilityList();
+        updateHiddenInputs();
+        updateViewingTimesDisplay();
+    };
+
+    // Initialize hidden inputs
+    updateHiddenInputs();
+});
+
+</script>
+<script>
+    // Assuming you are using jQuery forAJAX
+    $('#createListingForm').on('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        $.ajax({
+            type: 'POST',
+            url: $(this).attr('action'),
+            data: $(this).serialize(),
+            success: function(response) {
+                // Show popup notice
+                alert(response.message); // Replace with your preferred popup method
+                // Optionally, redirect or update the UI
+            },
+            error: function(xhr) {
+                // Handle errors
+                alert('An error occurred: ' + xhr.responseText);
+            }
+        });
+    });
+</script>
+
+<script>
+    // Show the modal if there is a message
+    $(document).ready(function() {
+        const message = "{{ message|default('') }}"; // Get the message from Flask
+        if (message) {
+            $('#modalMessage').text(message); // Set the message in the modal
+            $('#successModal').modal('show'); // Show the modal
+        }
+    });
+</script>
+{% endblock %} 

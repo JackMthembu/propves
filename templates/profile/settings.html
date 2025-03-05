@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="pagetitle"></div>
+      <h1>Settings</h1>
+    <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard')}}">Dashboard</a></li>
+          <li class="breadcrumb-item active">Settings</li>
+        </ol>
+    </nav>
+
+    <section class="section dashboard">
+        <div class="container">
+            <form method="POST" action="{{ url_for('profile_routes.settings') }}">
+                {{ form.hidden_tag() }}
+        
+                <div class="form-group">
+                    {{ form.system.label }}
+                    {{ form.system(class="form-control", value=current_system_value) }}
+                </div>
+        
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        
+            <a href="{{ url_for('profile_routes.profile_settings') }}">Back to Profile Settings</a>
+        </div>
+    </section>
+
+    {% if request.args.get('success') %}
+    <script>
+        Swal.fire({
+            title: 'Success!',
+            text: 'Settings updated successfully!',
+            icon: 'success',
+            confirmButtonText: 'OK'
+        });
+    </script>
+    {% endif %}
+
+</main><!-- End #main -->
+{% endblock %}

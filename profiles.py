@@ -130,7 +130,7 @@ def profile_settings():
         form = ProfileForm(current_user=current_user)
         profile_pic_form = ProfilePicForm()
 
-        return render_template('profile_settings.html', 
+        return render_template('profile/profile_settings.html', 
                              form=form,
                              profile_pic_form=profile_pic_form)
 
@@ -208,7 +208,7 @@ def company():
         flash('Company added successfully!', 'success')
         return redirect(url_for('profile_routes.company'))
 
-    return render_template('company_settings.html', form=form)
+    return render_template('profile/company_settings.html', form=form)
 
 @profile_routes.route('/settings', methods=['GET', 'POST'])
 @login_required
@@ -231,7 +231,7 @@ def settings():
     else:
         current_app.logger.error(f"Form validation errors: {form.errors}")
 
-    return render_template('settings.html', form=form)
+    return render_template('profile/settings.html', form=form)
 
 @profile_routes.route('/banking_details/<int:banking_details_id>', methods=['GET', 'POST'])
 @login_required
@@ -302,7 +302,7 @@ def banking_details(banking_details_id):
 
     # Check for success parameter to show popup
     success = request.args.get('success', False)
-    return render_template('banking_details.html', form=form, user=user, success=success, existing_banking_details=existing_banking_details)
+    return render_template('profile/banking_details.html', form=form, user=user, success=success, existing_banking_details=existing_banking_details)
 
 @profile_routes.route('/banking_settings', methods=['GET', 'POST'])
 @login_required
@@ -313,7 +313,7 @@ def banking_settings():
     # Create an instance of the BankingDetailsForm
     form = BankingDetailsForm()
 
-    return render_template('banking_settings.html', banking_details=banking_details, form=form)  # Pass banking_details and form to the template
+    return render_template('profile/banking_settings.html', banking_details=banking_details, form=form)  # Pass banking_details and form to the template
 
 @profile_routes.route('/delete_banking_detail/<int:id>', methods=['POST'])
 @login_required
@@ -332,5 +332,5 @@ def delete_banking_detail(id):
 
 @profile_routes.route('/setup_account', methods=['GET', 'POST'])
 def setup_account():
-    return render_template('setup_account.html')
+    return render_template('profile/setup_account.html')
 

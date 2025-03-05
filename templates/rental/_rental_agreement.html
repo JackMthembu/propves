@@ -1,0 +1,147 @@
+<div>
+    <h2>Lease Agreement</h2>
+    <p>This Residential Lease Agreement ("Agreement") is entered into on this 
+        {% if agreement.date_start %}
+            {{ agreement.date_start.strftime('%d') }} day of 
+            {{ agreement.date_start.strftime('%B') }}, 
+            {{ agreement.date_start.strftime('%Y') }}
+        {% else %}
+            [DATE] 
+        {% endif %}
+        , by and between:</p>
+
+    <p><strong>Landlord:</strong><br>
+    Name: {{ owner.user.name }} {{ owner.user.lastname }}<br>
+    Address: <br>
+    {{ owner.user.street_address }} {{ owner.user.city }}, {{ owner.user.state.state }} {{ owner.user.country.country }}<br>
+    </p>
+
+    <p><strong>Tenant:</strong><br>
+    Name: {{ agreement.tenant.user.name }} {{ agreement.tenant.user.lastname }}<br>
+    Address: <br>
+    {{ agreement.tenant.user.street_address }} {{ agreement.tenant.user.city }}, {{ agreement.tenant.user.state.state }} {{ agreement.tenant.user.country.country }}<br>
+    </p>
+
+    <p><strong>1. Premises:</strong><br>
+    Landlord agrees to lease to Tenant the premises located at: {{ agreement.property.title }}<br>
+    Address: {{ agreement.property.street_address }}, {{ agreement.property.city }}, {{ agreement.property.state.state }}<br>
+    </p>
+
+    <p><strong>2. Term:</strong><br>
+    This Agreement shall commence on {{ agreement.date_start.strftime('%B %d, %Y') }} and shall continue for a term of 
+    {% set terms = [] %} 
+    {% if agreement.term_years > 0 %} 
+        {% set terms = terms + [agreement.term_years ~ ' year' ~ ('' if agreement.term_years == 1 else 's')] %}
+    {% endif %}
+    {% if agreement.term_months > 0 %}
+        {% set terms = terms + [agreement.term_months ~ ' month' ~ ('' if agreement.term_months == 1 else 's')] %}
+    {% endif %}
+    {{ terms | join(', ') }}.
+    </p>
+
+    <p><strong>3. Rent:</strong><br>
+    The monthly rent for the premises is {{ agreement.owner.user.currency.symbol }}{{ agreement.monthly_rental }}.</p>
+
+    <p><strong>4. Security Deposit:</strong><br>
+    Tenant shall pay a security deposit of {{ agreement.owner.user.currency.symbol }}{{ agreement.deposit }}.</p>
+
+    <p><strong>5. Utilities:</strong><br>
+    Tenant is responsible for all utilities, including but not limited to electricity, water, and gas.</p>
+
+    <p><strong>6. Maintenance:</strong><br>
+    Landlord shall maintain the premises in a habitable condition.</p>
+
+    <p><strong>7. Access:</strong><br>
+    Landlord shall have the right to enter the premises upon reasonable notice to Tenant for purposes of making repairs, showing the premises to prospective tenants, buyers, or lenders, and conducting routine inspections. In case of emergency, Landlord may enter without prior notice.</p>
+
+    <p><strong>8. Pets:</strong><br>
+    {% if agreement.pets_allowed %}
+        <strong>Pets are allowed under the following conditions:</strong><br>
+        8.1. Tenant must obtain prior approval for any pets.<br>
+        8.2. Tenant is responsible for all pet-related damages.<br>
+        8.3. Tenant must comply with all applicable pet regulations and laws.<br>
+    {% else %}
+        8.1. Pets are not allowed.
+    {% endif %}
+    </p>
+
+    <p><strong>9. Alterations:</strong><br>
+    Tenant shall not make any alterations, improvements, or additions to the premises without the prior written consent of Landlord. Any approved alterations shall become the property of Landlord upon termination of this Agreement.</p>
+
+    <p><strong>10. Subletting:</strong><br>
+    {% if agreement.sub_letting_allowed %}
+        10.1. Tenant is allowed to sublet the premises with the prior written consent of Landlord.
+    {% else %}
+        10.1. Tenant shall not sublet the premises or assign this Agreement without the prior written consent of Landlord.
+    {% endif %}
+    </p>
+
+    <p><strong>11. Termination:</strong><br>
+    11.1. This Agreement may be terminated by either party upon a full calendar month written notice to the other party. In the event of early termination, the terminating party must provide valid reasons as outlined in this Agreement.<br>
+    11.2. If the tenant terminates this Agreement prior to the natural expiration of the term, the following consequences will apply:<br>
+    11.2.1. The Tenant may forfeit the security deposit if the termination is not in accordance with the terms specified herein.<br>    
+    11.2.2. The Landlord may seek compensation for any unpaid rent or damages incurred due to the early termination.<br>    
+    11.2.3. Any outstanding obligations or liabilities must be settled prior to the termination date.<br>    
+    11.2.4. The Tenant will be required to vacate the premises within 30 days of the termination date.<br>
+    11.3. If the Landlord terminates this Agreement prior to the natural expiration of the term, except for a material breach of this Agreement by Tenant, the Landlord shall compensate the Tenant for the Tenant's reasonable and documented relocation expenses. Such expenses may include, but are not limited to:<br>
+    11.3.1. Moving costs: Reasonable costs associated with hiring movers, renting moving trucks, and packing materials.<br>
+    11.3.2. Temporary housing: Reasonable costs for temporary housing if necessary, for a period not to exceed 30 days.<br>
+    11.3.3. New lease fees: Application fees and other costs associated with entering into a new lease.<br>
+    11.3.4. Lost Deposits: Any non-refundable deposits paid by the Tenant to third parties in connection with the premises, such as utility deposits.<br>
+    11.3.5. Other: Any other reasonable and documented expenses directly resulting from the early termination, subject to mutual agreement between Landlord and Tenant.<br>
+    11.4. Except as otherwise provided herein, all terms and conditions of this Agreement shall remain in effect until the termination is finalized.<br>
+    </p>
+
+    <p><strong>12. Breach of Agreement:</strong><br>
+    12.1. If Tenant fails to pay rent or otherwise breaches this Agreement, Landlord may pursue legal action for unpaid rent and damages, terminate this Agreement, and exercise any other rights and remedies available under this Agreement or applicable law.<br>
+    12.2. Additionally, a daily compounding fee of {{ agreement.owner.user.currency.symbol }}{{ agreement.daily_compounding }} will be charged for each day the rent remains unpaid.<br>
+    </p>
+
+    <p><strong>13. Governing Law:</strong><br>
+    {% if agreement.property.country.country == 'South Africa' %}
+            13.1. This Agreement shall be governed by and construed in accordance with the laws of the Republic of South Africa.
+        {% elif agreement.property.country.country == 'United States' %}
+            13.1. This Agreement shall be governed by and construed in accordance with the laws of the State of {{ agreement.property.state.state }}.
+        {% else %}
+            13.1. This Agreement shall be governed by the laws of the applicable jurisdiction.
+    {% endif %}
+    </p>
+
+    <p><strong>14. Occupation by household members:</strong><br>
+    14.1. The premises can be occupied by {{ agreement.max_occupants }} people, including the primary tenant.<br>
+    14.2. Guest sleeping over will be charged at a rate of {{ owner.user.currency.symbol }}{{ agreement.nightly_guest_rate }} per night.
+    </p>
+
+    <p><strong>15. Binding Effect:</strong><br>
+    15.1. This Agreement shall be binding upon and inure to the benefit of the parties hereto and their respective heirs, successors, and permitted assigns.</p>
+
+    <p><strong>16. Severability:</strong><br>
+    16.1. If any provision of this Agreement is held to be invalid or unenforceable, such provision shall be struck from this Agreement and the remaining provisions shall remain in full force and effect.</p>
+
+    <p><strong>17. Special Provisions:</strong><br>
+    {% if agreement.additional_terms %}
+        17.1. {{ agreement.additional_terms }}
+    {% else %}
+        17.1. No additional terms for this rental agreement.
+    {% endif %}
+    </p>
+
+    <p><strong>Landlord:</strong><br>
+    {{ apartment.owner.user.name }} {{ apartment.owner.user.lastname }}<br>
+    {{ apartment.owner.user.street_address }} {{ apartment.owner.user.city }} {{ apartment.owner.user.state.state }} {{ apartment.owner.user.country.country }}</p> 
+
+    <br>
+    <p><strong>Landlord Signature:</strong><br><br><br>
+    _________________________<br><br><br>
+    Date: _________________________</p>
+
+    <p><strong>Tenant:</strong><br>
+    {{ agreement.tenant.user.name }} {{ agreement.tenant.user.lastname }}<br>
+    {{ agreement.tenant.user.street_address }} {{ agreement.tenant.user.city }} {{ agreement.tenant.user.state.state }} {{ agreement.tenant.user.country.country }}</p>
+    <br>
+
+    <p><strong>Tenant Signature(s):</strong><br><br><br>
+    _________________________<br><br><br>
+    Date: _________________________</p>
+</div>
+

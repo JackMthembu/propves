@@ -1,0 +1,249 @@
+<!-- AI Upload Modal -->
+<div class="modal fade" id="aiUploadModal" tabindex="-1" aria-labelledby="aiUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="header-icon-wrapper">
+                        <i class="bi bi-robot" style="color: #fff;"></i>
+                    </div>
+                    <div class="header-text">
+                        <h5 class="modal-title" id="aiUploadModalLabel">AI Document Processor</h5> 
+                        <p class="text-muted mb-0"><small>Upload and process your documents automatically</small></p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="background-color: #ffffff;">
+                <form id="aiUploadForm" enctype="multipart/form-data" action="{{ url_for('transaction_routes.upload_document') }}" method="POST"> 
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="upload-area">
+                        <div class="drop-zone" id="dropZone">
+                            <div class="drop-zone__prompt">
+                                <i class="bi bi-cloud-upload fs-1"></i>
+                                <p>Drag and drop your files here or click to select</p>
+                                <div class="format-label">Supported formats:</div>
+                                <span class="format-badge">PDF</span>
+                                <span class="format-badge">CSV</span> 
+                            </div>
+                            <input type="file" name="files[]" id="fileInput" class="drop-zone__input" 
+                                   accept=".pdf,.csv" multiple hidden> 
+                        </div>
+                        
+                        <div class="selected-files mt-3"></div>
+                        
+                        <div class="upload-progress d-none">
+                            <div class="progress mt-2">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <p class="text-center mt-2" id="uploadStatus">Processing...</p>
+                        </div>
+                    </div>
+                </form>
+
+                <div id="previewSection" class="mt-4 d-none">
+                    <h6>Extracted Transactions</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Account</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th> 
+                                </tr>
+                            </thead>
+                            <tbody id="previewTransactions"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="processFiles" disabled> 
+                    Process Files
+                </button>
+            </div>
+        </div>
+    </div>
+</div> 
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const selectedFiles = document.querySelector('.selected-files');
+        const uploadProgress = document.querySelector('.upload-progress');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const processFilesBtn = document.getElementById('processFiles');
+        const previewSection = document.getElementById('previewSection');
+        const previewTransactions = document.getElementById('previewTransactions');
+        let filesToUpload = [];
+
+        // Drag and drop functionality
+        dropZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dropZone.classList.add('highlight');
+        });
+
+        dropZone.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            dropZone.classList.remove('highlight');
+        });
+
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropZone.classList.remove('highlight');
+            filesToUpload = e.dataTransfer.files;
+            showSelectedFiles();
+        });
+
+        // Click to select files
+        dropZone.addEventListener('click', function () {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function () {
+            filesToUpload = this.files;
+            showSelectedFiles();
+        });
+
+        // Display selected files
+        function showSelectedFiles() {
+            selectedFiles.innerHTML = ''; // Clear previous list
+
+            if (filesToUpload.length > 0) {
+                processFilesBtn.disabled = false; // Enable process button
+
+                for (let i = 0; i < filesToUpload.length; i++) {
+                    const file = filesToUpload[i];
+                    const listItem = document.createElement('li');
+                    listItem.textContent = file.name;
+                    selectedFiles.appendChild(listItem);
+                }
+            } else {
+                processFilesBtn.disabled = true; // Disable process button
+            }
+        }
+
+        // Handle file upload and processing
+        processFilesBtn.addEventListener('click', function () {
+            uploadProgress.classList.remove('d-none');
+            previewSection.classList.add('d-none'); // Hide preview section
+
+            const formData = new FormData(document.getElementById('aiUploadForm'));
+
+            // Append files to FormData
+            for (let i = 0; i < filesToUpload.length; i++) {
+                formData.append('files[]', filesToUpload[i]);
+            }
+
+            fetch('{{ url_for("transaction_routes.upload_document") }}', { 
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                uploadProgress.classList.add('d-none');
+
+                if (data.success) {
+                    uploadStatus.textContent = 'Upload successful!';
+                    displayPreview(data.transactions);
+                } else {
+                    uploadStatus.textContent = 'Upload failed: ' + data.error;
+                }
+            })
+            .catch(error => {
+                uploadProgress.classList.add('d-none');
+                uploadStatus.textContent = 'Upload failed: ' + error.message;
+            });
+        });
+
+        // Display extracted transactions preview
+        function displayPreview(transactions) {
+            previewTransactions.innerHTML = ''; // Clear previous entries
+
+            if (transactions.length > 0) {
+                previewSection.classList.remove('d-none'); // Show preview section
+
+                transactions.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${transaction.date}</td>
+                        <td>${transaction.description}</td>
+                        <td>${transaction.account}</td>
+                        <td>${transaction.amount}</td>
+                        <td>
+                            <button class="btn btn-sm btn-success accept-btn" data-transaction-id="${transaction.id}">Accept</button> 
+                            <button class="btn btn-sm btn-danger reject-btn" data-transaction-id="${transaction.id}">Reject</button> 
+                        </td>
+                    `;
+                    previewTransactions.appendChild(row);
+                });
+
+                // Add event listeners for Accept and Reject buttons
+                const acceptBtns = document.querySelectorAll('.accept-btn');
+                const rejectBtns = document.querySelectorAll('.reject-btn');
+
+                acceptBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const transactionId = btn.dataset.transactionId;
+                        // Handle accept action (e.g., send transaction data to server)
+                        console.log('Accepted transaction:', transactionId); 
+                    });
+                });
+
+                rejectBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const transactionId = btn.dataset.transactionId;
+                        // Handle reject action (e.g., remove transaction from preview)
+                        console.log('Rejected transaction:', transactionId); 
+                    });
+                });
+            }
+        }
+    });
+</script>
+<script>
+fetch('{{ url_for("transaction_routes.upload_document") }}', { 
+    method: 'POST',
+    body: formData,
+    headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    }
+})
+.then(response => {
+    if (!response.ok) {
+        throw new Error('Network response was not ok'); 
+    }
+    return response.json(); 
+})
+.then(data => {
+    uploadProgress.classList.add('d-none');
+
+    if (data.success) {
+        uploadStatus.textContent = 'Upload successful!';
+        displayPreview(data.transactions);
+    } else {
+        uploadStatus.textContent = 'Upload failed: ' + data.error;
+    }
+})
+.catch(error => {
+    uploadProgress.classList.add('d-none');
+    uploadStatus.textContent = 'Upload failed: ' + error.message;
+});
+</script>
+<script src="{{ url_for('static', filename='js/transactions.js') }}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- <script>
+    $(document).ready(function() {
+        $('#aiUploadModal').modal('show');
+    });
+</script> -->

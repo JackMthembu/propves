@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Income Statement Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            text-align: left;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+        td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+        .amount {
+            text-align: right;
+        }
+        .summary {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Income Statement Report</h1>
+    <h2>For the period: {{ start_date }} to {{ end_date }}</h2>
+    <h3>Generated on: {{ generated_date }}</h3>
+
+    <h3>Revenue</h3>
+    <table>
+        <thead>
+        </thead>
+        <tbody>
+            {% for category, amount in income_statement.revenue_categories.items() %}
+                <tr>
+                    <td>{{ category }}</td>
+                    <td class="amount" style="text-align: right;">{{ currency_symbol }}{{ amount }}</td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td><strong>Total Revenue</strong></td>
+                <td class="amount" style="text-align: right;"><strong>{{ currency_symbol }}{{ income_statement.income }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Cost of Sales</h3>
+    <table>
+        <tbody>
+            <tr>
+                <td><strong>Total Cost of Sales</strong></td>
+                <td class="amount" style="text-align: right;"><strong>{{ currency_symbol }}{{ income_statement.cost_of_sales }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Gross Income</h3>
+    <table>
+        <tbody>
+            <tr>
+                <td><strong>Gross Income</strong></td>
+                <td class="amount" style="text-align: right;"><strong>{{ currency_symbol }}{{ income_statement.gross_income }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Overhead Expenses</h3>
+    <table>
+        <thead>
+            <tr>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category, amount in income_statement.expense_categories.items() %}
+                {% if category != 'Cost of Sales' %} 
+                    <tr>
+                        <td>{{ category }}</td>
+                        <td class="amount" style="text-align: right;"><strong>{{ currency_symbol }}{{ amount }}</td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+            <tr>
+                <td><strong>Total Overhead Expenses</strong></td>
+                <td class="amount" style="text-align: right;"><strong>{{ currency_symbol }}{{ income_statement.overhead_expenses }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Net Income</h3>
+    <table>
+        <tbody>
+            <tr>
+                <td><strong>Net Income</strong></td>
+                <td class="amount" style="text-align: right;"><strong>{{ currency_symbol }}{{ income_statement.net_income }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html> 

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>{% block title %}{% endblock %}</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="{{ url_for('static', filename='img/propves2.png') }}" rel="icon">
+  <link href="{{ url_for('static', filename='img/propves2.png') }}" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendor/boxicons/css/boxicons.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link href="{{ url_for('static', filename='vendor/remixicon/remixicon.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='vendor/propves-datatables/style.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ai.css') }}">
+  
+
+
+  <!-- Template Main CSS File -->
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/transactions.css') }}">
+
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/property.css') }}">
+{% block styles %}{% endblock %}
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+
+  <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script src="{{ url_for('static', filename='js/flash-messages.js') }}"></script>
+
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+</head>
+
+<body>
+  <div class="modal fade" id="flashMessagesModal" tabindex="-1" role="dialog" aria-labelledby="flashMessagesLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="flashMessagesLabel">Messages</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              <script>
+                  window.flashMessages = {{ messages | tojson | safe }};
+              </script>
+            {% endif %}
+          {% endwith %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= Header ======= -->
+  <header id="header" class="header fixed-top d-flex align-items-center">
+
+    <div class="d-flex align-items-center justify-content-between">
+      <a href="{{ url_for('main.dashboard')}}" class="logo d-flex align-items-center">
+        <img src="{{ url_for('static', filename='img/logos/propves2.png') }}" alt="">
+        <span class="d-none d-lg-block">propves<span style="color: #60D0AC;">.</span></span>
+      </a>
+      <i class="bi bi-list toggle-sidebar-btn"></i>
+    </div><!-- End Logo -->
+
+    <div class="search-bar" >
+      <form id="searchForm" class="d-flex">
+        <input class="form-control" type="search" autocomplete="off">
+      </form>
+    </div><!-- End Search Bar -->
+
+    <nav class="header-nav ms-auto" >
+      <ul class="d-flex align-items-center">
+
+        <li class="nav-item d-block d-lg-none">
+          <a class="nav-link nav-icon search-bar-toggle " href="#">
+            <i class="bi bi-search"></i>
+          </a>
+        </li>
+
+        <li class="nav-item dropdown">
+
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-bell"></i>
+            <span class="badge bg-primary badge-number">{{ notifications|length }}</span>
+          </a>
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
+            <li class="dropdown-header">
+              {% if notifications|length > 0 %}
+                  You have {{ notifications|length }} new notifications
+              {% else %}
+                  You have no new notifications
+              {% endif %}
+              <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            {% for notification in notifications %}
+            <li class="notification-item">
+              <i class="bi bi-{{ notification.type == 'info' and 'info-circle' or notification.type == 'warning' and 'exclamation-circle' or notification.type == 'success' and 'check-circle' or 'x-circle' }} text-{{ notification.type }}"></i>
+              <div>
+                <h4>{{ notification.title }}</h4>
+                <p>{{ notification.message }}</p>
+                <p>{{ notification.timestamp.strftime('%Y-%m-%d %H:%M') }}</p>
+              </div>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            {% endfor %}
+
+            <li class="dropdown-footer">
+              <a href="#">Show all notifications</a>
+            </li>
+
+          </ul><!-- End Notification Dropdown Items -->
+
+        </li><!-- End Notification Nav -->
+
+        <li class="nav-item dropdown pe-3">
+          <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+            <i class="bi bi-chat-left-text"></i>
+            <span class="badge bg-success badge-number">{{ unread_messages_count }}</span>
+          </a><!-- End Messages Icon -->
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow messages">
+            <li class="dropdown-header">
+              {% if unread_messages_count > 0 %}
+                  You have {{ unread_messages_count }} new messages
+                  <a href="{{ url_for('messaging.inbox') }}"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
+              {% else %}
+                  You have no new messages
+              {% endif %}
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            {% for message in messages %}
+            <li class="message-item">
+              <a href="{{ url_for(messaging.inbox) }}">
+                <img src="{{ url_for('static', filename='img/messages-' + loop.index + '.jpg') }}" alt="" class="rounded-circle">
+                <div>
+                  <h4>{{ message.sender_name }}</h4>
+                  <p>{{ message.content }}</p>
+                  <p>{{ message.timestamp }}</p>
+                </div>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            {% endfor %}
+            <li class="dropdown-footer">
+              <a href="{{ url_for('messaging.inbox') }}"">Show all messages</a>
+            </li>
+          </ul><!-- End Messages Dropdown Items -->
+
+        </li><!-- End Messages Nav -->
+
+        <li class="nav-item dropdown pe-3">
+
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+            <span>Hello, </span><strong class="d-none d-md-block dropdown-toggle ps-2">{{ current_user.name }}</strong>
+            <img src="{{ url_for('static', filename='uploads/profile/' + (current_user.profile_picture or 'default.png')) }}" alt="{{ current_user.name }}"  class="rounded-circle">
+          </a><!-- End Profile Iamge Icon -->
+
+
+
+
+
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+            <li class="dropdown-header">
+              <h6>{{ current_user.name }} {{ current_user.lastname }}</h6>
+              <span>{{ current_user.role }}</span>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{{ url_for('profile_routes.profile_settings') }}">
+                <i class="bi bi-person"></i>
+                <span>My Profile</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{{ url_for('auth_routes.change_password') }}">
+                <i class="bi bi-lock"></i>
+                <span>Password Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{{ url_for('profile_routes.settings') }}">
+                <i class="bi bi-gear"></i>
+                <span>General Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{{ url_for('profile_routes.banking_settings') }}">
+                <i class="bi bi-bank"></i>
+                <span>Banking Settings</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
+                <i class="bi bi-question-circle"></i>
+                <span>Need Help?</span>
+              </a>
+            </li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item d-flex align-items-center" href="{{ url_for('auth_routes.logout') }}">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Sign Out</span>
+              </a>
+            </li>
+
+          </ul><!-- End Profile Dropdown Items -->
+        </li><!-- End Profile Nav -->
+
+      </ul>
+    </nav><!-- End Icons Navigation -->
+
+  </header><!-- End Header -->
+
+  <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
+
+    <ul class="sidebar-nav" id="sidebar-nav">
+
+      <li class="nav-item">
+        <a class="nav-link {{ 'active' if request.endpoint == 'main.dashboard' else '' }}" href="{{ url_for('main.dashboard') }}">
+          <i class="bi bi-grid"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link {{ 'active' if request.endpoint == 'property_routes.property_list' else '' }}" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#" onclick="toggleActive(this)">
+          <i class="bi bi-house"></i><span>Rental Properties</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li>
+            <a class="{{ 'active' if request.endpoint == 'property_routes.property_list' else '' }}" href="{{ url_for('property_routes.property_list') }}">
+              <i class="bi bi-circle"></i><span>My Properties</span>
+            </a>
+          </li>
+          <li>
+            <a class="{{ 'active' if request.endpoint == 'listing_routes.scheduled_enquiries' else '' }}" href="{{ url_for('listing_routes.scheduled_enquiries') }}">
+              <i class="bi bi-circle"></i><span>Scheduled Viewings</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link {{ 'active' if request.endpoint == 'property_routes.property_list' else '' }}" href="{{ url_for('property_routes.property_list') }}">
+          <i class="bi bi-people"></i>
+          <span>Tenants</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link {{ 'active' if request.endpoint == 'main.maintenance' else '' }}" href="{{ url_for('main.maintenance') }}">
+          <i class="bi bi-wrench"></i>
+          <span>Maintenance</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link {{ 'active' if request.endpoint in ['transaction_routes.transactions', 'accounting_routes.get_budget_overview'] else '' }}" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-calculator"></i><span>Financials</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li>
+            <a class="{{ 'active' if request.endpoint == 'transaction_routes.transactions' else '' }}" href="{{ url_for('transaction_routes.transactions') }}">
+              <i class="bi bi-circle"></i><span>Transactions</span>
+            </a>
+          </li>
+          <li>
+            <a class="{{ 'active' if request.endpoint == 'accounting_routes.get_budget_overview' else '' }}" href="{{ url_for('accounting_routes.get_budget_overview') }}">
+              <i class="bi bi-circle"></i><span>Budget Management</span>
+            </a>
+          </li>
+          <li>
+            <a href="components-badges.html">
+              <i class="bi bi-circle"></i><span>Financial Reports</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+          
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="{{ url_for('auth_routes.logout') }}" onclick="signOut()">
+          <i class="bi bi-box-arrow-left"></i>
+          <span>Logout</span>
+        </a>
+      </li><!-- End Login Page Nav -->
+
+  </aside><!-- End Sidebar-->
+  <!-- Flash Messages Modal -->
+
+  {% block content %}
+  {% endblock %}
+
+  {% block footer %}
+  <footer id="footer" class="footer">
+    <div class="copyright">
+      &copy; Copyright <strong><span>Propves 2024</span></strong>. 
+    </div>
+
+  </footer><!-- End Footer -->
+  {% endblock %}
+
+
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <script src="{{ url_for('static', filename='vendor/apexcharts/apexcharts.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/chart.js/chart.umd.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/echarts/echarts.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/quill/quill.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/propves-datatables/propves-datatables.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/tinymce/tinymce.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/php-email-form/validate.js') }}"></script>
+
+  <!-- Template Main JS File -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/property.js') }}"></script>
+
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- <script>
+    $(document).ready(function() {
+      {% if get_flashed_messages() %}
+        $('#flashMessagesModal').modal('show');
+      {% endif %}
+    });
+  </script> -->
+  {% block scripts %}{% endblock %}
+
+  <script>
+    function toggleActive(element) {
+      // Collapse all other nav items
+      const allNavLinks = document.querySelectorAll('.sidebar-nav .nav-link');
+      allNavLinks.forEach(link => {
+        if (link !== element) {
+          link.classList.remove('active');
+          const target = document.querySelector(link.getAttribute('data-bs-target'));
+          if (target) {
+            target.classList.remove('show');
+          }
+        }
+      });
+
+      // Toggle the clicked nav item
+      element.classList.toggle('active');
+      const target = document.querySelector(element.getAttribute('data-bs-target'));
+      if (target) {
+        target.classList.toggle('show');
+      }
+    }
+  </script>
+
+</body>
+</html>
+

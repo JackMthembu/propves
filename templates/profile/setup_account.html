@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Your Account</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Setup Your Account</h1>
+        <form id="setupAccountForm" method="POST" action="{{ url_for('profile_routes.setup_account') }}">
+            <div class="form-group">
+                <label for="phone_number">Phone Number:</label>
+                <input type="text" id="phone_number" name="phone_number" value="{{ current_user.phone_number }}" required>
+            </div>
+            <div class="form-group">
+                <label for="birthday">Birthday:</label>
+                <input type="date" id="birthday" name="birthday" value="{{ current_user.birthday }}" required>
+            </div>
+            <div class="form-group">
+                <label for="gender">Gender:</label>
+                <select id="gender" name="gender" required>
+                    <option value="male" {% if current_user.gender == 'male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if current_user.gender == 'female' %}selected{% endif %}>Female</option>
+                    <option value="other" {% if current_user.gender == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="country">Country:</label>
+                <input type="text" id="country" name="country" value="{{ current_user.country_id }}" required>
+            </div>
+            <button type="submit">Save Changes</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Optional: Add any JavaScript/jQuery for form handling here
+        });
+    </script>
+</body>
+</html> 
