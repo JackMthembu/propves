@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Profile Settings{% endblock %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet"> 
+
+<main id="main" class="main">
+    <div class="pagetitle"></div>
+    <h1>Profile Settings</h1> 
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard')}}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Profile Settings</li> 
+        </ol>
+    </nav>
+
+    <section class="section profile-section">
+        <div class="row"> 
+            <div class="col-lg-6"> 
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Update Profile</h5>
+                        <form method="POST" action="{{ url_for('profile_routes.profile_settings') }}">
+                            {{ form.hidden_tag() }}
+
+                            <div class="form-group form-floating">
+                                {{ form.email(class_="form-control", readonly=True, id="email") }}
+                                <label for="email">Email</label>
+                            </div><br>
+                            <div class="form-group form-floating">
+                                {{ form.phone_number(class_="form-control", id="phone_number", oninput="validatePhoneNumber('phone_number')") }}
+                                <label for="phone_number">Contact Number</label>
+                                <small id="phone-error" style="color: red; display: none;"></small> 
+                            </div><br>
+                            <div class="form-group form-floating">
+                                {{ form.birthday(class_="form-control", id="birthday") }}
+                                <label for="birthday">Birthday</label>
+                            </div><br>
+                            <div class="form-group form-floating mb-3">
+                                <select class="form-control{{ ' is-invalid' if form.gender.errors }}" 
+                                        id="gender" 
+                                        name="gender" 
+                                        required>
+                                    {% for value, label in form.gender.choices %}
+                                        <option value="{{ value }}" 
+                                                {% if form.gender.data == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <label for="gender">Gender</label>
+                                {% if form.gender.errors %}
+                                    {% for error in form.gender.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div><br>
+                            <div class="form-group form-floating">
+                                {{ form.country(class_="form-control", id="country") }}
+                                <label for="country">Country</label>
+                            </div><br>
+                            <div class="form-group form-floating">
+                                {{ form.currency_id(class_="form-control", id="currency_id") }}
+                                <label for="currency_id">Currency</label>
+                            </div><br>
+                            <button type="submit" class="btn btn-primary w-100">Update Profile</button> 
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Profile Picture</h5>
+                        <form method="POST" enctype="multipart/form-data" action="{{ url_for('profile_routes.profile_settings') }}">
+                            {{ profile_pic_form.hidden_tag() }}
+                            <div class="form-group text-center"> 
+                                <div class="profile-picture-wrapper">
+                                    <label for="profilePicInput" class="upload-label">
+                                        <img 
+                                            id="profilePic"
+                                            src="{{ url_for('static', filename='uploads/profile/' + (current_user.profile_picture or 'default.png')) }}" 
+                                            alt="{{ current_user.name }}" 
+                                            class="profile-picture img-fluid"
+                                            width="300px"
+                                            length="300px"> 
+                    
+                                        <span class="upload-icon">
+                                            <i class="bi bi-upload" style="color: #60D0AC; font-size: 30px;"></i>
+                                        </span>
+                                    </label>
+                                    <input type="file" id="profilePicInput" name="profile_picture" style="display: none;" onchange="previewImage(event)">
+                                    <button type="submit" name="delete_picture" value="delete" class="delete-button" title="Delete Picture">
+                                        <i class="bi bi-trash" style="color: red; font-size: 20px;"></i>
+                                    </button>
+                                </div>
+                                <button type="submit" class="btn btn-primary mt-3">Update Picture</button> 
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}
