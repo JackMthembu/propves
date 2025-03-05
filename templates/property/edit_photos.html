@@ -12,7 +12,7 @@
         <h1>{{ property.title }}- Photos</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Dashboard</a></li>
                 <li class="breadcrumb-item"><a href="{{ url_for('property_routes.property_list') }}">My Properties</a></li>
                 <li class="breadcrumb-item"><a href="{{ url_for('property_routes.manage_property', property_id=property.id) }}">Manage {{ property.title }}</a></li>
                 <li class="breadcrumb-item active">{{ property.title }}- Photos</li>

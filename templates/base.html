@@ -76,7 +76,7 @@
   <header id="header" class="header fixed-top d-flex align-items-center">
 
     <div class="d-flex align-items-center justify-content-between">
-      <a href="{{ url_for('main.dashboard')}}" class="logo d-flex align-items-center">
+      <a href="{{ url_for('main.index')}}" class="logo d-flex align-items-center">
         <img src="{{ url_for('static', filename='img/logos/propves2.png') }}" alt="">
         <span class="d-none d-lg-block">propves<span style="color: #60D0AC;">.</span></span>
       </a>
@@ -282,7 +282,7 @@
     <ul class="sidebar-nav" id="sidebar-nav">
 
       <li class="nav-item">
-        <a class="nav-link {{ 'active' if request.endpoint == 'main.dashboard' else '' }}" href="{{ url_for('main.dashboard') }}">
+        <a class="nav-link {{ 'active' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}">
           <i class="bi bi-grid"></i>
           <span>Dashboard</span>
         </a>

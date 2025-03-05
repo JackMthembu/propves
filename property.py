@@ -26,7 +26,7 @@ def new_property():
         if not owner:
             current_app.logger.debug("Owner not found for user_id: %s", current_user.id)
             flash('Owner profile not found.', 'error')
-            return redirect(url_for('main.dashboard'))
+            return redirect(url_for('main.index'))
 
         # Add debug logging before template render
         current_app.logger.debug("About to render template")
@@ -135,7 +135,7 @@ def manage_property(property_id):
         owner = Owner.query.filter_by(user_id=current_user.id).first()
         if not owner:
             flash('Owner profile not found.', 'error')
-            return redirect(url_for('main.dashboard'))
+            return redirect(url_for('main.index'))
 
         # Get the property
         property = Property.query.get_or_404(property_id)
@@ -169,7 +169,7 @@ def edit_details(property_id):
     
     if not current_user_owner:
         flash('User is not registered as an owner.', 'error')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
 
     if property_id == 'new':
         property = Property(owner_id=current_user_owner.id)  

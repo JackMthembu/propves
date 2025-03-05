@@ -12,7 +12,7 @@ main = Blueprint('main', __name__)
 
 @main.route('/')
 @login_required
-def dashboard():
+def index():
     # Get the filter type from the query parameters, default to 'past_year'
     filter_type = request.args.get('filter', 'past_year')
     # Logic to calculate date ranges based on the filter type
@@ -104,7 +104,7 @@ def dashboard():
 
     banking_details_count = BankingDetails.query.filter_by(user_id=current_user.id).count()
 
-    return render_template('dashboard/dashboard.html', user=user, total_income=formatted_income, total_operating_expenses=formatted_operating_expenses, filter=filter_type, terminated_rental_agreements=terminated_rental_agreements, tenant_count=tenant_count, active_maintainance=active_maintainance, agreement=agreement, offer_validity=agreement.offer_validity if agreement else None, unread_messages_count=unread_messages_count, progress_data=progress_data, oer_category=oer_category, banking_details_count=banking_details_count, current_user=current_user)
+    return render_template('dashboard/index.html', user=user, total_income=formatted_income, total_operating_expenses=formatted_operating_expenses, filter=filter_type, terminated_rental_agreements=terminated_rental_agreements, tenant_count=tenant_count, active_maintainance=active_maintainance, agreement=agreement, offer_validity=agreement.offer_validity if agreement else None, unread_messages_count=unread_messages_count, progress_data=progress_data, oer_category=oer_category, banking_details_count=banking_details_count, current_user=current_user)
 
 @main.route('/maintenance')
 def maintenance():

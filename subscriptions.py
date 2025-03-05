@@ -13,7 +13,7 @@ def subscriptions():
     owner = Owner.query.filter_by(user_id=current_user.id).first()
     if not owner:
         flash('Owner profile not found.', 'danger')
-        return redirect(url_for('main.dashboard'))
+        return redirect(url_for('main.index'))
         
     current_subscription = Subscription.query.filter_by(owner_id=owner.id).first()
     

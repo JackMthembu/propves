@@ -411,7 +411,7 @@ def login():
                 db.session.commit()
             
                 flash('Logged in successfully!', 'success')
-                return redirect(url_for('main.dashboard'))  
+                return redirect(url_for('main.index'))  
             else:
                 print("Password is incorrect")
                 user.failed_login_attempts += 1
