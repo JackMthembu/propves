@@ -4,16 +4,13 @@ set -e
 echo "Starting deployment script..."
 
 # Set Python path for Azure App Service
-export PATH="/usr/local/bin:/opt/python/3.11/bin:$PATH"
-export PYTHONPATH="/opt/python/3.11/lib/python3.11/site-packages:$PYTHONPATH"
-
-# Find Python executable
-for python_cmd in "python3.11" "python3" "python"; do
-    if command -v $python_cmd >/dev/null 2>&1; then
-        PYTHON_PATH=$(command -v $python_cmd)
-        break
-    fi
-done
+export PYTHON_PATH="/usr/local/bin/python3.11"
+if [ ! -f "$PYTHON_PATH" ]; then
+    PYTHON_PATH="/opt/python/3.11/bin/python3.11"
+fi
+if [ ! -f "$PYTHON_PATH" ]; then
+    PYTHON_PATH=$(which python3.11 || which python3 || which python)
+fi
 
 if [ -z "$PYTHON_PATH" ]; then
     echo "Error: Python not found"
@@ -24,7 +21,7 @@ echo "Using Python at: $PYTHON_PATH"
 
 # Create and activate virtual environment
 echo "Setting up virtual environment..."
-$PYTHON_PATH -m venv antenv || python -m venv antenv
+$PYTHON_PATH -m venv antenv
 source antenv/bin/activate || {
     echo "Failed to activate virtual environment"
     exit 1
