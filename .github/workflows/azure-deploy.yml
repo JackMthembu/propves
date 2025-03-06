@@ -13,7 +13,6 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: production
     
     steps:
     - uses: actions/checkout@v2
@@ -33,20 +32,6 @@ jobs:
       run: |
         chmod +x startup.sh
         zip -r deploy.zip . -x "*.git*" -x "*__pycache__*" -x "*.env" -x "*.venv*" -x "*antenv*" -x "*.pytest_cache*"
-
-    - name: Azure Login
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    - name: Clear deployment locks
-      continue-on-error: true
-      run: |
-        az webapp deployment list-publishing-credentials --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group proves_sa
-        az webapp stop --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group proves_sa
-        sleep 30
-        az webapp start --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group proves_sa
-        sleep 30
     
     - name: Deploy to Azure
       uses: azure/webapps-deploy@v2
@@ -54,12 +39,6 @@ jobs:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: './deploy.zip'
-
-    - name: Configure App Settings
-      if: success()
-      run: |
-        az webapp config set --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group proves_sa --linux-fx-version "PYTHON|3.11"
-        az webapp config appsettings set --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group proves_sa --settings \
-          WEBSITES_PORT=8000 \
-          SCM_DO_BUILD_DURING_DEPLOYMENT=true \
-          PYTHON_PATH=/usr/local/bin/python3
+        type: zip
+        clean: true
+        restart: true
