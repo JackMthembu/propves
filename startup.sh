@@ -3,21 +3,36 @@ set -e
 
 echo "Starting deployment script..."
 
-# Use the correct Python path
-export PATH="/usr/local/bin:$PATH"
+# Find Python executable
+PYTHON_PATH=$(which python3.11 || which python3 || which python)
+if [ -z "$PYTHON_PATH" ]; then
+    echo "Error: Python not found"
+    exit 1
+fi
+
+echo "Using Python at: $PYTHON_PATH"
 
 # Create and activate virtual environment
 echo "Setting up virtual environment..."
-python3 -m venv antenv
+$PYTHON_PATH -m venv antenv
 source antenv/bin/activate
 
 # Install dependencies
 echo "Installing dependencies..."
-python3 -m pip install --upgrade pip
+pip install --upgrade pip
 pip install -r requirements.txt
 
 # Add gunicorn if not in requirements
-pip install gunicorn
+pip install gunicorn pyodbc
+
+# Install ODBC driver if not present
+if ! dpkg -l | grep -q "msodbcsql17"; then
+    echo "Installing ODBC driver..."
+    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - || true
+    curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list || true
+    apt-get update || true
+    ACCEPT_EULA=Y apt-get install -y msodbcsql17 || true
+fi
 
 # Apply database migrations
 echo "Applying database migrations..."
@@ -26,4 +41,4 @@ flask db upgrade || echo "Warning: Database migration failed, continuing deploym
 
 # Start Gunicorn with our config
 echo "Starting Gunicorn..."
-gunicorn --config gunicorn.conf.py wsgi:application
+exec gunicorn --config gunicorn.conf.py wsgi:application
