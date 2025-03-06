@@ -10,12 +10,13 @@ ENV PYTHONUNBUFFERED=1 \
     WEBSITE_HOSTNAME=propves.azurewebsites.net \
     WEBSITE_ROLE_INSTANCE_ID=0 \
     WEBSITE_INSTANCE_ID=f19f17d318573e91b9f48a927b55cc10f33adb9462bf0cb4602e0d53a47e62e1 \
-    SCM_DO_BUILD_DURING_DEPLOYMENT=1
+    SCM_DO_BUILD_DURING_DEPLOYMENT=1 \
+    ACCEPT_EULA=Y
 
 # Set work directory
 WORKDIR /home/site/wwwroot
 
-# Install system dependencies
+# Install system dependencies including ODBC driver
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
@@ -24,6 +25,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openssh-server \
     curl \
     sqlite3 \
+    gnupg2 \
+    unixodbc \
+    unixodbc-dev \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends msodbcsql17 \
     && rm -rf /var/lib/apt/lists/*
 
 # Create necessary directories and set permissions
@@ -35,7 +43,7 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install gunicorn==23.0.0 \
+    && pip install gunicorn==23.0.0 pyodbc \
     && pip install viztracer  # For code profiling
 
 # Copy project files
@@ -50,8 +58,8 @@ exec gunicorn --bind 0.0.0.0:8000 \
 --access-logfile /home/LogFiles/docker.log \
 --error-logfile /home/LogFiles/docker.err \
 --capture-output \
---log-level info \
-app:app' > /opt/startup/startup.sh \
+--log-level debug \
+wsgi:application' > /opt/startup/startup.sh \
 && chmod +x /opt/startup/startup.sh
 
 # Expose port
