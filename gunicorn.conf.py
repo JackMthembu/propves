@@ -29,3 +29,6 @@ bind = '0.0.0.0:8000'
 
 # Worker class
 worker_class = 'sync'
+
+# The WSGI application object name
+wsgi_app = 'wsgi:application'
