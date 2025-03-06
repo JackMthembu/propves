@@ -7,11 +7,18 @@ echo "Starting deployment script..."
 export PATH="/usr/local/bin:/opt/python/3.11/bin:$PATH"
 export PYTHONPATH="/opt/python/3.11/lib/python3.11/site-packages:$PYTHONPATH"
 
-echo "Using Python at: $(which python3)"
+# Find Python executable
+PYTHON_PATH=$(which python3 || which python)
+if [ -z "$PYTHON_PATH" ]; then
+    echo "Error: Python not found"
+    exit 1
+fi
+
+echo "Using Python at: $PYTHON_PATH"
 
 # Create and activate virtual environment
 echo "Setting up virtual environment..."
-python3 -m venv antenv || python -m venv antenv
+$PYTHON_PATH -m venv antenv || python -m venv antenv
 source antenv/bin/activate
 
 # Install dependencies
