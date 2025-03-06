@@ -3,14 +3,17 @@ set -e
 
 echo "Starting deployment script..."
 
+# Use the correct Python path
+export PATH="/usr/local/bin:$PATH"
+
 # Create and activate virtual environment
 echo "Setting up virtual environment..."
-python -m venv .venv
-source .venv/bin/activate
+python3 -m venv antenv
+source antenv/bin/activate
 
 # Install dependencies
 echo "Installing dependencies..."
-pip install --upgrade pip
+python3 -m pip install --upgrade pip
 pip install -r requirements.txt
 
 # Add gunicorn if not in requirements
