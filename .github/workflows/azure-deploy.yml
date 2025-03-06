@@ -29,7 +29,14 @@ jobs:
     
     - name: Create deployment package
       run: |
-        zip -r deploy.zip . -x "*.git*" -x "*__pycache__*" -x "*.pytest_cache*" -x "*.env" -x "*venv*" -x "*antenv*"
+        zip -r deploy.zip . \
+          -x "*.git*" \
+          -x "*__pycache__*" \
+          -x "*.pytest_cache*" \
+          -x "*.env" \
+          -x "*venv*" \
+          -x "*antenv*" \
+          -x "*.zip"
     
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
