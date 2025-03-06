@@ -8,7 +8,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.11'
-  STARTUP_COMMAND: 'python3 -m venv antenv && source antenv/bin/activate && pip install -r requirements.txt && pip install gunicorn && gunicorn --config gunicorn.conf.py wsgi:application'
+  AZURE_WEBAPP_NAME: propves
 
 jobs:
   build-and-deploy:
@@ -27,16 +27,43 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install gunicorn
+
+    - name: Log in to Azure CLI
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
     
     - name: Create deployment package
       run: |
         chmod +x startup.sh
         zip -r deploy.zip . -x "*.git*" -x "*__pycache__*" -x "*.env" -x "*.venv*" -x "*antenv*" -x "*.pytest_cache*"
     
+    - name: Clean deployment
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az webapp stop --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group proves_sa
+          az webapp deployment slot list --resource-group proves_sa --name ${{ env.AZURE_WEBAPP_NAME }} || true
+          sleep 30
+    
     - name: Deploy to Azure
       uses: azure/webapps-deploy@v2
       with:
-        app-name: 'propves'
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: './deploy.zip'
-        startup-command: ${{ env.STARTUP_COMMAND }}
+    
+    - name: Start webapp
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az webapp start --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group proves_sa
+          
+    - name: Configure App Settings
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+          az webapp config set --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group proves_sa --linux-fx-version "PYTHON|3.11"
+          az webapp config appsettings set --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group proves_sa --settings \
+            SCM_DO_BUILD_DURING_DEPLOYMENT=true \
+            PYTHON_PATH=/usr/local/bin/python3
