@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Page Not Found</title>
+    <title>Internal Server Error</title>
     <style>
         body { text-align: center; padding: 50px; }
         h1 { font-size: 50px; color: #60d0ac; }
@@ -20,6 +20,11 @@
             stroke-width: 3;
             fill: none;
         }
+        .scaffold {
+            stroke: #60d0ac;
+            stroke-width: 2;
+            fill: none;
+        }
         .logo {
             max-width: 200px;
             margin-bottom: 20px;
@@ -29,22 +34,26 @@
 <body>
     <article>
         <img src="{{ url_for('static', filename='img/logos/propves1.png') }}" alt="Propves Logo" class="logo">
-        <h1>404: Page Not Found</h1>
+        <h1>500: Internal Server Error</h1>
         <svg class="house-illustration" viewBox="0 0 100 100">
             <!-- House base -->
             <path class="house" d="M20,80 L20,40 L50,20 L80,40 L80,80 Z" />
             <!-- Door -->
             <path class="house" d="M40,80 L40,60 L55,60 L55,80" />
-            <!-- Windows (multiple to indicate emptiness) -->
-            <rect class="house" x="30" y="50" width="10" height="10" />
+            <!-- Window -->
             <rect class="house" x="60" y="50" width="10" height="10" />
-            <!-- Chimney -->
-            <path class="house" d="M65,25 L65,15 L70,15 L70,28" />
+            <!-- Scaffold -->
+            <line class="scaffold" x1="10" y1="30" x2="10" y2="90" />
+            <line class="scaffold" x1="90" y1="30" x2="90" y2="90" />
+            <line class="scaffold" x1="10" y1="40" x2="90" y2="40" />
+            <line class="scaffold" x1="10" y1="60" x2="90" y2="60" />
+            <!-- Tool -->
+            <path class="house" d="M70,70 L75,65 L80,70" />
         </svg>
         <div>
-            <p>The page you are looking for does not exist.</p>
-            <p>You might have mistyped the address or the page may have moved.</p>
-            <p><a href="{{ url_for('main.index') }}">Return to homepage</a></p>
+            <p>Sorry, something went wrong on our end.</p>
+            <p>Our team has been notified and we're working on it.</p>
+            <p><a href="/">Return to homepage</a></p>
         </div>
     </article>
 </body>
