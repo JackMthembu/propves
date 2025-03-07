@@ -3,7 +3,7 @@ from datetime import datetime, time, timedelta
 from functools import cache
 import os
 import threading
-from flask import Flask, current_app, g, jsonify, request
+from flask import Flask, current_app, g, jsonify, request, render_template
 from flask_cors import CORS
 from flask_login import current_user, LoginManager
 # import celery_config
@@ -91,6 +91,21 @@ def create_app():
     app = Flask(__name__, template_folder='templates', static_folder='static')
 
     load_dotenv()
+
+    # Error handlers
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return render_template('errors/500.html'), 500
+
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        app.logger.error(f"Unhandled exception: {str(e)}")
+        return render_template('errors/500.html'), 500
 
     app.config.from_object(Config)
     app.config.update(
