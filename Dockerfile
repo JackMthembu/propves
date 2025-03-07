@@ -11,7 +11,8 @@ ENV PYTHONUNBUFFERED=1 \
     WEBSITE_ROLE_INSTANCE_ID=0 \
     WEBSITE_INSTANCE_ID=f19f17d318573e91b9f48a927b55cc10f33adb9462bf0cb4602e0d53a47e62e1 \
     SCM_DO_BUILD_DURING_DEPLOYMENT=1 \
-    ACCEPT_EULA=Y
+    ACCEPT_EULA=Y \
+    PYTHONPATH=/home/site/wwwroot
 
 # Set work directory
 WORKDIR /home/site/wwwroot
@@ -49,17 +50,21 @@ RUN pip install --no-cache-dir -r requirements.txt \
 # Copy project files
 COPY . .
 
-# Create startup script
+# Create startup script with proper environment setup
 RUN echo '#!/bin/bash\n\
 mkdir -p /home/LogFiles\n\
-exec gunicorn --bind 0.0.0.0:8000 \
---workers 4 \
---timeout 600 \
---access-logfile /home/LogFiles/docker.log \
---error-logfile /home/LogFiles/docker.err \
+export PYTHONPATH=/home/site/wwwroot:$PYTHONPATH\n\
+cd /home/site/wwwroot\n\
+exec gunicorn \
+--bind=0.0.0.0:8000 \
+--workers=4 \
+--timeout=600 \
+--access-logfile=/home/LogFiles/docker.log \
+--error-logfile=/home/LogFiles/docker.err \
 --capture-output \
---log-level debug \
-wsgi:application' > /opt/startup/startup.sh \
+--log-level=debug \
+--chdir=/home/site/wwwroot \
+wsgi:app' > /opt/startup/startup.sh \
 && chmod +x /opt/startup/startup.sh
 
 # Expose port
