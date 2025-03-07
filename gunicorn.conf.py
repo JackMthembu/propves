@@ -2,17 +2,17 @@ import multiprocessing
 import os
 
 # Number of worker processes - adjust for Azure
-workers = 4  # Fixed number instead of CPU-based
+workers = 4  
 
 # Number of threads per worker
-threads = 4
+threads = 2
 
 # Maximum requests before worker restart
 max_requests = 1000
 max_requests_jitter = 50
 
 # Timeout configs
-timeout = 600  # Increased for Azure
+timeout = 120  
 graceful_timeout = 60
 
 # Keep the connection alive
@@ -26,11 +26,10 @@ accesslog = '-'
 errorlog = '-'
 
 # Bind - use port from environment
-port = os.getenv('PORT', '8000')
-bind = f'0.0.0.0:{port}'
+bind = "0.0.0.0:8000"
 
 # Worker class
-worker_class = 'sync'
+worker_class = "sync"
 
 # The WSGI application object name
 wsgi_app = 'wsgi:application'
