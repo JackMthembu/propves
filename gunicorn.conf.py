@@ -1,41 +1,45 @@
 import multiprocessing
 import os
 
-# Number of worker processes - adjust for Azure
-workers = 4  
+# Server socket
+bind = f"0.0.0.0:{os.getenv('PORT', '8000')}"
+backlog = 2048
 
-# Number of threads per worker
-threads = 2
+# Worker processes
+workers = multiprocessing.cpu_count() * 2 + 1
+worker_class = 'sync'
+worker_connections = 1000
+timeout = 30
+keepalive = 2
 
-# Maximum requests before worker restart
-max_requests = 1000
-max_requests_jitter = 50
-
-# Timeout configs
-timeout = 120  
-graceful_timeout = 60
-
-# Keep the connection alive
-keepalive = 5
-
-# Log level
-loglevel = 'info'
-
-# Access log format
+# Logging
 accesslog = '-'
 errorlog = '-'
+loglevel = 'info'
 
-# Bind - use port from environment
-bind = "0.0.0.0:8000"
+# Process naming
+proc_name = 'propves'
 
-# Worker class
-worker_class = "sync"
+# SSL
+keyfile = None
+certfile = None
 
-# The WSGI application object name
-wsgi_app = 'wsgi:application'
+# Server mechanics
+daemon = False
+pidfile = None
+umask = 0
+user = None
+group = None
+tmp_upload_dir = None
 
-# Prevent worker timeout
-timeout_keep_alive = 65
-
-# Preload app for better performance
+# Deployment-specific settings
 preload_app = True
+reload = False  # Set to True for development
+spew = False
+
+# SSL
+secure_scheme_headers = {
+    'X-FORWARDED-PROTOCOL': 'ssl',
+    'X-FORWARDED-PROTO': 'https',
+    'X-FORWARDED-SSL': 'on'
+}

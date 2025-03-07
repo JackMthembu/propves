@@ -1,10 +1,9 @@
-name: Deploy to Azure App Service
+name: Deploy to Azure Web App
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -18,30 +17,45 @@ jobs:
       with:
         python-version: '3.11'
     
+    - name: Create and activate virtual environment
+      run: |
+        python -m venv antenv
+        source antenv/bin/activate
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install gunicorn pyodbc
-    
-    - name: Make startup script executable
-      run: chmod +x startup.sh
+        pip install gunicorn
     
     - name: Create deployment package
       run: |
-        zip -r deploy.zip . \
-          -x "*.git*" \
-          -x "*__pycache__*" \
-          -x "*.pytest_cache*" \
-          -x "*.env" \
-          -x "*venv*" \
-          -x "*antenv*" \
-          -x "*.zip"
+        chmod +x startup.sh
+        zip -r deploy.zip .
     
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
-        app-name: 'propves'
-        slot-name: 'production'
+        app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: './deploy.zip'
+        package: deploy.zip
+        
+    - name: Configure App Settings
+      uses: azure/appservice-settings@v1
+      with:
+        app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+        app-settings-json: |
+          [
+            {
+              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+              "value": "true"
+            },
+            {
+              "name": "PYTHON_PATH",
+              "value": "antenv/bin/python"
+            },
+            {
+              "name": "STARTUP_COMMAND",
+              "value": "bash startup.sh"
+            }
+          ]
