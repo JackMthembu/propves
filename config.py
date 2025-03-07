@@ -51,10 +51,10 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Mail configuration
-    MAIL_SERVER = os.getenv('MAIL_SERVER', 'kassandra.aserv.co.za')
-    MAIL_PORT = os.getenv('MAIL_PORT', 587)
-    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', True)
-    MAIL_USE_SSL = os.getenv('MAIL_USE_SSL', False)
+    MAIL_SERVER = 'kassandra.aserv.co.za'  
+    MAIL_PORT = 587  
+    MAIL_USE_TLS = True
+    MAIL_USE_SSL = False
     MAIL_USERNAME = os.getenv('MAIL_USERNAME', 'hello@propves.com')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = ('Propves', 'hello@propves.com')

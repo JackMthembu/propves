@@ -94,6 +94,58 @@ def create_app():
 
     @app.errorhandler(500)
     def internal_error(error):
+        try:
+            # Get current user info
+            user_info = "Not logged in"
+            if current_user.is_authenticated:
+                user_info = f"User ID: {current_user.id}, Email: {current_user.email}, Name: {current_user.name}"
+            
+            # Get error details with full traceback
+            import traceback
+            error_details = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
+
+            # Send email to founders
+            msg = Message(
+                subject="⚠️ Propves System Error Alert",
+                sender=('Propves', 'hello@propves.com'),
+                recipients=['founders@propves.com']
+            )
+            
+            # HTML email body for better formatting
+            msg.html = f"""
+            <h2>500 Error Alert - Propves System</h2>
+            <hr>
+            <h3>User Information:</h3>
+            <pre>{user_info}</pre>
+            <h3>Error Details:</h3>
+            <pre style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+{error_details}
+            </pre>
+            <p><strong>Time:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            <p><strong>Environment:</strong> {app.config.get('ENV', 'production')}</p>
+            """
+            
+            # Plain text version as fallback
+            msg.body = f"""
+500 Error Alert - Propves System
+
+User Information:
+{user_info}
+
+Error Details:
+{error_details}
+
+Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Environment: {app.config.get('ENV', 'production')}
+            """
+            
+            mail.send(msg)
+            logger.info("Error notification email sent successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to send error notification: {str(e)}", exc_info=True)
+        
+        # Always rollback the session and return the error page
         db.session.rollback()
         return render_template('errors/500.html'), 500
 

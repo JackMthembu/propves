@@ -2,6 +2,8 @@
 <html>
 <head>
     <title>Internal Server Error</title>
+    <link href="{{ url_for('static', filename='img/logos/propves2.png') }}" rel="icon">
+    <link href="{{ url_for('static', filename='img/logos/propves2.png') }}" rel="apple-touch-icon">  
     <style>
         body { text-align: center; padding: 50px; }
         h1 { font-size: 50px; color: #60d0ac; }
@@ -33,7 +35,7 @@
 </head>
 <body>
     <article>
-        <img src="{{ url_for('static', filename='img/logos/propves1.png') }}" alt="Propves Logo" class="logo">
+        <img src="{{ url_for('static', filename='img/logos/propves4.png') }}" alt="Propves Logo" class="logo">
         <h1>500: Internal Server Error</h1>
         <svg class="house-illustration" viewBox="0 0 100 100">
             <!-- House base -->
@@ -53,7 +55,7 @@
         <div>
             <p>Sorry, something went wrong on our end.</p>
             <p>Our team has been notified and we're working on it.</p>
-            <p><a href="/">Return to homepage</a></p>
+            <p><a href="{{ url_for('main.index') }}">Return to Dashboard</a></p>
         </div>
     </article>
 </body>
