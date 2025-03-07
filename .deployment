@@ -2,5 +2,6 @@
 SCM_DO_BUILD_DURING_DEPLOYMENT=true
 PYTHON_VERSION=3.11
 ENABLE_ORYX_BUILD=true
-POST_BUILD_COMMAND=pip install pyodbc
+POST_BUILD_COMMAND=pip install pyodbc gunicorn && chmod +x startup.sh
 PRE_BUILD_COMMAND=apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17
+STARTUP_COMMAND=python -m gunicorn --bind=0.0.0.0:8000 wsgi:application
