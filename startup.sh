@@ -46,5 +46,4 @@ echo "Using port: $PORT"
 
 # Start Gunicorn with our config
 echo "Starting Gunicorn..."
-cd /home/site/wwwroot
 exec gunicorn --config gunicorn.conf.py --bind=0.0.0.0:$PORT wsgi:application
