@@ -19,9 +19,13 @@ fi
 
 echo "Using Python at: $PYTHON_PATH"
 
-# Create and activate virtual environment
-echo "Setting up virtual environment..."
-$PYTHON_PATH -m venv antenv
+# Create and activate virtual environment if it doesn't exist
+if [ ! -d "antenv" ]; then
+    echo "Creating virtual environment..."
+    $PYTHON_PATH -m venv antenv
+fi
+
+echo "Activating virtual environment..."
 source antenv/bin/activate || {
     echo "Failed to activate virtual environment"
     exit 1
@@ -30,7 +34,10 @@ source antenv/bin/activate || {
 # Install dependencies
 echo "Installing dependencies..."
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r requirements.txt || {
+    echo "Failed to install dependencies"
+    exit 1
+}
 
 # Add gunicorn if not in requirements
 pip install gunicorn pyodbc
@@ -46,4 +53,4 @@ echo "Using port: $PORT"
 
 # Start Gunicorn with our config
 echo "Starting Gunicorn..."
-exec gunicorn --config gunicorn.conf.py --bind=0.0.0.0:$PORT wsgi:application
+exec gunicorn --config gunicorn.conf.py --bind=0.0.0.0:$PORT wsgi:app
