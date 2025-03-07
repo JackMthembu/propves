@@ -35,6 +35,12 @@ from messaging import message_routes
 from openai import classify_transaction_with_azure
 import pdfkit
 
+app = Flask(__name__, static_folder='static')  
+app.secret_key = os.getenv('SECRET_KEY') 
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 request_cache = TTLCache(maxsize=100, ttl=5)  
 
 logging.basicConfig(level=logging.INFO)
@@ -42,8 +48,44 @@ logging.basicConfig(level=logging.INFO)
 def scheduled_task():
     try:
         logging.info(f"Scheduled task is running at {datetime.now()}")
+
     except Exception as e:
         logging.error(f"Error occurred: {e}")
+
+    @app.before_first_request
+    def scheduled_task():
+        def run_updates():
+            with app.app_context():
+                while True:
+                    try:
+                        update_expired_agreements()
+                    except Exception as e:
+                        logging.error(f"Error updating expired agreements: {e}")
+                    time.sleep(600)  # 600 seconds = 10 minutes
+
+        thread = threading.Thread(target=run_updates)
+        thread.start()
+
+# Initialize cache
+
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})  # You can choose other cache types as needed
+
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
+    session = db.session
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+@cache.memoize(timeout=60)  # Cache the result for 60 seconds
+def get_cached_user(user_id):
+    return User.query.get(user_id)  # Example of fetching a user from the database
 
 def create_app():
     app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -267,7 +309,7 @@ def create_app():
     
 def update_expired_agreements():
     """Update agreements that have expired."""
-    with create_app().app_context():
+    with app.app_context():
         try:
             # Query for expired agreements
             expired_agreements = RentalAgreement.query.filter_by(status='expired').all()
